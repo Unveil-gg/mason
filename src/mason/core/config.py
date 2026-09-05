@@ -40,6 +40,7 @@ class ProjectConfig(BaseModel):
 
     name: str = "mason-project"
     default_style: str = "default"
+    install_dir: str | None = None
 
 
 def machine_config_path() -> Path:

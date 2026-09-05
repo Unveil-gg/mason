@@ -1,0 +1,26 @@
+type: layered_raster
+id: plank_texture
+name: Plank Texture
+
+dimensions:
+  width: 256
+  height: 256
+
+style: default
+
+layers:
+  - name: base
+    role: background
+    fill: wood_dark
+  - name: plank_1
+    role: fill
+    fill: wood_light
+    rect: {x: 0, y: 0, width: 256, height: 60}
+  - name: plank_2
+    role: fill
+    fill: wood_light
+    rect: {x: 0, y: 128, width: 256, height: 60}
+
+export:
+  kra: true
+  png: true

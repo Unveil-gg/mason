@@ -65,6 +65,44 @@ def test_cylinder_and_parent() -> None:
     assert spec.geometry.parts[1].parent == "post"
 
 
+def test_part_texture_asset_file() -> None:
+    spec = parse_asset_spec({
+        "type": "static_prop",
+        "id": "crate",
+        "name": "Crate",
+        "dimensions": {"width": 1, "depth": 1, "height": 1},
+        "geometry": {
+            "parts": [{
+                "name": "box",
+                "size": [1, 1, 1],
+                "location": [0, 0, 0.5],
+                "texture": {"asset": "plank_texture", "file": "output/asset.png"},
+            }],
+        },
+    })
+    part = spec.geometry.parts[0]
+    assert part.texture.asset == "plank_texture"
+    assert part.texture.file == "output/asset.png"
+
+
+def test_part_texture_rejects_path_and_asset() -> None:
+    with pytest.raises(MasonError):
+        parse_asset_spec({
+            "type": "static_prop",
+            "id": "crate",
+            "name": "Crate",
+            "dimensions": {"width": 1, "depth": 1, "height": 1},
+            "geometry": {
+                "parts": [{
+                    "name": "box",
+                    "size": [1, 1, 1],
+                    "location": [0, 0, 0.5],
+                    "texture": {"asset": "a", "file": "f", "path": "p"},
+                }],
+            },
+        })
+
+
 def test_text_layer_without_fill() -> None:
     spec = parse_asset_spec({
         "type": "layered_raster",

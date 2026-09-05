@@ -37,6 +37,32 @@ def test_blender_script_has_helpers(project: Path) -> None:
     assert "#654936" in script
     assert "BLENDER_EEVEE" in script
     assert "CYCLES" in script
+    assert "def unwrap_cube" in script
+    assert "def create_textured_material" in script
+    assert 'path + "@"' in script
+
+
+def test_blender_script_wires_part_textures(project: Path) -> None:
+    spec = parse_asset_spec({
+        "type": "static_prop",
+        "id": "textured_crate",
+        "name": "Textured Crate",
+        "dimensions": {"width": 1, "depth": 1, "height": 1},
+        "geometry": {"recipe": "crate"},
+        "materials": {"primary": "wood_dark"},
+    })
+    style = load_style(project / "styles" / "default.yaml")
+    parts = resolved_parts(spec)
+    bw, bs, r, m = apply_style_defaults(spec, style)
+    script = build_blender_script(
+        spec, style, parts, project / ".mason" / "jobs" / "textured_crate",
+        bevel_width=bw, bevel_segments=bs, roughness=r, metallic=m,
+        part_textures={"crate": "/abs/path/plank.png"},
+    )
+    assert '"part_textures"' in script
+    assert "/abs/path/plank.png" in script
+    assert '"tile_size": 1.0' in script
+    assert '"wrap": "repeat"' in script
 
 
 def test_krita_script_has_document(project: Path) -> None:

@@ -17,6 +17,7 @@ from pydantic import (
 from mason.core.parts import (  # noqa: F401
     Dimensions3D,
     GeometrySpec,
+    ImageSource,
     PartArray,
     PropPart,
     RecipeParams,
@@ -36,6 +37,7 @@ class Export3D(BaseModel):
 
     format: Literal["glb"] = "glb"
     save_blend: bool = True
+    install_to: str | None = None
 
 
 class MaterialsSpec(BaseModel):
@@ -96,6 +98,7 @@ class RasterExport(BaseModel):
 
     kra: bool = True
     png: bool = True
+    install_to: str | None = None
 
 
 class LayeredRasterSpec(BaseModel):
@@ -111,24 +114,6 @@ class LayeredRasterSpec(BaseModel):
     layers: list[RasterLayer] = Field(min_length=1)
     export: RasterExport = Field(default_factory=RasterExport)
     metadata: dict[str, str] = Field(default_factory=dict)
-
-
-class ImageSource(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    asset: str | None = None
-    file: str | None = None
-    path: str | None = None
-
-    @model_validator(mode="after")
-    def one_source(self) -> ImageSource:
-        if self.path:
-            if self.asset or self.file:
-                raise ValueError("use path or asset+file, not both")
-            return self
-        if self.asset and self.file:
-            return self
-        raise ValueError("source needs path or asset+file")
 
 
 class ResizeOp(BaseModel):
@@ -205,6 +190,7 @@ class ImageExport(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     format: Literal["png", "webp", "jpg"] = "png"
+    install_to: str | None = None
 
 
 class ImageProcessSpec(BaseModel):

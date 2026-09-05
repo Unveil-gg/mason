@@ -60,6 +60,23 @@ def create_primitive(part):
     return create_box(*args)
 
 
+def unwrap_cube(obj, tile_size):
+    """Deterministic box-projected UVs, sized so tileable textures
+    repeat consistently across parts regardless of object size."""
+    bpy.ops.object.select_all(action="DESELECT")
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.uv.cube_project(
+        cube_size=float(tile_size),
+        correct_aspect=True,
+        clip_to_bounds=False,
+        scale_to_bounds=False,
+    )
+    bpy.ops.object.mode_set(mode="OBJECT")
+
+
 def apply_bevel(obj, width, segments):
     """Apply a Bevel modifier and keep it applied."""
     if width <= 0 or segments < 1:

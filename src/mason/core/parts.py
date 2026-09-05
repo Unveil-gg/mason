@@ -7,6 +7,27 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
+class ImageSource(BaseModel):
+    """A reference to a PNG: either a literal project path, or another
+    asset's built output (asset id + file, e.g. "output/asset.png")."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    asset: str | None = None
+    file: str | None = None
+    path: str | None = None
+
+    @model_validator(mode="after")
+    def one_source(self) -> ImageSource:
+        if self.path:
+            if self.asset or self.file:
+                raise ValueError("use path or asset+file, not both")
+            return self
+        if self.asset and self.file:
+            return self
+        raise ValueError("source needs path or asset+file")
+
+
 class PartArray(BaseModel):
     """Linear copies of a part along an offset."""
 
@@ -27,6 +48,7 @@ class PropPart(BaseModel):
     location: tuple[float, float, float]
     rotation: tuple[float, float, float] = (0.0, 0.0, 0.0)
     material: str = "primary"
+    texture: ImageSource | None = None
     bevel: bool | None = None
     parent: str | None = None
     inset: float = Field(default=0.0, ge=0)

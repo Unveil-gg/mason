@@ -114,9 +114,40 @@ truth is a list of `parts` (`box`, `cylinder`, `plane`) with optional
 `parent`, `inset`, and linear `array`.
 
 3D examples: `simple_crate`, `simple_shelf`, `simple_post`,
-`simple_sign`, `simple_fence`. Raster: `simple_panel`, `menu_card`
-(text + image import). Previews include a 2×2 `contact_sheet.png`.
-EEVEE is preferred; Mason falls back to Cycles CPU if EEVEE fails.
+`simple_sign`, `simple_fence`, `textured_crate`. Raster: `simple_panel`,
+`menu_card` (text + image import), `plank_texture` (tileable material).
+Previews include a 2×2 `contact_sheet.png`. EEVEE is preferred; Mason
+falls back to Cycles CPU if EEVEE fails.
+
+## Textures on 3D parts
+
+A part can use a 2D asset's PNG as its material instead of a flat
+palette color:
+
+```yaml
+geometry:
+  parts:
+    - name: crate
+      size: [0.6, 0.6, 0.6]
+      location: [0, 0, 0.3]
+      texture:
+        asset: plank_texture   # another asset id, built beforehand
+        file: output/asset.png # or: texture: {path: "textures/x.png"}
+```
+
+Build order matters: `plank_texture` (a `layered_raster` job) must be
+built before `textured_crate` references it. Every part is UV-unwrapped
+with a deterministic cube projection (`bpy.ops.uv.cube_project`), sized
+by `textures.tile_size` in the style profile (world units per tile) so
+tileable textures repeat consistently across differently-sized props
+without per-asset tuning. `textures.wrap` (`repeat`/`clamp`) controls
+the image node's extension mode. This suits tileable materials (wood,
+stone, fabric); it is a whole-object cube projection, not a per-face
+decal placement, so a single "sign face" design is not yet cleanly
+supported — see Roadmap.
+
+Try it: `mason build examples/assets/plank_texture.yaml`, then
+`mason build examples/assets/textured_crate.yaml`.
 
 ## Commands
 
@@ -129,11 +160,38 @@ EEVEE is preferred; Mason falls back to Cycles CPU if EEVEE fails.
 | `mason preview <asset-id>` | Re-render previews only |
 | `mason inspect <asset-id>` | Job state, paths, metrics |
 | `mason validate <asset-id>` | Re-read stored validation |
+| `mason export <asset-id>` | Copy finished outputs into another project |
 | `mason list` | Jobs in this project |
 | `mason tools scan` | Rediscover and store new tool paths |
 | `mason config get/set` | Machine config (`tools.blender.path`, …) |
 
 Add `--json` to any of these for agent-friendly output.
+
+## Exporting into another project
+
+`mason build`/`rebuild` only write inside `.mason/jobs/<id>/`. To land the
+finished `.glb`/`.png` in a consuming project (e.g. a sibling Godot repo),
+use `mason export`. It never copies working files (`.blend`/`.kra`) or
+previews.
+
+```bash
+mason export simple_crate --to ../my_game/res/models
+mason export simple_crate --engine godot   # models/, textures/ subfolders
+```
+
+The destination can also be set once instead of passed every time:
+`install_dir` in `mason.yaml`, or `export.install_to` in an individual
+asset spec (spec setting wins over the project default; `--to` wins over
+both).
+
+Each export merges an entry into `mason_manifest.json` at the
+destination root, so an agent (or you) can see what Mason has put there
+without needing the Mason project itself. Mason does **not** write
+Godot `.import` sidecars: since Godot 4.0, texture filter/repeat moved
+out of the importer into project settings and per-`CanvasItem`
+overrides, so a hand-written `.import` file would be silently wrong.
+For pixel art, set Project Settings → Rendering → Textures → Canvas
+Textures → Default Texture Filter to Nearest instead.
 
 ## JSON mode
 
@@ -173,16 +231,18 @@ a zero exit code as “it looks right.”
 
 ## Current limitations (v0.1)
 
-- 3D primitives are boxes only (no cylinders/planes yet).
-- Raster generation is palette fills and rectangles, not painting.
+- Raster generation is palette fills, rects, text, and image import,
+  not freehand painting.
+- Textures on 3D parts are whole-object cube projections, not per-face
+  decal placement (no clean single "sign face" design yet).
 - Aseprite is discovery-only.
-- Previews use Cycles CPU (reliable headless, slower than EEVEE).
-- No Godot export, no in-process LLM, no bundled creative apps.
+- `mason export` copies files and a manifest only; it does not
+  construct Godot scenes/resources or write `.import` sidecars.
+- No in-process LLM, no bundled creative apps.
 
 ## Roadmap
 
-- More 3D primitives and richer part ops
-- Krita text/import/paint hooks
+- Per-face/planar UV placement for decals (sign faces, labels)
 - Aseprite sprite sheets + animation metadata
-- Optional Godot SpriteFrames / in-engine preview
-- EEVEE preview path where the GPU context is available
+- Optional Godot SpriteFrames / scene construction / in-engine preview
+- Richer Krita paint tools beyond fill/text/image layers

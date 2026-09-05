@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from mason.core.jobs import AssetJob
-from mason.core.results import BuildResult
+from mason.core.results import BuildResult, ExportResult
 from mason.core.workspace import find_project_root
 from mason.tools.base import ToolInfo
 from mason.tools.registry import ALL_CAPABILITIES, TOOL_GROUPS, capabilities_from
@@ -81,6 +81,15 @@ def print_inspect(job: AssetJob, result: BuildResult | None) -> None:
         for key in ("triangles", "materials", "mesh_count", "width", "height"):
             if key in result.validation:
                 console.print(f"  {key}: {result.validation[key]}")
+
+
+def print_export(result: ExportResult) -> None:
+    status = "[green]ok[/green]" if result.success else "[red]failed[/red]"
+    console.print(f"Exported [bold]{result.asset_id}[/bold] ({status})")
+    for key, path in result.installed.items():
+        console.print(f"  {key}: {path}")
+    if result.manifest:
+        console.print(f"  manifest: {result.manifest}")
 
 
 def print_list(jobs: list[AssetJob]) -> None:

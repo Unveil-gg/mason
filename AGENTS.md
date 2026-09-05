@@ -28,6 +28,11 @@ Before generating assets:
 9. Continue until technical validation passes and the visual result
    is acceptable.
 10. Treat asset.yaml and build.py as reproducible source artifacts.
+11. If the asset needs to land in another project (e.g. a Godot repo),
+    run `mason export <id> --to <dir>` (or set `install_dir` in
+    `mason.yaml` / `export.install_to` in the spec, then just
+    `mason export <id>`). Only finished outputs (glb/png) are copied,
+    never `.blend`/`.kra`/previews.
 
 Important rules:
 
@@ -43,8 +48,11 @@ Important rules:
 Asset types:
 
 - `static_prop` — Blender parts (`box`, `cylinder`, `plane`) with
-  optional `parent`, `inset`, and linear `array`. Recipes
-  (crate/shelf/table) expand into parts.
+  optional `parent`, `inset`, `array`, and `texture` (another asset's
+  PNG, e.g. `{asset: plank_texture, file: output/asset.png}`, applied
+  via a deterministic cube-projected UV unwrap). Build the texture
+  asset (usually `layered_raster`) before the part that references it.
+  Recipes (crate/shelf/table) expand into parts.
 - `layered_raster` — Krita layers: fill, text, or imported image,
   plus optional `role`. Source is `.kra`.
 - `image_process` — ImageMagick resize/crop/trim/composite/quantize/convert

@@ -49,6 +49,16 @@ class StyleLighting(BaseModel):
     preset: str = "neutral_studio"
 
 
+class StyleTextures(BaseModel):
+    """Defaults for mapping 2D textures onto 3D parts (one texture
+    strategy, encoded once instead of per-asset)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    tile_size: float = Field(default=1.0, gt=0)
+    wrap: Literal["repeat", "clamp"] = "repeat"
+
+
 class StyleProfile(BaseModel):
     """Named palette and default geometry/material/render settings."""
 
@@ -62,6 +72,7 @@ class StyleProfile(BaseModel):
     materials: StyleMaterials = Field(default_factory=StyleMaterials)
     render: StyleRender = Field(default_factory=StyleRender)
     lighting: StyleLighting = Field(default_factory=StyleLighting)
+    textures: StyleTextures = Field(default_factory=StyleTextures)
 
     def color(self, key: str) -> str:
         """Return a palette hex color or raise if missing."""
@@ -143,4 +154,8 @@ render:
 
 lighting:
   preset: neutral_studio
+
+textures:
+  tile_size: 1.0
+  wrap: repeat
 """

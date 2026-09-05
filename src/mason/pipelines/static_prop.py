@@ -6,9 +6,12 @@ from pathlib import Path
 
 from mason.core.assets import StaticPropSpec
 from mason.core.jobs import AssetJob
+from mason.core.parts import PropPart
+from mason.core.paths import resolve_image_source
 from mason.core.results import BuildResult
 from mason.core.styles import StyleProfile
 from mason.core.workspace import find_project_root
+from mason.errors import MasonError
 from mason.generators.blender.part_ops import expand_part_ops
 from mason.generators.blender.recipes import expand_recipe
 from mason.generators.blender.script_builder import build_blender_script
@@ -31,6 +34,29 @@ def resolved_parts(spec: StaticPropSpec):
         spec.geometry.recipe_params,
         spec.materials.primary,
     ))
+
+
+def resolve_part_textures(
+    job: AssetJob,
+    parts: list[PropPart],
+) -> dict[str, str]:
+    """Map each textured part's name to its resolved PNG path (a
+    literal project path, or another asset's built output). Raises if
+    the referenced file doesn't exist yet."""
+    textures: dict[str, str] = {}
+    for part in parts:
+        if not part.texture:
+            continue
+        path = resolve_image_source(part.texture, job.project_root)
+        if not path.is_file():
+            raise MasonError(
+                f"Texture for part '{part.name}' not found: {path}",
+                code="texture_missing",
+                hint="Build the referenced texture asset first.",
+                context={"part": part.name, "path": str(path)},
+            )
+        textures[part.name] = str(path)
+    return textures
 
 
 def apply_style_defaults(spec: StaticPropSpec, style: StyleProfile):
@@ -77,6 +103,7 @@ def build_static_prop(
     job.write_meta(source_spec)
 
     bw, bs, rough, metal = apply_style_defaults(spec, style)
+    part_textures = resolve_part_textures(job, parts)
     script = build_blender_script(
         spec,
         style,
@@ -86,6 +113,7 @@ def build_static_prop(
         bevel_segments=bs,
         roughness=rough,
         metallic=metal,
+        part_textures=part_textures,
     )
     job.build_py.write_text(script, encoding="utf-8")
 

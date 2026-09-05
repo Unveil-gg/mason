@@ -34,6 +34,26 @@ def create_material(name, hex_color, roughness, metallic):
     return mat
 
 
+def create_textured_material(name, image_path, roughness, metallic, wrap):
+    """Create a Principled BSDF material with an Image Texture as its
+    Base Color, loaded from a previously-built 2D asset's PNG."""
+    mat = bpy.data.materials.new(name=name)
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    bsdf = next(
+        n for n in nodes if n.type == "BSDF_PRINCIPLED"
+    )
+    bsdf.inputs["Roughness"].default_value = float(roughness)
+    bsdf.inputs["Metallic"].default_value = float(metallic)
+    tex_node = nodes.new("ShaderNodeTexImage")
+    tex_node.image = bpy.data.images.load(image_path)
+    tex_node.extension = "REPEAT" if wrap == "repeat" else "EXTEND"
+    color_in = bsdf.inputs.get("Base Color") or bsdf.inputs.get("Color")
+    links.new(tex_node.outputs["Color"], color_in)
+    return mat
+
+
 def assign_material(obj, mat):
     """Assign a material to a mesh object."""
     if obj.data.materials:

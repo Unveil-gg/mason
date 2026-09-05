@@ -11,9 +11,16 @@ def export_glb(path):
 
 
 def save_blend(path):
-    """Save the current file as a .blend, replacing any previous file."""
-    if os.path.isfile(path):
-        os.remove(path)
+    """Save the current file as a .blend, replacing any previous file.
+
+    Blender saves via a `<path>@` temp file then renames it; a stale
+    leftover (from an interrupted save, or a locking AV/indexer) makes
+    the rename fail with "Cannot change old file". Clear both before
+    saving.
+    """
+    for candidate in (path, path + "@"):
+        if os.path.isfile(candidate):
+            os.remove(candidate)
     bpy.ops.wm.save_as_mainfile(filepath=path, check_existing=False)
 
 

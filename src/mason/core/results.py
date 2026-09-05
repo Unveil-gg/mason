@@ -55,3 +55,15 @@ class BuildResult(BaseModel):
     source_spec: str | None = None
     style: str | None = None
     error: dict[str, Any] | None = None
+
+
+class ExportResult(BaseModel):
+    """Result of copying finished outputs into another project."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    success: bool
+    asset_id: str
+    engine: str
+    installed: dict[str, str] = Field(default_factory=dict)
+    manifest: str | None = None

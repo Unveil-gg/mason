@@ -23,8 +23,14 @@ def build_blender_script(
     bevel_segments: int,
     roughness: float,
     metallic: float,
+    part_textures: dict[str, str] | None = None,
 ) -> str:
-    """Return a self-contained Blender Python script."""
+    """Return a self-contained Blender Python script.
+
+    part_textures: maps a part's `name` to a resolved PNG path (see
+    `resolve_part_textures`), for parts to use as an Image Texture
+    base color instead of a flat palette color.
+    """
     palette = {part.material: style.color(part.material) for part in parts}
     # always include primary
     try:
@@ -46,6 +52,9 @@ def build_blender_script(
         "samples": style.render.samples,
         "engine": style.render.engine,
         "palette": palette,
+        "part_textures": part_textures or {},
+        "tile_size": style.textures.tile_size,
+        "wrap": style.textures.wrap,
         "parts": [p.model_dump(mode="json") for p in parts],
     }
     return (
@@ -88,7 +97,7 @@ def reset_scene():
 
 
 def build_geometry():
-    """Create parts, materials, and bevels."""
+    """Create parts, materials, bevels, and UVs."""
     mats = {}
     for key, hex_color in CONFIG["palette"].items():
         mats[key] = create_material(
@@ -97,18 +106,37 @@ def build_geometry():
             CONFIG["roughness"],
             CONFIG["metallic"],
         )
+    tex_mats = {}
+
+    def texture_material(image_path):
+        """Cache one material per distinct texture path."""
+        if image_path not in tex_mats:
+            tex_mats[image_path] = create_textured_material(
+                f"tex_{len(tex_mats)}",
+                image_path,
+                CONFIG["roughness"],
+                CONFIG["metallic"],
+                CONFIG["wrap"],
+            )
+        return tex_mats[image_path]
+
     created = {}
     for part in CONFIG["parts"]:
         obj = create_primitive(part)
         created[obj.name] = obj
-        key = part.get("material") or "primary"
-        if key in mats:
-            assign_material(obj, mats[key])
+        tex_path = CONFIG["part_textures"].get(part["name"])
+        if tex_path:
+            assign_material(obj, texture_material(tex_path))
+        else:
+            key = part.get("material") or "primary"
+            if key in mats:
+                assign_material(obj, mats[key])
         use_bevel = part.get("bevel")
         if use_bevel is None:
             use_bevel = CONFIG["bevel"]
         if use_bevel and (part.get("shape") or "box") != "plane":
             apply_bevel(obj, CONFIG["bevel_width"], CONFIG["bevel_segments"])
+        unwrap_cube(obj, CONFIG["tile_size"])
     for part in CONFIG["parts"]:
         parent_name = part.get("parent")
         child = created.get(part["name"])

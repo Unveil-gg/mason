@@ -12,6 +12,7 @@ from mason import __version__
 from mason.cli_render import (
     print_build,
     print_doctor,
+    print_export,
     print_init,
     print_inspect,
     print_list,
@@ -26,6 +27,7 @@ from mason.core.jobs import list_jobs, require_job
 from mason.core.workspace import find_project_root, init_project
 from mason.errors import MasonError
 from mason.pipelines.dispatch import run_build, run_rebuild
+from mason.pipelines.export import run_export
 from mason.tools.registry import detect_all, doctor_payload, scan_and_store
 
 app = typer.Typer(
@@ -139,6 +141,30 @@ def preview(
     def _run():
         result = run_rebuild(asset_id, mode="preview")
         _emit(json_mode, result.model_dump(), lambda: print_build(result))
+        if not result.success:
+            raise typer.Exit(code=1)
+
+    _guard(json_mode, _run)
+
+
+@app.command()
+def export(
+    asset_id: Annotated[str, typer.Argument()],
+    to: Annotated[
+        Path | None,
+        typer.Option("--to", help="Install destination dir."),
+    ] = None,
+    engine: Annotated[
+        str,
+        typer.Option("--engine", help="generic or godot."),
+    ] = "generic",
+    json_mode: JsonFlag = False,
+) -> None:
+    """Copy an asset's finished outputs into another project."""
+
+    def _run():
+        result = run_export(asset_id, to, engine)
+        _emit(json_mode, result.model_dump(), lambda: print_export(result))
         if not result.success:
             raise typer.Exit(code=1)
 

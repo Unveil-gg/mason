@@ -15,27 +15,19 @@ from mason.core.assets import (
     TrimOp,
 )
 from mason.core.jobs import AssetJob
-from mason.core.paths import resolve_project_path
+from mason.core.paths import resolve_image_source
 from mason.core.styles import StyleProfile
 from mason.errors import MasonError
 
 
 def resolve_source(spec: ImageProcessSpec, job: AssetJob) -> Path:
     """Resolve the input image path inside the project."""
-    src = spec.source
-    if src.path:
-        return resolve_project_path(job.project_root, src.path)
-    assert src.asset and src.file
-    base = job.project_root / ".mason" / "jobs" / src.asset
-    return resolve_project_path(job.project_root, str(base / src.file))
+    return resolve_image_source(spec.source, job.project_root)
 
 
 def resolve_overlay(op: CompositeOp, job: AssetJob) -> Path:
-    if op.path:
-        return resolve_project_path(job.project_root, op.path)
-    assert op.asset and op.file
-    base = job.project_root / ".mason" / "jobs" / op.asset
-    return resolve_project_path(job.project_root, str(base / op.file))
+    """Resolve a composite op's overlay image path."""
+    return resolve_image_source(op, job.project_root)
 
 
 def write_palette_png(style: StyleProfile, dest: Path) -> Path:

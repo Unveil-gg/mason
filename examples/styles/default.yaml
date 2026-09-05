@@ -27,3 +27,7 @@ render:
 
 lighting:
   preset: neutral_studio
+
+textures:
+  tile_size: 1.0
+  wrap: repeat
