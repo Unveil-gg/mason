@@ -1,0 +1,1 @@
+"""ImageMagick argv builders."""

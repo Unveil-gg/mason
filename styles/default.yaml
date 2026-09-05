@@ -1,0 +1,28 @@
+name: default
+version: 1
+
+units: meters
+
+palette:
+  wood_dark: "#654936"
+  wood_light: "#A77C54"
+  cream: "#DDD0B4"
+  accent: "#8066A8"
+  primary: "#654936"
+
+geometry:
+  bevel_width: 0.02
+  bevel_segments: 2
+
+materials:
+  roughness: 0.75
+  metallic: 0.0
+
+render:
+  resolution:
+    width: 512
+    height: 512
+  samples: 16
+
+lighting:
+  preset: neutral_studio

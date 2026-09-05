@@ -1,0 +1,1 @@
+"""Krita Python source emitters."""

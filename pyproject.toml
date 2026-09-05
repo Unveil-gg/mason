@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mason"
+version = "0.1.0"
+description = "Local asset-generation harness for coding agents."
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+authors = [{name = "Unveil"}]
+dependencies = [
+    "typer>=0.12",
+    "pydantic>=2.0",
+    "rich>=13.0",
+    "pyyaml>=6.0",
+    "pillow>=10.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+mason = "mason.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mason"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/mason" = "mason"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+    "integration: needs locally installed creative tools",
+]

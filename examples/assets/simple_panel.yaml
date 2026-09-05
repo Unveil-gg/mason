@@ -1,0 +1,31 @@
+type: layered_raster
+id: simple_panel
+name: Simple Panel
+
+dimensions:
+  width: 1024
+  height: 1536
+
+style: default
+
+layers:
+  - name: background
+    fill: cream
+  - name: header_band
+    fill: wood_dark
+    rect:
+      x: 0
+      y: 0
+      width: 1024
+      height: 200
+  - name: accent_bar
+    fill: accent
+    rect:
+      x: 80
+      y: 240
+      width: 864
+      height: 8
+
+export:
+  kra: true
+  png: true
