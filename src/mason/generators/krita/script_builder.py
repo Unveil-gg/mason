@@ -124,9 +124,11 @@ def main():
     os.makedirs(output, exist_ok=True)
     os.makedirs(previews, exist_ok=True)
     app = Krita.instance()
+    app.setBatchmode(True)
     w = int(CONFIG["width"])
     h = int(CONFIG["height"])
     doc = app.createDocument(w, h, CONFIG["name"], "RGBA", "U8", "", 72.0)
+    doc.setBatchmode(True)
     root = doc.rootNode()
     for child in list(root.childNodes()):
         root.removeChildNode(child)

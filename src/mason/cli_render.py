@@ -4,12 +4,21 @@ from __future__ import annotations
 
 from mason.core.jobs import AssetJob
 from mason.core.results import BuildResult
+from mason.core.workspace import find_project_root
 from mason.tools.base import ToolInfo
 from mason.tools.registry import ALL_CAPABILITIES, TOOL_GROUPS, capabilities_from
 from rich.console import Console
 from rich.table import Table
 
 console = Console()
+
+
+def _abs(rel_path: str) -> str:
+    """Best-effort absolute path for a project-relative path string."""
+    try:
+        return str((find_project_root() / rel_path).resolve())
+    except Exception:
+        return rel_path
 
 
 def print_doctor(tools: dict[str, ToolInfo]) -> None:
@@ -44,11 +53,11 @@ def print_build(result: BuildResult) -> None:
     if result.outputs:
         console.print("Outputs:")
         for key, path in result.outputs.items():
-            console.print(f"  {key}: {path}")
+            console.print(f"  {key}: {_abs(path)}")
     if result.previews:
         console.print("Previews:")
         for key, path in result.previews.items():
-            console.print(f"  {key}: {path}")
+            console.print(f"  {key}: {_abs(path)}")
     passed = result.validation.get("passed")
     console.print(f"Validation: {'passed' if passed else 'failed'}")
     for key in ("triangles", "materials", "width", "height"):
@@ -66,9 +75,9 @@ def print_inspect(job: AssetJob, result: BuildResult | None) -> None:
         console.print(f"  built_at: {result.built_at}")
         console.print(f"  validation: {result.validation.get('passed')}")
         for key, path in result.outputs.items():
-            console.print(f"  output.{key}: {path}")
+            console.print(f"  output.{key}: {_abs(path)}")
         for key, path in result.previews.items():
-            console.print(f"  preview.{key}: {path}")
+            console.print(f"  preview.{key}: {_abs(path)}")
         for key in ("triangles", "materials", "mesh_count", "width", "height"):
             if key in result.validation:
                 console.print(f"  {key}: {result.validation[key]}")

@@ -52,6 +52,8 @@ def test_krita_script_has_document(project: Path) -> None:
     style = load_style(project / "styles" / "default.yaml")
     script = build_krita_script(spec, style, project / "job", 128, 256)
     assert "createDocument" in script
+    assert "app.setBatchmode(True)" in script
+    assert "doc.setBatchmode(True)" in script
     assert "paint_text" in script
     assert "createFileLayer" in script
     assert "background" in script
