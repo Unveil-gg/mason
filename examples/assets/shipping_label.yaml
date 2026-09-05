@@ -1,0 +1,50 @@
+type: layered_raster
+id: shipping_label
+name: Shipping Label
+
+dimensions:
+  width: 320
+  height: 200
+
+style: default
+
+layers:
+  - name: bg
+    role: background
+    fill: label_green
+  - name: header_band
+    role: fill
+    fill: ink
+    rect: {x: 0, y: 0, width: 320, height: 40}
+  - name: title
+    role: text
+    text: FRAGILE
+    fill: cream
+    font_size: 24
+    rect: {x: 10, y: 0, width: 300, height: 40}
+  - name: subtitle
+    role: text
+    text: THIS SIDE UP
+    fill: ink
+    font_size: 20
+    rect: {x: 0, y: 130, width: 320, height: 36}
+  - name: barcode_1
+    role: fill
+    fill: ink
+    rect: {x: 40, y: 170, width: 8, height: 24}
+  - name: barcode_2
+    role: fill
+    fill: ink
+    rect: {x: 60, y: 170, width: 16, height: 24}
+  - name: barcode_3
+    role: fill
+    fill: ink
+    rect: {x: 88, y: 170, width: 8, height: 24}
+  - name: barcode_4
+    role: fill
+    fill: ink
+    rect: {x: 108, y: 170, width: 20, height: 24}
+
+export:
+  kra: true
+  png: true

@@ -49,10 +49,12 @@ Asset types:
 
 - `static_prop` — Blender parts (`box`, `cylinder`, `plane`) with
   optional `parent`, `inset`, `array`, and `texture` (another asset's
-  PNG, e.g. `{asset: plank_texture, file: output/asset.png}`, applied
-  via a deterministic cube-projected UV unwrap). Build the texture
-  asset (usually `layered_raster`) before the part that references it.
-  Recipes (crate/shelf/table) expand into parts.
+  PNG, e.g. `{asset: plank_texture, file: output/asset.png}`). Build
+  the texture asset (usually `layered_raster`) before the part that
+  references it. `box`/`cylinder` get a cube-projected tiling UV
+  (wood, stone, fabric); a textured `plane` is a decal and gets a
+  stretched UV so one label/sign/billboard image shows whole and
+  undistorted. Recipes (crate/shelf/table) expand into parts.
 - `layered_raster` — Krita layers: fill, text, or imported image,
   plus optional `role`. Source is `.kra`.
 - `image_process` — ImageMagick resize/crop/trim/composite/quantize/convert

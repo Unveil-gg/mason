@@ -1,0 +1,40 @@
+type: layered_raster
+id: noir_billboard_face
+name: Noir Billboard Face
+
+dimensions:
+  width: 480
+  height: 270
+
+style: default
+
+layers:
+  - name: bg
+    role: background
+    fill: ink
+  - name: title
+    role: text
+    text: MIDNIGHT ALIBI
+    fill: cream
+    font_size: 30
+    rect: {x: 10, y: 65, width: 460, height: 60}
+  - name: divider
+    role: fill
+    fill: accent
+    rect: {x: 60, y: 150, width: 360, height: 6}
+  - name: tagline
+    role: text
+    text: SHE KNEW TOO MUCH
+    fill: accent
+    font_size: 22
+    rect: {x: 0, y: 168, width: 480, height: 40}
+  - name: credit
+    role: text
+    text: A NOIR PICTURE
+    fill: cream
+    font_size: 16
+    rect: {x: 0, y: 220, width: 480, height: 30}
+
+export:
+  kra: true
+  png: true

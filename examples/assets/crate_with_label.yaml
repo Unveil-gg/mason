@@ -1,0 +1,35 @@
+type: static_prop
+id: crate_with_label
+name: Crate With Shipping Label
+
+dimensions:
+  width: 0.6
+  depth: 0.6
+  height: 0.6
+
+style: default
+
+geometry:
+  bevel: true
+  parts:
+    - name: crate
+      shape: box
+      size: [0.6, 0.6, 0.6]
+      location: [0.0, 0.0, 0.3]
+      material: wood_dark
+    - name: label
+      shape: plane
+      size: [0.34, 0.22, 0.0]
+      location: [0.0, -0.302, 0.3]
+      rotation: [1.5708, 0.0, 0.0]
+      parent: crate
+      texture:
+        asset: shipping_label
+        file: output/asset.png
+
+materials:
+  primary: wood_dark
+
+export:
+  format: glb
+  save_blend: true

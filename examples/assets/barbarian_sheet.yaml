@@ -1,0 +1,33 @@
+type: image_process
+id: barbarian_sheet
+name: Barbarian NES Spritesheet
+
+# 4 frames, 32x32 each, laid out left-to-right: idle, walk1, walk2,
+# attack. Build barbarian_idle/walk1/walk2/attack first -- this reads
+# their output/asset.png files by asset id.
+source:
+  asset: barbarian_idle
+  file: output/asset.png
+
+operations:
+  - op: composite
+    asset: barbarian_walk1
+    file: output/asset.png
+    gravity: northwest
+    offset_x: 32
+    offset_y: 0
+  - op: composite
+    asset: barbarian_walk2
+    file: output/asset.png
+    gravity: northwest
+    offset_x: 64
+    offset_y: 0
+  - op: composite
+    asset: barbarian_attack
+    file: output/asset.png
+    gravity: northwest
+    offset_x: 96
+    offset_y: 0
+
+export:
+  format: png

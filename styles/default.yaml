@@ -9,6 +9,8 @@ palette:
   cream: "#DDD0B4"
   accent: "#8066A8"
   primary: "#654936"
+  ink: "#1A1410"
+  label_green: "#2E7D4F"
 
 geometry:
   bevel_width: 0.02

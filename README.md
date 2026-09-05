@@ -114,10 +114,14 @@ truth is a list of `parts` (`box`, `cylinder`, `plane`) with optional
 `parent`, `inset`, and linear `array`.
 
 3D examples: `simple_crate`, `simple_shelf`, `simple_post`,
-`simple_sign`, `simple_fence`, `textured_crate`. Raster: `simple_panel`,
-`menu_card` (text + image import), `plank_texture` (tileable material).
-Previews include a 2×2 `contact_sheet.png`. EEVEE is preferred; Mason
-falls back to Cycles CPU if EEVEE fails.
+`simple_sign`, `simple_fence`, `textured_crate` (tiled material),
+`crate_with_label`, `noir_billboard` (decal faces). Raster:
+`simple_panel`, `menu_card` (text + image import), `plank_texture`
+(tileable material), `shipping_label`, `noir_billboard_face` (decal
+faces), `barbarian_idle`/`walk1`/`walk2`/`attack` + `barbarian_sheet`
+(hand-assembled sprite strip). Previews include a 2×2
+`contact_sheet.png`. EEVEE is preferred; Mason falls back to Cycles CPU
+if EEVEE fails.
 
 ## Textures on 3D parts
 
@@ -136,18 +140,23 @@ geometry:
 ```
 
 Build order matters: `plank_texture` (a `layered_raster` job) must be
-built before `textured_crate` references it. Every part is UV-unwrapped
-with a deterministic cube projection (`bpy.ops.uv.cube_project`), sized
-by `textures.tile_size` in the style profile (world units per tile) so
-tileable textures repeat consistently across differently-sized props
-without per-asset tuning. `textures.wrap` (`repeat`/`clamp`) controls
-the image node's extension mode. This suits tileable materials (wood,
-stone, fabric); it is a whole-object cube projection, not a per-face
-decal placement, so a single "sign face" design is not yet cleanly
-supported — see Roadmap.
+built before `textured_crate` references it. Two UV modes, chosen
+automatically by shape:
+
+- `box`/`cylinder` parts get a deterministic cube projection
+  (`bpy.ops.uv.cube_project`), sized by `textures.tile_size` in the
+  style profile (world units per tile), so tileable materials (wood,
+  stone, fabric) repeat consistently across differently-sized props
+  without per-asset tuning.
+- A textured `plane` part is treated as a **decal** (a label, sign, or
+  billboard face): its single quad gets a stretched 0..1 UV so the
+  whole image shows once, undistorted by tile size. `textures.wrap`
+  (`repeat`/`clamp`) only affects the tiled case.
 
 Try it: `mason build examples/assets/plank_texture.yaml`, then
-`mason build examples/assets/textured_crate.yaml`.
+`mason build examples/assets/textured_crate.yaml` (tiled material), or
+`mason build examples/assets/shipping_label.yaml` then
+`mason build examples/assets/crate_with_label.yaml` (decal face).
 
 ## Commands
 
@@ -232,17 +241,21 @@ a zero exit code as “it looks right.”
 ## Current limitations (v0.1)
 
 - Raster generation is palette fills, rects, text, and image import,
-  not freehand painting.
-- Textures on 3D parts are whole-object cube projections, not per-face
-  decal placement (no clean single "sign face" design yet).
-- Aseprite is discovery-only.
+  not freehand painting. Sprite sheets are assembled by hand today
+  (see `examples/assets/barbarian_sheet.yaml`): several `layered_raster`
+  frames + an `image_process` job that composites them side by side.
+  There is no dedicated sprite/animation asset type or metadata export
+  yet — that is Aseprite work, still on hold (see Roadmap).
+- Aseprite is discovery-only (no generation).
 - `mason export` copies files and a manifest only; it does not
   construct Godot scenes/resources or write `.import` sidecars.
 - No in-process LLM, no bundled creative apps.
 
 ## Roadmap
 
-- Per-face/planar UV placement for decals (sign faces, labels)
-- Aseprite sprite sheets + animation metadata
-- Optional Godot SpriteFrames / scene construction / in-engine preview
+- Aseprite-scripted sprite sheets + animation JSON metadata (frame
+  durations, tags), replacing the hand-assembled composite approach
+- Optional Godot SpriteFrames / scene construction / in-engine preview,
+  fed by richer per-asset metadata (bounds already in `metadata.json`)
 - Richer Krita paint tools beyond fill/text/image layers
+- Material variants, boolean ops, and multi-asset "kits"

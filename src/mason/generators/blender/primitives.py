@@ -77,6 +77,20 @@ def unwrap_cube(obj, tile_size):
     bpy.ops.object.mode_set(mode="OBJECT")
 
 
+def unwrap_stretch(obj):
+    """Stretch UVs to fill 0..1 on a single-quad plane, so one decal
+    image (a label, sign face, poster) shows whole and centered
+    instead of being cropped by tile-based projection."""
+    mesh = obj.data
+    if not mesh.uv_layers:
+        mesh.uv_layers.new(name="UVMap")
+    uv_layer = mesh.uv_layers.active.data
+    corners = ((0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0))
+    for face in mesh.polygons:
+        for i, loop_index in enumerate(face.loop_indices):
+            uv_layer[loop_index].uv = corners[i % 4]
+
+
 def apply_bevel(obj, width, segments):
     """Apply a Bevel modifier and keep it applied."""
     if width <= 0 or segments < 1:

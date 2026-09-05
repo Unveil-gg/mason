@@ -1,0 +1,35 @@
+type: static_prop
+id: noir_billboard
+name: Noir Movie Billboard
+
+dimensions:
+  width: 1.2
+  depth: 0.14
+  height: 2.34
+
+style: default
+
+geometry:
+  bevel: true
+  parts:
+    - name: post
+      shape: cylinder
+      size: [0.12, 0.12, 2.2]
+      location: [0.0, 0.0, 1.1]
+      material: wood_dark
+    - name: board
+      shape: plane
+      size: [1.2, 0.675, 0.0]
+      location: [0.0, -0.08, 2.0]
+      rotation: [1.5708, 0.0, 0.0]
+      parent: post
+      texture:
+        asset: noir_billboard_face
+        file: output/asset.png
+
+materials:
+  primary: wood_dark
+
+export:
+  format: glb
+  save_blend: true

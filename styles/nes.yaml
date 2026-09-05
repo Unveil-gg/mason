@@ -1,0 +1,8 @@
+name: nes
+version: 1
+
+palette:
+  skin: "#C68958"
+  hair: "#3B2712"
+  cloth: "#8C2F2F"
+  metal: "#9AA5AD"

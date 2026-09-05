@@ -124,6 +124,7 @@ def build_geometry():
     for part in CONFIG["parts"]:
         obj = create_primitive(part)
         created[obj.name] = obj
+        is_plane = (part.get("shape") or "box") == "plane"
         tex_path = CONFIG["part_textures"].get(part["name"])
         if tex_path:
             assign_material(obj, texture_material(tex_path))
@@ -134,9 +135,14 @@ def build_geometry():
         use_bevel = part.get("bevel")
         if use_bevel is None:
             use_bevel = CONFIG["bevel"]
-        if use_bevel and (part.get("shape") or "box") != "plane":
+        if use_bevel and not is_plane:
             apply_bevel(obj, CONFIG["bevel_width"], CONFIG["bevel_segments"])
-        unwrap_cube(obj, CONFIG["tile_size"])
+        if tex_path and is_plane:
+            # A textured plane is a decal (label/sign face): fit the
+            # whole image to the one face instead of tiling it.
+            unwrap_stretch(obj)
+        else:
+            unwrap_cube(obj, CONFIG["tile_size"])
     for part in CONFIG["parts"]:
         parent_name = part.get("parent")
         child = created.get(part["name"])

@@ -38,6 +38,7 @@ def test_blender_script_has_helpers(project: Path) -> None:
     assert "BLENDER_EEVEE" in script
     assert "CYCLES" in script
     assert "def unwrap_cube" in script
+    assert "def unwrap_stretch" in script
     assert "def create_textured_material" in script
     assert 'path + "@"' in script
 
@@ -63,6 +64,39 @@ def test_blender_script_wires_part_textures(project: Path) -> None:
     assert "/abs/path/plank.png" in script
     assert '"tile_size": 1.0' in script
     assert '"wrap": "repeat"' in script
+
+
+def test_blender_script_stretches_textured_planes(project: Path) -> None:
+    """A textured plane is a decal: unwrap_stretch, not cube_project."""
+    spec = parse_asset_spec({
+        "type": "static_prop",
+        "id": "sign",
+        "name": "Sign",
+        "dimensions": {"width": 0.7, "depth": 0.1, "height": 1.5},
+        "geometry": {
+            "parts": [
+                {
+                    "name": "post", "shape": "cylinder",
+                    "size": [0.1, 0.1, 1.5], "location": [0, 0, 0.75],
+                },
+                {
+                    "name": "board", "shape": "plane",
+                    "size": [0.6, 0.4, 0.0], "location": [0, 0.05, 1.2],
+                    "parent": "post",
+                    "texture": {"asset": "face", "file": "output/asset.png"},
+                },
+            ],
+        },
+    })
+    style = load_style(project / "styles" / "default.yaml")
+    parts = resolved_parts(spec)
+    bw, bs, r, m = apply_style_defaults(spec, style)
+    script = build_blender_script(
+        spec, style, parts, project / ".mason" / "jobs" / "sign",
+        bevel_width=bw, bevel_segments=bs, roughness=r, metallic=m,
+        part_textures={"board": "/abs/path/face.png"},
+    )
+    assert "unwrap_stretch(obj)" in script
 
 
 def test_krita_script_has_document(project: Path) -> None:
