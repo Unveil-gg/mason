@@ -1,6 +1,6 @@
 type: layered_raster
 id: barbarian_attack
-name: Barbarian Attack (frame 3)
+name: Barbarian Attack (frame 1 of 3, windup)
 
 dimensions:
   width: 32

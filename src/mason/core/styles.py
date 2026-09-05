@@ -138,6 +138,8 @@ palette:
   primary: "#654936"
   ink: "#1A1410"
   label_green: "#2E7D4F"
+  charcoal: "#3A3632"
+  smoke: "#5C5548"
 
 geometry:
   bevel_width: 0.02

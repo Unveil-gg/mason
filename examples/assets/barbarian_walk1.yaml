@@ -1,6 +1,6 @@
 type: layered_raster
 id: barbarian_walk1
-name: Barbarian Walk (frame 1)
+name: Barbarian Walk (frame 1 of 4, left leg forward)
 
 dimensions:
   width: 32

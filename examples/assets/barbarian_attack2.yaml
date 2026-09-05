@@ -1,7 +1,9 @@
 type: layered_raster
-id: barbarian_walk2
-name: Barbarian Walk (frame 3 of 4, right leg forward)
+id: barbarian_attack2
+name: Barbarian Attack (frame 2 of 3, strike)
 
+# Weapon swept from the raised windup (barbarian_attack) down into a
+# horizontal forward slash.
 dimensions:
   width: 32
   height: 32
@@ -28,19 +30,23 @@ layers:
   - name: left_arm
     role: fill
     fill: skin
-    rect: {x: 23, y: 14, width: 3, height: 8}
+    rect: {x: 7, y: 14, width: 3, height: 8}
   - name: right_arm
     role: fill
     fill: skin
-    rect: {x: 6, y: 14, width: 3, height: 8}
+    rect: {x: 25, y: 14, width: 3, height: 8}
+  - name: weapon
+    role: fill
+    fill: metal
+    rect: {x: 20, y: 15, width: 10, height: 3}
   - name: left_leg
     role: fill
     fill: skin
-    rect: {x: 19, y: 22, width: 4, height: 9}
+    rect: {x: 9, y: 22, width: 4, height: 9}
   - name: right_leg
     role: fill
     fill: skin
-    rect: {x: 9, y: 22, width: 4, height: 9}
+    rect: {x: 19, y: 22, width: 4, height: 9}
 
 export:
   kra: true

@@ -2,9 +2,12 @@ type: layered_raster
 id: noir_billboard_face
 name: Noir Billboard Face
 
+# Black-and-white movie poster: dramatic title, a spotlight patch, and
+# a blocky fedora+trenchcoat silhouette built from rects (same
+# technique as the barbarian sprite, applied to a noir detective).
 dimensions:
   width: 480
-  height: 270
+  height: 300
 
 style: default
 
@@ -16,24 +19,56 @@ layers:
     role: text
     text: MIDNIGHT ALIBI
     fill: cream
-    font_size: 30
-    rect: {x: 10, y: 65, width: 460, height: 60}
+    font_size: 34
+    rect: {x: 10, y: 8, width: 460, height: 56}
   - name: divider
     role: fill
-    fill: accent
-    rect: {x: 60, y: 150, width: 360, height: 6}
+    fill: cream
+    rect: {x: 90, y: 68, width: 300, height: 3}
+  - name: spotlight_outer
+    role: fill
+    fill: charcoal
+    rect: {x: 140, y: 68, width: 200, height: 190}
+  - name: spotlight_inner
+    role: fill
+    fill: smoke
+    rect: {x: 168, y: 86, width: 144, height: 154}
+  - name: hat_crown
+    role: fill
+    fill: ink
+    rect: {x: 222, y: 78, width: 36, height: 18}
+  - name: hat_brim
+    role: fill
+    fill: ink
+    rect: {x: 203, y: 92, width: 74, height: 8}
+  - name: head
+    role: fill
+    fill: ink
+    rect: {x: 227, y: 100, width: 26, height: 16}
+  - name: shoulders
+    role: fill
+    fill: ink
+    rect: {x: 205, y: 114, width: 70, height: 16}
+  - name: coat_upper
+    role: fill
+    fill: ink
+    rect: {x: 200, y: 128, width: 80, height: 48}
+  - name: coat_lower
+    role: fill
+    fill: ink
+    rect: {x: 183, y: 174, width: 114, height: 74}
   - name: tagline
     role: text
     text: SHE KNEW TOO MUCH
-    fill: accent
-    font_size: 22
-    rect: {x: 0, y: 168, width: 480, height: 40}
+    fill: cream
+    font_size: 18
+    rect: {x: 0, y: 252, width: 480, height: 22}
   - name: credit
     role: text
     text: A NOIR PICTURE
     fill: cream
-    font_size: 16
-    rect: {x: 0, y: 220, width: 480, height: 30}
+    font_size: 12
+    rect: {x: 0, y: 280, width: 480, height: 16}
 
 export:
   kra: true

@@ -1,0 +1,50 @@
+type: layered_raster
+id: barbarian_idle2
+name: Barbarian Idle (frame 2, breathe)
+
+# Idle animation frame 2: torso/head/arms shifted up 1px vs frame 1
+# (barbarian_idle) for a subtle NES-style breathing bob. Feet stay
+# planted.
+dimensions:
+  width: 32
+  height: 32
+
+style: nes
+
+layers:
+  - name: hair
+    role: fill
+    fill: hair
+    rect: {x: 12, y: 1, width: 8, height: 4}
+  - name: head
+    role: fill
+    fill: skin
+    rect: {x: 12, y: 5, width: 8, height: 7}
+  - name: torso
+    role: fill
+    fill: cloth
+    rect: {x: 10, y: 12, width: 12, height: 9}
+  - name: belt
+    role: fill
+    fill: hair
+    rect: {x: 10, y: 19, width: 12, height: 2}
+  - name: left_arm
+    role: fill
+    fill: skin
+    rect: {x: 7, y: 13, width: 3, height: 8}
+  - name: right_arm
+    role: fill
+    fill: skin
+    rect: {x: 22, y: 13, width: 3, height: 8}
+  - name: left_leg
+    role: fill
+    fill: skin
+    rect: {x: 12, y: 22, width: 4, height: 9}
+  - name: right_leg
+    role: fill
+    fill: skin
+    rect: {x: 16, y: 22, width: 4, height: 9}
+
+export:
+  kra: true
+  png: true

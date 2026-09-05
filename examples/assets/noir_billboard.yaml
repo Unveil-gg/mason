@@ -2,27 +2,41 @@ type: static_prop
 id: noir_billboard
 name: Noir Movie Billboard
 
+# Two-post highway billboard (not a single sign post): a wide board
+# framed by a crossbeam and mounted on two support legs, matching the
+# 480x300 (1.6:1) aspect of noir_billboard_face.
 dimensions:
-  width: 1.2
-  depth: 0.14
-  height: 2.34
+  width: 1.4
+  depth: 0.13
+  height: 2.875
 
 style: default
 
 geometry:
   bevel: true
   parts:
-    - name: post
+    - name: left_post
       shape: cylinder
-      size: [0.12, 0.12, 2.2]
-      location: [0.0, 0.0, 1.1]
+      size: [0.1, 0.1, 2.0]
+      location: [-0.45, 0.0, 1.0]
+      material: wood_dark
+    - name: right_post
+      shape: cylinder
+      size: [0.1, 0.1, 2.0]
+      location: [0.45, 0.0, 1.0]
+      material: wood_dark
+    - name: crossbeam
+      shape: box
+      size: [1.0, 0.08, 0.08]
+      location: [0.0, 0.0, 2.0]
+      parent: left_post
       material: wood_dark
     - name: board
       shape: plane
-      size: [1.2, 0.675, 0.0]
-      location: [0.0, -0.08, 2.0]
+      size: [1.4, 0.875, 0.0]
+      location: [0.0, -0.08, 2.4375]
       rotation: [1.5708, 0.0, 0.0]
-      parent: post
+      parent: left_post
       texture:
         asset: noir_billboard_face
         file: output/asset.png

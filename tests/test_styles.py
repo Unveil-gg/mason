@@ -17,6 +17,8 @@ def test_load_default_style(tmp_path: Path) -> None:
     assert style.name == "default"
     assert style.color("wood_dark") == "#654936"
     assert style.color("label_green") == "#2E7D4F"
+    assert style.color("charcoal") == "#3A3632"
+    assert style.color("smoke") == "#5C5548"
     assert style.geometry.bevel_width == 0.02
     assert style.textures.tile_size == 1.0
     assert style.textures.wrap == "repeat"

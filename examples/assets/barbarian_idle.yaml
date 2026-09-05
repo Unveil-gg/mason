@@ -1,14 +1,15 @@
 type: layered_raster
 id: barbarian_idle
-name: Barbarian Idle (sheet base, frame 0)
+name: Barbarian Idle (sheet base, frame 1 of 2)
 
-# 128x32 canvas: this is also the base image the spritesheet is
-# assembled onto (see barbarian_sheet.yaml). Only the first 32px
-# column holds pixels; the rest stays transparent until the other
-# frames are composited on top of it.
+# 128x96 canvas: this is also the base image the spritesheet is
+# assembled onto (see barbarian_sheet.yaml), a 4-col x 3-row grid of
+# 32px cells (row 0 = idle, row 1 = walk, row 2 = attack). Only the
+# top-left cell holds pixels here; every other cell is composited on
+# top of this transparent base by barbarian_sheet.yaml.
 dimensions:
   width: 128
-  height: 32
+  height: 96
 
 style: nes
 

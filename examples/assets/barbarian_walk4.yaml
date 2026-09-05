@@ -1,7 +1,10 @@
 type: layered_raster
-id: barbarian_walk2
-name: Barbarian Walk (frame 3 of 4, right leg forward)
+id: barbarian_walk4
+name: Barbarian Walk (frame 4 of 4, passing)
 
+# Second "passing" pose, completing the 4-frame cycle before it loops
+# back to walk1: same crossed-leg stance as walk3 but the arm swing
+# has continued through to the opposite side.
 dimensions:
   width: 32
   height: 32
@@ -28,19 +31,19 @@ layers:
   - name: left_arm
     role: fill
     fill: skin
-    rect: {x: 23, y: 14, width: 3, height: 8}
+    rect: {x: 20, y: 14, width: 3, height: 8}
   - name: right_arm
     role: fill
     fill: skin
-    rect: {x: 6, y: 14, width: 3, height: 8}
+    rect: {x: 9, y: 14, width: 3, height: 8}
   - name: left_leg
     role: fill
     fill: skin
-    rect: {x: 19, y: 22, width: 4, height: 9}
+    rect: {x: 11, y: 22, width: 4, height: 9}
   - name: right_leg
     role: fill
     fill: skin
-    rect: {x: 9, y: 22, width: 4, height: 9}
+    rect: {x: 17, y: 22, width: 4, height: 9}
 
 export:
   kra: true

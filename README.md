@@ -115,11 +115,13 @@ truth is a list of `parts` (`box`, `cylinder`, `plane`) with optional
 
 3D examples: `simple_crate`, `simple_shelf`, `simple_post`,
 `simple_sign`, `simple_fence`, `textured_crate` (tiled material),
-`crate_with_label`, `noir_billboard` (decal faces). Raster:
-`simple_panel`, `menu_card` (text + image import), `plank_texture`
-(tileable material), `shipping_label`, `noir_billboard_face` (decal
-faces), `barbarian_idle`/`walk1`/`walk2`/`attack` + `barbarian_sheet`
-(hand-assembled sprite strip). Previews include a 2×2
+`crate_with_label`, `noir_billboard` (a two-post highway billboard with
+a decal face). Raster: `simple_panel`, `menu_card` (text + image
+import), `plank_texture` (tileable material), `shipping_label`,
+`noir_billboard_face` (black-and-white movie-poster decal, built from
+rects same as the sprite below), `barbarian_idle`/`idle2`/`walk1..4`/
+`attack`/`attack2`/`attack3` + `barbarian_sheet` (hand-assembled 4×3
+grid: idle/walk/attack rows). Previews include a 2×2
 `contact_sheet.png`. EEVEE is preferred; Mason falls back to Cycles CPU
 if EEVEE fails.
 
@@ -242,20 +244,28 @@ a zero exit code as “it looks right.”
 
 - Raster generation is palette fills, rects, text, and image import,
   not freehand painting. Sprite sheets are assembled by hand today
-  (see `examples/assets/barbarian_sheet.yaml`): several `layered_raster`
-  frames + an `image_process` job that composites them side by side.
-  There is no dedicated sprite/animation asset type or metadata export
-  yet — that is Aseprite work, still on hold (see Roadmap).
-- Aseprite is discovery-only (no generation).
+  (see `examples/assets/barbarian_sheet.yaml`): one `layered_raster`
+  frame per animation pose, composited by an `image_process` job into
+  a grid (rows = animations, columns = frames). There is no dedicated
+  sprite/animation asset type or metadata export yet — that is
+  Aseprite work, still on hold (see Roadmap, and `docs/roadmap.md` for
+  the detailed design now that Aseprite is available on this machine).
+- Aseprite is discovery-only (no generation) for now.
 - `mason export` copies files and a manifest only; it does not
   construct Godot scenes/resources or write `.import` sidecars.
 - No in-process LLM, no bundled creative apps.
 
 ## Roadmap
 
-- Aseprite-scripted sprite sheets + animation JSON metadata (frame
-  durations, tags), replacing the hand-assembled composite approach
-- Optional Godot SpriteFrames / scene construction / in-engine preview,
-  fed by richer per-asset metadata (bounds already in `metadata.json`)
+Detailed specs for the two biggest items: [docs/roadmap.md](docs/roadmap.md).
+
+- Aseprite-scripted `sprite_sheet` asset type + animation JSON
+  metadata (frame durations, tags), replacing the hand-assembled
+  composite approach — Aseprite is installed and detected, unblocked
+  to implement
+- Optional Godot SpriteFrames / scene construction / in-engine
+  preview, fed by richer per-asset metadata (bounds already in
+  `metadata.json`; sprite `frames.json` still to add)
 - Richer Krita paint tools beyond fill/text/image layers
-- Material variants, boolean ops, and multi-asset "kits"
+- Material variants, boolean ops, and multi-asset "kits" (still on
+  hold — no concrete asset needs them yet)
