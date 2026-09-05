@@ -5,6 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from mason.errors import MasonError
@@ -38,6 +40,7 @@ class StyleRender(BaseModel):
         default_factory=RenderResolution,
     )
     samples: int = Field(default=16, gt=0)
+    engine: Literal["eevee", "cycles"] = "eevee"
 
 
 class StyleLighting(BaseModel):
@@ -136,6 +139,7 @@ render:
     width: 512
     height: 512
   samples: 16
+  engine: eevee
 
 lighting:
   preset: neutral_studio

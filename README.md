@@ -110,8 +110,13 @@ export:
 ```
 
 `crate`, `shelf`, and `table` are optional **recipes**. The source of
-truth is a list of box `parts`. An agent can omit the recipe and author
-parts directly.
+truth is a list of `parts` (`box`, `cylinder`, `plane`) with optional
+`parent`, `inset`, and linear `array`.
+
+3D examples: `simple_crate`, `simple_shelf`, `simple_post`,
+`simple_sign`, `simple_fence`. Raster: `simple_panel`, `menu_card`
+(text + image import). Previews include a 2×2 `contact_sheet.png`.
+EEVEE is preferred; Mason falls back to Cycles CPU if EEVEE fails.
 
 ## Commands
 

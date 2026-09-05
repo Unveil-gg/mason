@@ -7,6 +7,8 @@ from pathlib import Path
 
 from PIL import Image
 
+import os
+
 from mason.core.assets import LayeredRasterSpec
 from mason.core.jobs import AssetJob
 from mason.core.results import BuildResult, ValidationCheck, ValidationReport
@@ -48,7 +50,14 @@ def build_layered_raster(
     job.write_style(style)
     job.write_meta(source_spec)
     job.build_py.write_text(
-        build_krita_script(spec, style, job.dir, width, height),
+        build_krita_script(
+            spec,
+            style,
+            job.dir,
+            width,
+            height,
+            project_root=job.project_root,
+        ),
         encoding="utf-8",
     )
 
@@ -75,8 +84,9 @@ def build_layered_raster(
             stderr_path=job.stderr_log,
         )
     else:
+        module = _install_krita_script(job)
         result = adapter.execute(
-            ["-s", str(job.build_py.resolve())],
+            ["-s", module, "-f", "__main__"],
             cwd=Path(runner).parent,
             executable=Path(runner),
             stdout_path=job.stdout_log,
@@ -84,6 +94,8 @@ def build_layered_raster(
             timeout=300,
         )
     if not result.success:
+        raise tool_failed(job, result.command, result.exit_code, "krita")
+    if not (job.previews / "full.png").is_file():
         raise tool_failed(job, result.command, result.exit_code, "krita")
 
     report = validate_raster(job, spec, width, height, result.exit_code)
@@ -159,3 +171,18 @@ def validate_raster(
         checks=checks,
         metrics=metrics,
     )
+
+
+def _install_krita_script(job: AssetJob) -> str:
+    """Copy build.py where kritarunner can import it. Returns module name."""
+    if os.name == "nt":
+        appdata = os.environ.get("APPDATA")
+        if not appdata:
+            raise MasonError("APPDATA is unset.", code="krita_script")
+        dest_dir = Path(appdata) / "kritarunner"
+    else:
+        dest_dir = Path.home() / ".local" / "share" / "kritarunner"
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    dest = dest_dir / "mason_job.py"
+    dest.write_text(job.build_py.read_text(encoding="utf-8"), encoding="utf-8")
+    return "mason_job"

@@ -48,6 +48,11 @@ def validate_static_prop(
             except OSError as exc:
                 detail = str(exc)
         checks.append(_check(f"preview_{view}", ok, detail))
+    sheet = job.previews / "contact_sheet.png"
+    if sheet.is_file() and sheet.stat().st_size > 0:
+        checks.append(_check("preview_contact_sheet", True))
+    else:
+        checks.append(_check("preview_contact_sheet", False, "missing"))
 
     meta_path = job.output / "metadata.json"
     bounds = None
@@ -72,6 +77,8 @@ def validate_static_prop(
         ) if scales else True
         checks.append(_check("scale_sensible", sensible))
         bounds = data.get("bounds")
+        if data.get("preview_engine"):
+            metrics["preview_engine"] = data["preview_engine"]
     else:
         checks.append(_check("metadata", False, "metadata.json missing"))
 

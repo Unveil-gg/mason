@@ -1,0 +1,26 @@
+type: static_prop
+id: simple_post
+name: Simple Post
+
+dimensions:
+  width: 0.16
+  depth: 0.16
+  height: 1.2
+
+style: default
+
+geometry:
+  bevel: true
+  parts:
+    - name: post
+      shape: cylinder
+      size: [0.16, 0.16, 1.2]
+      location: [0.0, 0.0, 0.6]
+      material: wood_dark
+
+materials:
+  primary: wood_dark
+
+export:
+  format: glb
+  save_blend: true

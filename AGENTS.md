@@ -42,9 +42,14 @@ Important rules:
 
 Asset types:
 
-- `static_prop` — Blender boxes/parts (optional crate/shelf/table recipes)
-- `layered_raster` — Krita layered document + PNG preview
+- `static_prop` — Blender parts (`box`, `cylinder`, `plane`) with
+  optional `parent`, `inset`, and linear `array`. Recipes
+  (crate/shelf/table) expand into parts.
+- `layered_raster` — Krita layers: fill, text, or imported image,
+  plus optional `role`. Source is `.kra`.
 - `image_process` — ImageMagick resize/crop/trim/composite/quantize/convert
 
-3D previews: front, side, top, three_quarter.
+3D previews: front, side, top, three_quarter, plus `contact_sheet.png`.
 Raster previews: previews/full.png.
+Compare previews to the spec, then edit the spec or generated script
+and `mason rebuild <id> --json`.

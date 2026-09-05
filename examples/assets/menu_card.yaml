@@ -1,0 +1,36 @@
+type: layered_raster
+id: menu_card
+name: Menu Card
+
+dimensions:
+  width: 1024
+  height: 1536
+
+style: default
+
+layers:
+  - name: background
+    role: background
+    fill: cream
+  - name: header_band
+    role: fill
+    fill: wood_dark
+    rect: {x: 0, y: 0, width: 1024, height: 220}
+  - name: title
+    role: text
+    fill: cream
+    text: Cafe
+    font_size: 72
+    rect: {x: 40, y: 40, width: 944, height: 140}
+  - name: accent_bar
+    role: overlay
+    fill: accent
+    rect: {x: 80, y: 260, width: 864, height: 10}
+  - name: swatch
+    role: image
+    image: examples/ref/swatch.png
+    rect: {x: 80, y: 300, width: 256, height: 128}
+
+export:
+  kra: true
+  png: true

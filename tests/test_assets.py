@@ -36,6 +36,45 @@ def test_static_prop_requires_parts_or_recipe() -> None:
         })
 
 
+def test_cylinder_and_parent() -> None:
+    spec = parse_asset_spec({
+        "type": "static_prop",
+        "id": "sign",
+        "name": "Sign",
+        "dimensions": {"width": 1, "depth": 0.2, "height": 1.5},
+        "geometry": {
+            "parts": [
+                {
+                    "name": "post",
+                    "shape": "cylinder",
+                    "size": [0.1, 0.1, 1.5],
+                    "location": [0, 0, 0.75],
+                },
+                {
+                    "name": "board",
+                    "shape": "plane",
+                    "size": [0.6, 0.4, 0.0],
+                    "location": [0, 0.05, 1.2],
+                    "parent": "post",
+                    "material": "cream",
+                },
+            ],
+        },
+    })
+    assert spec.geometry.parts[0].shape == "cylinder"
+    assert spec.geometry.parts[1].parent == "post"
+
+
+def test_text_layer_without_fill() -> None:
+    spec = parse_asset_spec({
+        "type": "layered_raster",
+        "id": "card",
+        "name": "Card",
+        "layers": [{"name": "title", "role": "text", "text": "Hello"}],
+    })
+    assert spec.layers[0].text == "Hello"
+
+
 def test_layered_raster() -> None:
     spec = parse_asset_spec({
         "type": "layered_raster",

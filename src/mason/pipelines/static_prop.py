@@ -9,8 +9,10 @@ from mason.core.jobs import AssetJob
 from mason.core.results import BuildResult
 from mason.core.styles import StyleProfile
 from mason.core.workspace import find_project_root
+from mason.generators.blender.part_ops import expand_part_ops
 from mason.generators.blender.recipes import expand_recipe
 from mason.generators.blender.script_builder import build_blender_script
+from mason.pipelines.contact_sheet import write_contact_sheet
 from mason.pipelines.common import finish_result, tool_failed
 from mason.tools.blender.commands import headless_python, preview_from_blend
 from mason.tools.blender.preview import PREVIEW_VIEWS
@@ -21,14 +23,14 @@ from mason.tools.registry import require_tool
 def resolved_parts(spec: StaticPropSpec):
     """Return parts, using a recipe expander when needed."""
     if spec.geometry.parts:
-        return list(spec.geometry.parts)
+        return expand_part_ops(list(spec.geometry.parts))
     assert spec.geometry.recipe is not None
-    return expand_recipe(
+    return expand_part_ops(expand_recipe(
         spec.geometry.recipe,
         spec.dimensions,
         spec.geometry.recipe_params,
         spec.materials.primary,
-    )
+    ))
 
 
 def apply_style_defaults(spec: StaticPropSpec, style: StyleProfile):
@@ -112,6 +114,7 @@ def build_static_prop(
     if not result.success or _script_failed(job.stderr_log):
         raise tool_failed(job, result.command, result.exit_code, "blender")
 
+    write_contact_sheet(job.previews)
     report = validate_static_prop(job, spec, result.exit_code)
     outputs = {}
     glb = job.output / "asset.glb"
@@ -125,6 +128,9 @@ def build_static_prop(
         for view in PREVIEW_VIEWS
         if (job.previews / f"{view}.png").is_file()
     }
+    sheet = job.previews / "contact_sheet.png"
+    if sheet.is_file():
+        previews["contact_sheet"] = job.rel(sheet)
     return finish_result(
         job,
         spec,

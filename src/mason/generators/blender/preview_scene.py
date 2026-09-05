@@ -8,13 +8,9 @@ def clear_non_mesh():
             bpy.data.objects.remove(obj, do_unlink=True)
 
 
-def setup_cycles(resolution, samples):
-    """Configure Cycles CPU and transparent film."""
+def setup_film(resolution):
+    """Shared resolution and transparent PNG settings."""
     scene = bpy.context.scene
-    scene.render.engine = "CYCLES"
-    scene.cycles.device = "CPU"
-    scene.cycles.samples = int(samples)
-    scene.cycles.use_denoising = False
     scene.render.film_transparent = True
     scene.render.resolution_x = int(resolution[0])
     scene.render.resolution_y = int(resolution[1])
@@ -22,7 +18,45 @@ def setup_cycles(resolution, samples):
     scene.render.image_settings.file_format = "PNG"
     scene.render.image_settings.color_mode = "RGBA"
     scene.render.image_settings.compression = 15
-    scene.view_settings.view_transform = "Standard"
+    try:
+        scene.view_settings.view_transform = "Standard"
+    except TypeError:
+        pass
+
+
+def setup_cycles(resolution, samples):
+    """Configure Cycles CPU and transparent film."""
+    scene = bpy.context.scene
+    scene.render.engine = "CYCLES"
+    scene.cycles.device = "CPU"
+    scene.cycles.samples = int(samples)
+    scene.cycles.use_denoising = False
+    setup_film(resolution)
+
+
+def setup_eevee(resolution, samples):
+    """Try EEVEE Next, then EEVEE. Returns True if set."""
+    scene = bpy.context.scene
+    for name in ("BLENDER_EEVEE_NEXT", "BLENDER_EEVEE"):
+        try:
+            scene.render.engine = name
+            setup_film(resolution)
+            eevee = getattr(scene, "eevee", None)
+            if eevee is not None and hasattr(eevee, "taa_render_samples"):
+                eevee.taa_render_samples = max(int(samples), 8)
+            return True
+        except TypeError:
+            continue
+    return False
+
+
+def setup_renderer(resolution, samples, preferred):
+    """Prefer EEVEE; fall back to Cycles. Returns engine label."""
+    want = (preferred or "eevee").lower()
+    if want == "eevee" and setup_eevee(resolution, samples):
+        return "eevee"
+    setup_cycles(resolution, samples)
+    return "cycles"
 
 
 def setup_studio_lights(center, distance):
@@ -61,10 +95,10 @@ def setup_camera(center, location, clip_end):
     return camera
 
 
-def render_previews(preview_dir, resolution, samples):
-    """Render front/side/top/three_quarter PNGs."""
+def render_previews(preview_dir, resolution, samples, engine="eevee"):
+    """Render front/side/top/three_quarter; EEVEE then Cycles."""
     clear_non_mesh()
-    setup_cycles(resolution, samples)
+    used = setup_renderer(resolution, samples, engine)
     mins, maxs = scene_bounds()
     center = (mins + maxs) * 0.5
     size = maxs - mins
@@ -79,11 +113,26 @@ def render_previews(preview_dir, resolution, samples):
         "three_quarter": center + Vector((dist * 0.75, -dist * 0.75, dist * 0.55)),
     }
     os.makedirs(preview_dir, exist_ok=True)
-    for name, loc in views.items():
-        if bpy.context.scene.camera:
-            bpy.data.objects.remove(bpy.context.scene.camera, do_unlink=True)
-        setup_camera(center, loc, clip_end)
-        out = os.path.join(preview_dir, name + ".png")
-        bpy.context.scene.render.filepath = out
-        bpy.ops.render.render(write_still=True)
+
+    def render_all():
+        for name, loc in views.items():
+            if bpy.context.scene.camera:
+                bpy.data.objects.remove(bpy.context.scene.camera, do_unlink=True)
+            setup_camera(center, loc, clip_end)
+            out = os.path.join(preview_dir, name + ".png")
+            bpy.context.scene.render.filepath = out
+            bpy.ops.render.render(write_still=True)
+            if not os.path.isfile(out) or os.path.getsize(out) < 32:
+                raise RuntimeError("empty preview " + name)
+
+    try:
+        render_all()
+    except Exception:
+        if used != "cycles":
+            used = "cycles"
+            setup_cycles(resolution, samples)
+            render_all()
+        else:
+            raise
+    CONFIG["preview_engine"] = used
 '''

@@ -44,6 +44,7 @@ def build_blender_script(
             style.render.resolution.height,
         ],
         "samples": style.render.samples,
+        "engine": style.render.engine,
         "palette": palette,
         "parts": [p.model_dump(mode="json") for p in parts],
     }
@@ -96,21 +97,27 @@ def build_geometry():
             CONFIG["roughness"],
             CONFIG["metallic"],
         )
+    created = {}
     for part in CONFIG["parts"]:
-        obj = create_box(
-            part["name"],
-            tuple(part["size"]),
-            tuple(part["location"]),
-            tuple(part["rotation"]),
-        )
+        obj = create_primitive(part)
+        created[obj.name] = obj
         key = part.get("material") or "primary"
         if key in mats:
             assign_material(obj, mats[key])
         use_bevel = part.get("bevel")
         if use_bevel is None:
             use_bevel = CONFIG["bevel"]
-        if use_bevel:
+        if use_bevel and (part.get("shape") or "box") != "plane":
             apply_bevel(obj, CONFIG["bevel_width"], CONFIG["bevel_segments"])
+    for part in CONFIG["parts"]:
+        parent_name = part.get("parent")
+        child = created.get(part["name"])
+        parent = created.get(parent_name) if parent_name else None
+        if child is not None and parent is not None:
+            world = child.matrix_world.copy()
+            child.parent = parent
+            child.matrix_parent_inverse = parent.matrix_world.inverted()
+            child.matrix_world = world
 
 
 def parse_mode():
@@ -138,7 +145,6 @@ def main():
         if CONFIG["save_blend"]:
             save_blend(blend)
         export_glb(os.path.join(output, "asset.glb"))
-        write_metadata(os.path.join(output, "metadata.json"))
     if mode in ("all", "preview"):
         if mode == "preview" and os.path.isfile(blend):
             bpy.ops.wm.open_mainfile(filepath=blend)
@@ -146,7 +152,10 @@ def main():
             previews,
             CONFIG["resolution"],
             CONFIG["samples"],
+            CONFIG.get("engine") or "eevee",
         )
+    if mode in ("all", "build"):
+        write_metadata(os.path.join(output, "metadata.json"))
 
 
 if __name__ == "__main__":

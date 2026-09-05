@@ -44,14 +44,23 @@ def find_krita(override: Path | None = None) -> Path | None:
 
 
 def find_kritarunner(krita: Path | None) -> Path | None:
-    """Sibling kritarunner next to krita, then PATH."""
+    """Sibling kritarunner next to krita, then PATH.
+
+    On Windows prefer kritarunner.com so stdout/stderr are captured.
+    """
+    names = ["kritarunner"]
+    if sys.platform == "win32":
+        names = ["kritarunner.com", "kritarunner.exe"]
     if krita is not None:
-        sibling = krita.with_name(
-            "kritarunner.exe" if krita.suffix == ".exe" else "kritarunner",
-        )
-        if sibling.is_file():
-            return sibling.resolve()
-    return which("kritarunner") or which("kritarunner.exe")
+        for name in names:
+            sibling = krita.with_name(name)
+            if sibling.is_file():
+                return sibling.resolve()
+    for name in names:
+        found = which(name)
+        if found:
+            return found
+    return None
 
 
 def krita_version(executable: Path) -> str | None:

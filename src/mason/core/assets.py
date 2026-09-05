@@ -14,58 +14,14 @@ from pydantic import (
     model_validator,
 )
 
+from mason.core.parts import (  # noqa: F401
+    Dimensions3D,
+    GeometrySpec,
+    PartArray,
+    PropPart,
+    RecipeParams,
+)
 from mason.errors import MasonError
-
-
-class PropPart(BaseModel):
-    """One box primitive in a static prop."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    name: str
-    shape: Literal["box"] = "box"
-    size: tuple[float, float, float]
-    location: tuple[float, float, float]
-    rotation: tuple[float, float, float] = (0.0, 0.0, 0.0)
-    material: str = "primary"
-    bevel: bool | None = None
-
-
-class RecipeParams(BaseModel):
-    """Optional parameters for crate/shelf/table expanders."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    board_thickness: float = Field(default=0.03, gt=0)
-    shelf_count: int = Field(default=4, ge=1)
-    side_panels: bool = True
-    back_panel: bool = False
-    leg_thickness: float = Field(default=0.06, gt=0)
-
-
-class GeometrySpec(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    bevel: bool = True
-    bevel_width: float | None = None
-    bevel_segments: int | None = None
-    recipe: Literal["crate", "shelf", "table"] | None = None
-    recipe_params: RecipeParams = Field(default_factory=RecipeParams)
-    parts: list[PropPart] = Field(default_factory=list)
-
-    @model_validator(mode="after")
-    def require_parts_or_recipe(self) -> GeometrySpec:
-        if not self.parts and self.recipe is None:
-            raise ValueError("geometry needs parts or a recipe")
-        return self
-
-
-class Dimensions3D(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    width: float = Field(gt=0)
-    depth: float = Field(gt=0)
-    height: float = Field(gt=0)
 
 
 class PixelDimensions(BaseModel):
@@ -91,7 +47,7 @@ class MaterialsSpec(BaseModel):
 
 
 class StaticPropSpec(BaseModel):
-    """Procedural 3D prop built from box parts."""
+    """Procedural 3D prop built from primitive parts."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -119,8 +75,20 @@ class RasterLayer(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str
-    fill: str
+    role: Literal[
+        "background", "fill", "text", "image", "overlay",
+    ] | None = None
+    fill: str | None = None
     rect: LayerRect | None = None
+    text: str | None = None
+    font_size: int = Field(default=48, gt=0)
+    image: str | None = None
+
+    @model_validator(mode="after")
+    def need_content(self) -> RasterLayer:
+        if not self.fill and not self.text and not self.image:
+            raise ValueError("layer needs fill, text, or image")
+        return self
 
 
 class RasterExport(BaseModel):

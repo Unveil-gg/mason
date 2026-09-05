@@ -11,8 +11,10 @@ def export_glb(path):
 
 
 def save_blend(path):
-    """Save the current file as a .blend."""
-    bpy.ops.wm.save_as_mainfile(filepath=path)
+    """Save the current file as a .blend, replacing any previous file."""
+    if os.path.isfile(path):
+        os.remove(path)
+    bpy.ops.wm.save_as_mainfile(filepath=path, check_existing=False)
 
 
 def scene_bounds():
@@ -62,6 +64,7 @@ def write_metadata(path):
         "scales": {
             o.name: [float(s) for s in o.scale] for o in meshes
         },
+        "preview_engine": CONFIG.get("preview_engine"),
     }
     with open(path, "w", encoding="utf-8") as handle:
         json.dump(payload, handle, indent=2)

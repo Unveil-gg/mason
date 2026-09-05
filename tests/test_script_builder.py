@@ -28,10 +28,14 @@ def test_blender_script_has_helpers(project: Path) -> None:
         bevel_width=bw, bevel_segments=bs, roughness=r, metallic=m,
     )
     assert "def create_box" in script
+    assert "def create_cylinder" in script
+    assert "def create_plane" in script
+    assert "def create_primitive" in script
     assert "def create_material" in script
     assert "def export_glb" in script
     assert "json.loads" in script
     assert "#654936" in script
+    assert "BLENDER_EEVEE" in script
     assert "CYCLES" in script
 
 
@@ -48,6 +52,8 @@ def test_krita_script_has_document(project: Path) -> None:
     style = load_style(project / "styles" / "default.yaml")
     script = build_krita_script(spec, style, project / "job", 128, 256)
     assert "createDocument" in script
+    assert "paint_text" in script
+    assert "createFileLayer" in script
     assert "background" in script
     assert "#DDD0B4" in script
     assert "#8066A8" in script

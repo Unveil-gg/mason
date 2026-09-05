@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from mason.core.assets import LayeredRasterSpec
+from mason.core.paths import resolve_project_path
 from mason.core.styles import StyleProfile
 
 
@@ -15,14 +16,27 @@ def build_krita_script(
     job_dir: Path,
     width: int,
     height: int,
+    project_root: Path | None = None,
 ) -> str:
     """Return a self-contained Krita Python script."""
     layers = []
     for layer in spec.layers:
+        fill_key = layer.fill
+        fill = style.color(fill_key) if fill_key else None
         entry = {
             "name": layer.name,
-            "fill": style.color(layer.fill),
+            "role": layer.role,
+            "fill": fill,
+            "text": layer.text,
+            "font_size": layer.font_size,
+            "image": None,
         }
+        if layer.image and project_root is not None:
+            entry["image"] = str(
+                resolve_project_path(project_root, layer.image),
+            )
+        elif layer.image:
+            entry["image"] = layer.image
         if layer.rect:
             entry["rect"] = layer.rect.model_dump()
         layers.append(entry)
@@ -49,31 +63,55 @@ import os
 
 from krita import InfoObject, Krita
 
+try:
+    from PyQt5.QtCore import QRect, Qt
+    from PyQt5.QtGui import QColor, QFont, QImage, QPainter
+except ImportError:
+    from PyQt6.QtCore import QRect, Qt
+    from PyQt6.QtGui import QColor, QFont, QImage, QPainter
+
 CONFIG = json.loads(r'''
 """
 
 _BODY = r'''
+def hex_rgb(value):
+    text = (value or "#000000").strip().lstrip("#")
+    return int(text[0:2], 16), int(text[2:4], 16), int(text[4:6], 16)
+
+
 def hex_to_bgra(value):
-    """Convert #RRGGBB to BGRA bytes."""
-    text = value.strip().lstrip("#")
-    r = int(text[0:2], 16)
-    g = int(text[2:4], 16)
-    b = int(text[4:6], 16)
+    r, g, b = hex_rgb(value)
     return bytes((b, g, r, 255))
 
 
 def fill_layer(layer, color, x, y, w, h):
-    """Write a solid BGRA rectangle into a paint layer."""
     pixel = hex_to_bgra(color)
     layer.setPixelData(pixel * (w * h), x, y, w, h)
 
 
-def write_metadata(path, layer_names):
+def paint_text(layer, text, color, x, y, w, h, font_size):
+    """Draw centered text with Qt (Krita's bundled GUI toolkit)."""
+    img = QImage(w, h, QImage.Format_ARGB32)
+    img.fill(0)
+    painter = QPainter(img)
+    r, g, b = hex_rgb(color)
+    painter.setPen(QColor(r, g, b, 255))
+    painter.setFont(QFont("DejaVu Sans", int(font_size)))
+    align = Qt.AlignmentFlag.AlignCenter if hasattr(Qt, "AlignmentFlag") else Qt.AlignCenter
+    painter.drawText(QRect(0, 0, w, h), align, text)
+    painter.end()
+    bits = img.bits()
+    if hasattr(bits, "setsize"):
+        bits.setsize(img.sizeInBytes() if hasattr(img, "sizeInBytes") else img.byteCount())
+    layer.setPixelData(bytes(bits), x, y, w, h)
+
+
+def write_metadata(path, layers_meta):
     payload = {
         "width": CONFIG["width"],
         "height": CONFIG["height"],
-        "layer_count": len(layer_names),
-        "layers": layer_names,
+        "layer_count": len(layers_meta),
+        "layers": layers_meta,
     }
     with open(path, "w", encoding="utf-8") as handle:
         json.dump(payload, handle, indent=2)
@@ -92,23 +130,46 @@ def main():
     root = doc.rootNode()
     for child in list(root.childNodes()):
         root.removeChildNode(child)
-    names = []
+    meta = []
     for layer in CONFIG["layers"]:
-        node = doc.createNode(layer["name"], "paintlayer")
-        root.addChildNode(node, None)
-        rect = layer.get("rect")
-        if rect:
-            fill_layer(
-                node,
-                layer["fill"],
-                int(rect["x"]),
-                int(rect["y"]),
-                int(rect["width"]),
-                int(rect["height"]),
-            )
+        rect = layer.get("rect") or {"x": 0, "y": 0, "width": w, "height": h}
+        x, y = int(rect["x"]), int(rect["y"])
+        lw, lh = int(rect["width"]), int(rect["height"])
+        image_path = layer.get("image")
+        if image_path:
+            node = doc.createFileLayer(layer["name"], image_path, "None")
+            root.addChildNode(node, None)
+            paint = doc.createNode(layer["name"] + "_pixels", "paintlayer")
+            root.addChildNode(paint, None)
+            src = QImage(image_path)
+            if not src.isNull():
+                scaled = src.scaled(lw, lh)
+                bits = scaled.bits()
+                if hasattr(bits, "setsize"):
+                    nbytes = (
+                        scaled.sizeInBytes()
+                        if hasattr(scaled, "sizeInBytes")
+                        else scaled.byteCount()
+                    )
+                    bits.setsize(nbytes)
+                paint.setPixelData(bytes(bits), x, y, scaled.width(), scaled.height())
         else:
-            fill_layer(node, layer["fill"], 0, 0, w, h)
-        names.append(layer["name"])
+            node = doc.createNode(layer["name"], "paintlayer")
+            root.addChildNode(node, None)
+            if layer.get("fill") and not layer.get("text"):
+                fill_layer(node, layer["fill"], x, y, lw, lh)
+            if layer.get("text"):
+                paint_text(
+                    node,
+                    layer["text"],
+                    layer.get("fill") or "#000000",
+                    x, y, lw, lh,
+                    layer.get("font_size") or 48,
+                )
+        meta.append({
+            "name": layer["name"],
+            "role": layer.get("role"),
+        })
     doc.refreshProjection()
     kra = os.path.join(output, "asset.kra")
     png = os.path.join(output, "asset.png")
@@ -119,9 +180,11 @@ def main():
     if CONFIG["save_png"]:
         doc.exportImage(png, info)
     doc.exportImage(preview, info)
-    write_metadata(os.path.join(output, "metadata.json"), names)
+    write_metadata(os.path.join(output, "metadata.json"), meta)
     doc.close()
 
 
-main()
+def __main__(*_args):
+    """kritarunner calls this by default."""
+    main()
 '''

@@ -10,8 +10,10 @@ style: default
 
 layers:
   - name: background
+    role: background
     fill: cream
   - name: header_band
+    role: fill
     fill: wood_dark
     rect:
       x: 0
@@ -19,6 +21,7 @@ layers:
       width: 1024
       height: 200
   - name: accent_bar
+    role: overlay
     fill: accent
     rect:
       x: 80
