@@ -1,0 +1,1 @@
+"""Aseprite Lua script generation."""

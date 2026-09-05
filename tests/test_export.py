@@ -92,3 +92,49 @@ def test_export_writes_manifest(
     manifest = json.loads(Path(result.manifest).read_text(encoding="utf-8"))
     assert set(manifest["assets"]) == {"box", "crate"}
     assert manifest["assets"]["crate"]["files"]["glb"] == str(dest / "crate.glb")
+
+
+def test_export_frames_and_bounds(
+    project: Path, monkeypatch, tmp_path: Path,
+) -> None:
+    monkeypatch.chdir(project)
+    spec = parse_asset_spec({
+        "type": "sprite_sheet",
+        "id": "hero",
+        "name": "Hero",
+        "canvas": {"width": 8, "height": 8},
+        "animations": [{
+            "name": "idle",
+            "frames": [{"layers": [{"name": "a", "fill": "ink"}]}],
+        }],
+    })
+    job = AssetJob(project, "hero")
+    job.prepare()
+    job.write_spec(spec)
+    png = job.output / "asset.png"
+    png.write_bytes(b"png-bytes")
+    frames = job.output / "frames.json"
+    frames.write_text("{}", encoding="utf-8")
+    result = BuildResult(
+        success=True,
+        asset_id="hero",
+        asset_type="sprite_sheet",
+        outputs={
+            "png": job.rel(png),
+            "frames": job.rel(frames),
+        },
+        validation={
+            "passed": True,
+            "frame_size": {"width": 8, "height": 8},
+            "animations": [{"name": "idle", "frame_count": 1, "loop": True}],
+        },
+    )
+    job.write_result(result)
+    dest = tmp_path / "res"
+    exported = run_export("hero", to=dest)
+    assert (dest / "hero.png").is_file()
+    assert (dest / "hero_frames.json").is_file()
+    manifest = json.loads(Path(exported.manifest).read_text(encoding="utf-8"))
+    entry = manifest["assets"]["hero"]
+    assert entry["frame_size"] == {"width": 8, "height": 8}
+    assert entry["animations"][0]["name"] == "idle"

@@ -8,6 +8,7 @@ from mason.core.assets import (
     AssetSpec,
     ImageProcessSpec,
     LayeredRasterSpec,
+    SpriteSheetSpec,
     StaticPropSpec,
     load_asset_spec,
 )
@@ -20,6 +21,7 @@ from mason.pipelines.common import (
 )
 from mason.pipelines.image_process import build_image_process
 from mason.pipelines.layered_raster import build_layered_raster
+from mason.pipelines.sprite_sheet import build_sprite_sheet
 from mason.pipelines.static_prop import build_static_prop, rel_source
 
 
@@ -59,4 +61,6 @@ def _run(
         return build_layered_raster(spec, style, job, source, mode=mode)
     if isinstance(spec, ImageProcessSpec):
         return build_image_process(spec, style, job, source, mode=mode)
+    if isinstance(spec, SpriteSheetSpec):
+        return build_sprite_sheet(spec, style, job, source, mode=mode)
     raise TypeError(f"Unsupported spec {type(spec)}")

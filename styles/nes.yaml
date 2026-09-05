@@ -3,6 +3,9 @@ version: 1
 
 palette:
   skin: "#C68958"
+  skin_dark: "#A86B42"
   hair: "#3B2712"
   cloth: "#8C2F2F"
+  cloth_light: "#B04A4A"
   metal: "#9AA5AD"
+  ink: "#140C08"

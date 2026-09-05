@@ -6,6 +6,10 @@ from pathlib import Path
 
 from mason.core.assets import parse_asset_spec
 from mason.core.styles import load_style
+from mason.generators.aseprite.script_builder import (
+    build_aseprite_script,
+    sheet_layout,
+)
 from mason.generators.blender.script_builder import build_blender_script
 from mason.generators.krita.script_builder import build_krita_script
 from mason.pipelines.static_prop import apply_style_defaults, resolved_parts
@@ -119,3 +123,37 @@ def test_krita_script_has_document(project: Path) -> None:
     assert "background" in script
     assert "#DDD0B4" in script
     assert "#8066A8" in script
+
+
+def test_aseprite_script_draws_pixels(project: Path) -> None:
+    spec = parse_asset_spec({
+        "type": "sprite_sheet",
+        "id": "hero",
+        "name": "Hero",
+        "canvas": {"width": 8, "height": 8},
+        "style": "default",
+        "animations": [{
+            "name": "idle",
+            "loop": True,
+            "frames": [{
+                "duration_ms": 200,
+                "layers": [{
+                    "name": "body",
+                    "pixels": ["II", ".I"],
+                    "keys": {"I": "ink"},
+                }],
+            }],
+        }],
+    })
+    style = load_style(project / "styles" / "default.yaml")
+    job_dir = project / ".mason" / "jobs" / "hero"
+    script = build_aseprite_script(spec, style, job_dir)
+    assert "local CONFIG =" in script
+    assert "Sprite(" in script
+    assert "putPixel" in script
+    assert "newTag" in script
+    assert "saveAs" in script
+    assert spec.animations[0].name in script
+    layout = sheet_layout(spec)
+    assert layout["sheet"] == {"width": 8, "height": 8}
+    assert layout["animations"][0]["frames"][0]["duration_ms"] == 200

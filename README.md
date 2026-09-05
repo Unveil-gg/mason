@@ -47,7 +47,7 @@ Mason is a thin harness:
 | Blender 4.x | `static_prop` (3D parts → .blend/.glb + 4 previews) | No |
 | Krita | `layered_raster` (.kra + PNG) | No |
 | ImageMagick | `image_process` (resize, quantize, …) | No |
-| Aseprite | discovery only in v0.1 | No |
+| Aseprite | `sprite_sheet` (.aseprite + PNG + frames.json) | No |
 
 Install those applications yourself. Point Mason at them if needed:
 
@@ -118,10 +118,9 @@ truth is a list of `parts` (`box`, `cylinder`, `plane`) with optional
 `crate_with_label`, `noir_billboard` (a two-post highway billboard with
 a decal face). Raster: `simple_panel`, `menu_card` (text + image
 import), `plank_texture` (tileable material), `shipping_label`,
-`noir_billboard_face` (black-and-white movie-poster decal, built from
-rects same as the sprite below), `barbarian_idle`/`idle2`/`walk1..4`/
-`attack`/`attack2`/`attack3` + `barbarian_sheet` (hand-assembled 4×3
-grid: idle/walk/attack rows). Previews include a 2×2
+`noir_billboard_face` (black-and-white movie-poster decal),
+`barbarian` (`sprite_sheet`: idle ×2, walk ×4, attack ×3 on a 4×3
+grid, plus `frames.json`). Previews include a 2×2
 `contact_sheet.png`. EEVEE is preferred; Mason falls back to Cycles CPU
 if EEVEE fails.
 
@@ -197,7 +196,10 @@ both).
 
 Each export merges an entry into `mason_manifest.json` at the
 destination root, so an agent (or you) can see what Mason has put there
-without needing the Mason project itself. Mason does **not** write
+without needing the Mason project itself. Sprite sheets also copy
+`{id}_frames.json` (rects, durations, loop flags). 3D exports include
+`bounds` on the manifest entry when the last build recorded them.
+Mason does **not** write
 Godot `.import` sidecars: since Godot 4.0, texture filter/repeat moved
 out of the importer into project settings and per-`CanvasItem`
 overrides, so a hand-written `.import` file would be silently wrong.
@@ -242,30 +244,21 @@ a zero exit code as “it looks right.”
 
 ## Current limitations (v0.1)
 
-- Raster generation is palette fills, rects, text, and image import,
-  not freehand painting. Sprite sheets are assembled by hand today
-  (see `examples/assets/barbarian_sheet.yaml`): one `layered_raster`
-  frame per animation pose, composited by an `image_process` job into
-  a grid (rows = animations, columns = frames). There is no dedicated
-  sprite/animation asset type or metadata export yet — that is
-  Aseprite work, still on hold (see Roadmap, and `docs/roadmap.md` for
-  the detailed design now that Aseprite is available on this machine).
-- Aseprite is discovery-only (no generation) for now.
+- Raster generation is palette fills, rects, text, image import, and
+  per-pixel maps (`pixels` + `keys` on `sprite_sheet` / raster
+  layers). Not freehand painting.
 - `mason export` copies files and a manifest only; it does not
-  construct Godot scenes/resources or write `.import` sidecars.
+  construct Godot scenes/resources or write `.import` sidecars. A
+  separate engine bridge can read `mason_manifest.json` plus
+  `frames.json` / `bounds`.
 - No in-process LLM, no bundled creative apps.
 
 ## Roadmap
 
-Detailed specs for the two biggest items: [docs/roadmap.md](docs/roadmap.md).
+Design notes: [docs/roadmap.md](docs/roadmap.md).
 
-- Aseprite-scripted `sprite_sheet` asset type + animation JSON
-  metadata (frame durations, tags), replacing the hand-assembled
-  composite approach — Aseprite is installed and detected, unblocked
-  to implement
 - Optional Godot SpriteFrames / scene construction / in-engine
-  preview, fed by richer per-asset metadata (bounds already in
-  `metadata.json`; sprite `frames.json` still to add)
+  preview (out of Mason; consume `frames.json` and `bounds`)
 - Richer Krita paint tools beyond fill/text/image layers
 - Material variants, boolean ops, and multi-asset "kits" (still on
   hold — no concrete asset needs them yet)

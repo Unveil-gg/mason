@@ -1,4 +1,4 @@
-"""Aseprite tool adapter (discovery only in v0.1)."""
+"""Aseprite tool adapter."""
 
 from __future__ import annotations
 
@@ -34,7 +34,9 @@ class AsepriteAdapter:
         if info.available and info.path:
             return
         raise MasonError(
-            "Aseprite was not found.",
+            "Aseprite is required for the sprite_sheet pipeline "
+            "but was not found. Install Aseprite or configure its "
+            "executable path, then run `mason doctor`.",
             code="aseprite_missing",
             hint="Install Aseprite or set tools.aseprite.path.",
         )

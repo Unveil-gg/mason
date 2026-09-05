@@ -26,7 +26,7 @@ Before generating assets:
 
 Important rules:
 
-- Do not manually operate Blender or Krita when Mason can invoke them.
+- Do not manually operate Blender, Krita, or Aseprite when Mason can invoke them.
 - Prefer editing specs/generator source and rebuilding.
 - Do not assume a successful tool exit means the asset looks correct.
 - Always inspect previews.

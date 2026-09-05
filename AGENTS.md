@@ -32,11 +32,13 @@ Before generating assets:
     run `mason export <id> --to <dir>` (or set `install_dir` in
     `mason.yaml` / `export.install_to` in the spec, then just
     `mason export <id>`). Only finished outputs (glb/png) are copied,
-    never `.blend`/`.kra`/previews.
+    never `.blend`/`.kra`/`.aseprite`/previews. Sprite sheets also
+    export `frames.json` (animation rects + durations) next to the PNG.
 
 Important rules:
 
-- Do not manually operate Blender or Krita when Mason can invoke them.
+- Do not manually operate Blender, Krita, or Aseprite when Mason can
+  invoke them.
 - Prefer editing specs/generator source and rebuilding.
 - Do not assume a successful tool exit means the asset looks correct.
 - Always inspect previews.
@@ -57,9 +59,15 @@ Asset types:
   undistorted. Recipes (crate/shelf/table) expand into parts.
 - `layered_raster` — Krita layers: fill, text, or imported image,
   plus optional `role`. Source is `.kra`.
+- `sprite_sheet` — Aseprite animations of timed frames. Prefer
+  `pixels` + `keys` (one char = one palette color, `.`/`_`/` ` empty)
+  over large `fill` rects so sprites read as pixel art. Source is
+  `.aseprite`; outputs are the packed PNG and `frames.json`.
 - `image_process` — ImageMagick resize/crop/trim/composite/quantize/convert
 
 3D previews: front, side, top, three_quarter, plus `contact_sheet.png`.
-Raster previews: previews/full.png.
+Raster previews: previews/full.png. Sprite-sheet previews are a 4×
+nearest-neighbor scale of the packed PNG so NES-size pixels are
+readable; the output PNG stays native size.
 Compare previews to the spec, then edit the spec or generated script
 and `mason rebuild <id> --json`.

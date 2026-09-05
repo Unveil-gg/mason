@@ -46,6 +46,10 @@ class AssetJob:
         return self.dir / "build.py"
 
     @property
+    def build_lua(self) -> Path:
+        return self.dir / "build.lua"
+
+    @property
     def stdout_log(self) -> Path:
         return self.dir / "stdout.log"
 

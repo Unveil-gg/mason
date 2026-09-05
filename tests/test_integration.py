@@ -93,3 +93,75 @@ def test_krita_panel(project: Path, monkeypatch) -> None:
     assert result.exit_code == 0, result.stdout + result.stderr
     preview = project / ".mason" / "jobs" / "panel" / "previews" / "full.png"
     assert preview.is_file()
+
+
+@pytest.mark.integration
+def test_aseprite_sprite_sheet(project: Path, monkeypatch) -> None:
+    tools = _tools()
+    if not tools["aseprite"].available:
+        pytest.skip("Aseprite not installed")
+    spec = {
+        "type": "sprite_sheet",
+        "id": "hero",
+        "name": "Hero",
+        "canvas": {"width": 8, "height": 8},
+        "animations": [
+            {
+                "name": "idle",
+                "loop": True,
+                "frames": [
+                    {
+                        "duration_ms": 200,
+                        "layers": [{
+                            "name": "body",
+                            "pixels": [
+                                "IIII....",
+                                "I..I....",
+                                "IIII....",
+                                "........",
+                                "........",
+                                "........",
+                                "........",
+                                "........",
+                            ],
+                            "keys": {"I": "ink"},
+                        }],
+                    },
+                    {
+                        "duration_ms": 200,
+                        "layers": [{
+                            "name": "body",
+                            "pixels": [
+                                ".IIII...",
+                                ".I..I...",
+                                ".IIII...",
+                                "........",
+                                "........",
+                                "........",
+                                "........",
+                                "........",
+                            ],
+                            "keys": {"I": "ink"},
+                        }],
+                    },
+                ],
+            },
+        ],
+    }
+    path = project / "hero.yaml"
+    path.write_text(yaml.safe_dump(spec), encoding="utf-8")
+    monkeypatch.chdir(project)
+    result = runner.invoke(app, ["build", str(path), "--json"])
+    assert result.exit_code == 0, result.stdout + result.stderr
+    out = project / ".mason" / "jobs" / "hero" / "output"
+    png = out / "asset.png"
+    frames = out / "frames.json"
+    preview = project / ".mason" / "jobs" / "hero" / "previews" / "full.png"
+    assert png.is_file() and png.stat().st_size > 0
+    assert frames.is_file()
+    assert preview.is_file()
+    with Image.open(png) as img:
+        assert img.size == (16, 8)
+    data = __import__("json").loads(frames.read_text(encoding="utf-8"))
+    assert data["animations"][0]["name"] == "idle"
+    assert data["animations"][0]["frames"][1]["x"] == 8

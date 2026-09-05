@@ -73,6 +73,11 @@ class LayerRect(BaseModel):
     height: int = Field(gt=0)
 
 
+# Transparent cells in a `pixels` map. Any other character must appear
+# in that layer's `keys` dict (palette lookup happens at build time).
+PIXEL_TRANSPARENT = frozenset(". _")
+
+
 class RasterLayer(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -85,11 +90,24 @@ class RasterLayer(BaseModel):
     text: str | None = None
     font_size: int = Field(default=48, gt=0)
     image: str | None = None
+    pixels: list[str] | None = None
+    keys: dict[str, str] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def need_content(self) -> RasterLayer:
-        if not self.fill and not self.text and not self.image:
-            raise ValueError("layer needs fill, text, or image")
+        if not self.fill and not self.text and not self.image and not self.pixels:
+            raise ValueError("layer needs fill, text, image, or pixels")
+        if self.pixels:
+            used = {
+                ch for row in self.pixels for ch in row
+                if ch not in PIXEL_TRANSPARENT
+            }
+            missing = sorted(used - set(self.keys))
+            if missing:
+                raise ValueError(
+                    "pixels uses characters with no keys entry: "
+                    + ", ".join(missing),
+                )
         return self
 
 
@@ -208,8 +226,57 @@ class ImageProcessSpec(BaseModel):
     metadata: dict[str, str] = Field(default_factory=dict)
 
 
+class SpriteFrame(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    duration_ms: int = Field(default=100, gt=0)
+    layers: list[RasterLayer] = Field(min_length=1)
+
+
+class SpriteAnimation(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    loop: bool = True
+    frames: list[SpriteFrame] = Field(min_length=1)
+
+
+class SpriteExport(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    png: bool = True
+    frames: bool = True
+    aseprite: bool = True
+    install_to: str | None = None
+
+
+class SpriteSheetSpec(BaseModel):
+    """Aseprite sprite sheet: named animations of timed frames."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["sprite_sheet"]
+    id: str
+    name: str
+    canvas: PixelDimensions
+    style: str = "default"
+    animations: list[SpriteAnimation] = Field(min_length=1)
+    export: SpriteExport = Field(default_factory=SpriteExport)
+    metadata: dict[str, str] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def unique_animation_names(self) -> SpriteSheetSpec:
+        names = [anim.name for anim in self.animations]
+        if len(names) != len(set(names)):
+            raise ValueError("animation names must be unique")
+        return self
+
+
 AssetSpec = Annotated[
-    StaticPropSpec | LayeredRasterSpec | ImageProcessSpec,
+    StaticPropSpec
+    | LayeredRasterSpec
+    | ImageProcessSpec
+    | SpriteSheetSpec,
     Field(discriminator="type"),
 ]
 

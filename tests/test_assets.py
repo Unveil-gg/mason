@@ -7,6 +7,7 @@ import pytest
 from mason.core.assets import (
     ImageProcessSpec,
     LayeredRasterSpec,
+    SpriteSheetSpec,
     StaticPropSpec,
     parse_asset_spec,
 )
@@ -134,6 +135,48 @@ def test_image_process_source() -> None:
         "operations": [{"op": "resize", "width": 32, "height": 32}],
     })
     assert isinstance(spec, ImageProcessSpec)
+
+
+def test_sprite_sheet_pixels() -> None:
+    spec = parse_asset_spec({
+        "type": "sprite_sheet",
+        "id": "hero",
+        "name": "Hero",
+        "canvas": {"width": 8, "height": 8},
+        "animations": [{
+            "name": "idle",
+            "frames": [{
+                "duration_ms": 200,
+                "layers": [{
+                    "name": "body",
+                    "pixels": ["..HH..", ".HSSH."],
+                    "keys": {"H": "hair", "S": "skin"},
+                }],
+            }],
+        }],
+    })
+    assert isinstance(spec, SpriteSheetSpec)
+    assert spec.animations[0].frames[0].layers[0].keys["H"] == "hair"
+
+
+def test_sprite_sheet_rejects_unknown_pixel_key() -> None:
+    with pytest.raises(MasonError):
+        parse_asset_spec({
+            "type": "sprite_sheet",
+            "id": "hero",
+            "name": "Hero",
+            "canvas": {"width": 8, "height": 8},
+            "animations": [{
+                "name": "idle",
+                "frames": [{
+                    "layers": [{
+                        "name": "body",
+                        "pixels": ["X."],
+                        "keys": {"H": "hair"},
+                    }],
+                }],
+            }],
+        })
 
 
 def test_rejects_unknown_type() -> None:

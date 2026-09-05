@@ -1,7 +1,8 @@
 # Mason roadmap: visual loop + Aseprite pipeline
 
-Design specs for the two items deferred from the texture-contract pass.
-Nothing here is implemented yet; this is the plan to implement against.
+Item 5 (`frames.json` + richer export manifest) and item 6
+(`sprite_sheet` via Aseprite) are implemented. This file is the
+design they were built against, plus what stays out of Mason.
 
 ## 1. Visual feedback loop (item 5)
 
@@ -127,13 +128,9 @@ don't parse binary" pattern used for Blender's `metadata.json`.
 
 ### 2e. Migration for the barbarian example
 
-Once 2a-2d land, `examples/assets/barbarian_sheet.yaml` and its nine
-`layered_raster` frame files (`barbarian_idle`, `barbarian_idle2`,
-`barbarian_walk1-4`, `barbarian_attack`, `barbarian_attack2-3`) get
-replaced by one `barbarian.yaml` `sprite_sheet` spec with three
-animations, and the old files are deleted (no duplicate implementation
-left behind). Not done in this pass — flagged as the concrete
-migration once the pipeline above exists.
+Done: `examples/assets/barbarian.yaml` is the one `sprite_sheet` spec
+(idle / walk / attack). The nine Krita frame files and the
+ImageMagick composite job were deleted.
 
 ### 2f. Still on hold: material variants / booleans / kits
 

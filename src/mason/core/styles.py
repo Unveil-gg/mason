@@ -89,6 +89,20 @@ class StyleProfile(BaseModel):
         return self.palette[key]
 
 
+def hex_rgba(value: str) -> list[int]:
+    """Parse `#RRGGBB` or `#RRGGBBAA` into `[r, g, b, a]` (0-255)."""
+    text = value.strip().lstrip("#")
+    if len(text) == 6:
+        text += "FF"
+    if len(text) != 8:
+        raise MasonError(
+            f"Invalid hex color '{value}'.",
+            code="invalid_hex",
+            hint="Use #RRGGBB or #RRGGBBAA.",
+        )
+    return [int(text[i : i + 2], 16) for i in (0, 2, 4, 6)]
+
+
 def load_style(path: Path) -> StyleProfile:
     """Parse a YAML style file. Returns StyleProfile."""
     if not path.is_file():
