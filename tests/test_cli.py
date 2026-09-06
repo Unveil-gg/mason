@@ -55,7 +55,20 @@ def test_vocab_json() -> None:
     data = json.loads(result.stdout)
     assert "x_brace" in data["components"]
     assert "l_corner" in data["stamps"]
-    assert "silhouette_front" in data["inspect"]
+    assert "cart" in data["recipes"]
+    assert "silhouette_regressed" in data["inspect"]
+
+
+def test_clean_removes_jobs(project: Path, monkeypatch) -> None:
+    monkeypatch.chdir(project)
+    job_dir = project / ".mason" / "jobs" / "box"
+    job_dir.mkdir(parents=True)
+    (job_dir / "asset.yaml").write_text("id: box\n", encoding="utf-8")
+    result = runner.invoke(app, ["clean", "--json"])
+    assert result.exit_code == 0, result.stdout
+    data = json.loads(result.stdout)
+    assert data["removed"] == ["box"]
+    assert not job_dir.is_dir()
 
 
 def test_inspect_missing(project: Path, monkeypatch) -> None:

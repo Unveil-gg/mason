@@ -25,7 +25,7 @@ from mason.core.config import (
 )
 from mason.core.inspect import inspect_payload
 from mason.core.vocab import vocab_payload
-from mason.core.jobs import list_jobs, require_job
+from mason.core.jobs import clean_jobs, list_jobs, require_job
 from mason.core.workspace import find_project_root, init_project
 from mason.errors import MasonError
 from mason.pipelines.dispatch import run_build, run_rebuild
@@ -271,6 +271,75 @@ def history(
             payload,
             lambda: typer.echo(
                 f"{len(payload['iterations'])} iteration(s)",
+            ),
+        )
+
+    _guard(json_mode, _run)
+
+
+@app.command()
+def compare(
+    asset_id: Annotated[str, typer.Argument()],
+    json_mode: JsonFlag = False,
+) -> None:
+    """Write previews/compare.png for the current job."""
+
+    def _run():
+        from mason.pipelines.compare import run_compare
+        payload = run_compare(asset_id)
+        _emit(
+            json_mode,
+            payload,
+            lambda: typer.echo(payload.get("compare") or "no compare"),
+        )
+
+    _guard(json_mode, _run)
+
+
+@app.command()
+def ingest(
+    image: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
+    asset: Annotated[
+        str | None,
+        typer.Option("--asset", help="Job id to attach the silhouette."),
+    ] = None,
+    json_mode: JsonFlag = False,
+) -> None:
+    """Extract a silhouette and height/width ratio from concept art."""
+
+    def _run():
+        from mason.pipelines.ingest import run_ingest
+        payload = run_ingest(image, asset)
+        _emit(
+            json_mode,
+            payload,
+            lambda: typer.echo(
+                f"{payload['path']} ratio="
+                f"{payload['height_width_ratio']:.3f}",
+            ),
+        )
+
+    _guard(json_mode, _run)
+
+
+@app.command()
+def clean(
+    asset_id: Annotated[
+        str | None,
+        typer.Argument(help="One job id, or all jobs if omitted."),
+    ] = None,
+    json_mode: JsonFlag = False,
+) -> None:
+    """Delete stored jobs (outputs, previews, iterations)."""
+
+    def _run():
+        root = find_project_root()
+        removed = clean_jobs(root, asset_id)
+        _emit(
+            json_mode,
+            {"success": True, "removed": removed},
+            lambda: typer.echo(
+                f"removed {len(removed)} job(s)",
             ),
         )
 

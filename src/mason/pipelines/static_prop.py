@@ -15,9 +15,12 @@ from mason.errors import MasonError
 from mason.generators.blender.components import expand_components
 from mason.generators.blender.part_ops import expand_part_ops
 from mason.generators.blender.recipes import expand_recipe
+from mason.generators.blender.snap import apply_snaps, snaps_touch
 from mason.generators.blender.script_builder import build_blender_script
+from mason.pipelines.compare import write_compare_plate
 from mason.pipelines.contact_sheet import write_contact_sheet
 from mason.pipelines.common import finish_result, tool_failed
+from mason.pipelines.ingest import ensure_reference_silhouette
 from mason.tools.blender.commands import headless_python, preview_from_blend
 from mason.tools.blender.preview import ALL_PREVIEW_FILES
 from mason.tools.blender.validation import validate_static_prop
@@ -37,7 +40,28 @@ def resolved_parts(spec: StaticPropSpec):
             spec.materials.primary,
         )
     parts = parts + _decal_parts(spec)
-    return expand_components(expand_part_ops(parts))
+    after_ops = expand_part_ops(parts)
+    after_snap = apply_snaps(after_ops)
+    return expand_components(after_snap)
+
+
+def snap_touch_report(spec: StaticPropSpec) -> tuple[bool, str]:
+    """Re-expand through snap and report whether snapped faces meet."""
+    if spec.geometry.parts:
+        parts = list(spec.geometry.parts)
+    elif spec.geometry.recipe is not None:
+        parts = expand_recipe(
+            spec.geometry.recipe,
+            spec.dimensions,
+            spec.geometry.recipe_params,
+            spec.materials.primary,
+        )
+    else:
+        return True, "ok"
+    after_snap = apply_snaps(expand_part_ops(parts + _decal_parts(spec)))
+    if not any(part.snap for part in after_snap):
+        return True, "ok"
+    return snaps_touch(after_snap)
 
 
 def _decal_parts(spec: StaticPropSpec) -> list[PropPart]:
@@ -163,10 +187,12 @@ def build_static_prop(
 ) -> BuildResult:
     """Generate script, run Blender, validate, write result.json."""
     info = require_tool("blender")
+    touch = snap_touch_report(spec)
     parts = resolved_parts(spec)
     assert_known_families(parts, style)
     spec.geometry.parts = parts
     job.prepare()
+    ensure_reference_silhouette(job, spec)
     job.write_spec(spec)
     job.write_style(style)
     job.write_meta(source_spec)
@@ -213,7 +239,10 @@ def build_static_prop(
         raise tool_failed(job, result.command, result.exit_code, "blender")
 
     write_contact_sheet(job.previews)
-    report = validate_static_prop(job, spec, result.exit_code)
+    write_compare_plate(job)
+    report = validate_static_prop(
+        job, spec, result.exit_code, touch=touch,
+    )
     outputs = {}
     glb = job.output / "asset.glb"
     if glb.is_file():
@@ -229,6 +258,9 @@ def build_static_prop(
     sheet = job.previews / "contact_sheet.png"
     if sheet.is_file():
         previews["contact_sheet"] = job.rel(sheet)
+    compare = job.previews / "compare.png"
+    if compare.is_file():
+        previews["compare"] = job.rel(compare)
     return finish_result(
         job,
         spec,

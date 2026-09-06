@@ -62,6 +62,15 @@ class DecalSpec(BaseModel):
     material: str = "primary"
 
 
+class PartSnap(BaseModel):
+    """Move this part so it meets a named face of another part."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    to: str
+    on: Literal["top", "bottom", "front", "back", "left", "right"]
+
+
 class PropPart(BaseModel):
     """One primitive or component instance in a static prop."""
 
@@ -82,6 +91,7 @@ class PropPart(BaseModel):
     texture: ImageSource | None = None
     bevel: bool | None = None
     parent: str | None = None
+    snap: PartSnap | None = None
     inset: float = Field(default=0.0, ge=0)
     array: PartArray | None = None
     mirror: Literal["x", "y", "z"] | None = None
@@ -106,6 +116,9 @@ class RecipeParams(BaseModel):
     body_height: float = Field(default=0.42, gt=0)
     cap_count: int = Field(default=2, ge=1, le=3)
     bolt_count: int = Field(default=6, ge=3)
+    flare: float = Field(default=0.18, ge=0, le=0.6)
+    basket_height: float = Field(default=0.42, gt=0)
+    handle_rise: float = Field(default=0.16, gt=0)
 
 
 class GeometrySpec(BaseModel):
@@ -114,7 +127,9 @@ class GeometrySpec(BaseModel):
     bevel: bool = True
     bevel_width: float | None = None
     bevel_segments: int | None = None
-    recipe: Literal["crate", "shelf", "table", "hydrant"] | None = None
+    recipe: Literal[
+        "crate", "shelf", "table", "hydrant", "cart",
+    ] | None = None
     recipe_params: RecipeParams = Field(default_factory=RecipeParams)
     parts: list[PropPart] = Field(default_factory=list)
 

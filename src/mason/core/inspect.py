@@ -6,6 +6,7 @@ from typing import Any
 
 from mason.core.jobs import AssetJob
 from mason.core.styles import QualityGuidance, StyleProfile, load_style
+from mason.pipelines.compare import reference_iou, silhouette_regressed
 
 
 def inspect_payload(job: AssetJob, *, full: bool = False) -> dict[str, Any]:
@@ -52,7 +53,12 @@ def inspect_payload(job: AssetJob, *, full: bool = False) -> dict[str, Any]:
             latest_eval.model_dump(mode="json") if latest_eval else None
         ),
         "evaluations": evaluations,
+        "compare": _compare_path(job, result),
+        "silhouette_regressed": _silhouette_regressed(job),
     }
+    iou = _silhouette_iou(job)
+    if iou is not None:
+        payload["silhouette_iou"] = iou
     if full:
         payload["validation"] = (
             _full_validation(report) if report else None
@@ -119,3 +125,20 @@ def _quality_for(
     if style is None or not importance:
         return None
     return style.quality.get(importance)
+
+
+def _compare_path(job: AssetJob, result) -> str | None:
+    path = job.previews / "compare.png"
+    if path.is_file():
+        return job.rel(path)
+    if result and result.previews.get("compare"):
+        return result.previews["compare"]
+    return None
+
+
+def _silhouette_regressed(job: AssetJob) -> bool:
+    return silhouette_regressed(job)
+
+
+def _silhouette_iou(job: AssetJob) -> float | None:
+    return reference_iou(job)

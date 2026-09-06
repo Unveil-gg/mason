@@ -10,6 +10,7 @@ from PIL import Image
 from mason.core.assets import StaticPropSpec
 from mason.core.jobs import AssetJob
 from mason.core.results import ValidationCheck, ValidationReport
+from mason.generators.blender.snap import parents_touch_bounds
 from mason.tools.blender.preview import ALL_PREVIEW_FILES
 
 
@@ -21,6 +22,7 @@ def validate_static_prop(
     job: AssetJob,
     spec: StaticPropSpec,
     exit_code: int,
+    touch: tuple[bool, str] | None = None,
 ) -> ValidationReport:
     """Run deterministic checks on a static_prop job."""
     checks: list[ValidationCheck] = []
@@ -56,6 +58,7 @@ def validate_static_prop(
 
     meta_path = job.output / "metadata.json"
     bounds = None
+    data: dict = {}
     if meta_path.is_file():
         data = json.loads(meta_path.read_text(encoding="utf-8"))
         metrics["triangles"] = data.get("triangles")
@@ -79,6 +82,8 @@ def validate_static_prop(
         bounds = data.get("bounds")
         if data.get("preview_engine"):
             metrics["preview_engine"] = data["preview_engine"]
+        if data.get("object_bounds"):
+            metrics["object_bounds_count"] = len(data["object_bounds"])
     else:
         checks.append(_check("metadata", False, "metadata.json missing"))
 
@@ -94,6 +99,22 @@ def validate_static_prop(
             detail_parts.append(f"{axis}={got:.4f}/{want:.4f}")
         checks.append(_check("dimensions", ok, ", ".join(detail_parts)))
         metrics["bounds"] = bounds
+
+    snap_ok, snap_detail = touch if touch else (True, "ok")
+    parent_ok, parent_detail = True, "ok"
+    if data.get("object_bounds"):
+        parent_ok, parent_detail = parents_touch_bounds(
+            spec.geometry.parts,
+            data["object_bounds"],
+        )
+    touch_ok = snap_ok and parent_ok
+    if not snap_ok:
+        touch_detail = snap_detail
+    elif not parent_ok:
+        touch_detail = parent_detail
+    else:
+        touch_detail = "ok"
+    checks.append(_check("parts_touch", touch_ok, touch_detail))
 
     return ValidationReport(
         passed=all(c.passed for c in checks),

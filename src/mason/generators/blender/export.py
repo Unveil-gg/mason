@@ -59,6 +59,22 @@ def write_metadata(path):
         triangles += len(mesh.loop_triangles)
     mins, maxs = scene_bounds()
     size = maxs - mins
+    object_bounds = {}
+    for obj in meshes:
+        omins = Vector((1e9, 1e9, 1e9))
+        omaxs = Vector((-1e9, -1e9, -1e9))
+        for corner in obj.bound_box:
+            world = obj.matrix_world @ Vector(corner)
+            omins.x = min(omins.x, world.x)
+            omins.y = min(omins.y, world.y)
+            omins.z = min(omins.z, world.z)
+            omaxs.x = max(omaxs.x, world.x)
+            omaxs.y = max(omaxs.y, world.y)
+            omaxs.z = max(omaxs.z, world.z)
+        object_bounds[obj.name] = {
+            "min": [float(omins.x), float(omins.y), float(omins.z)],
+            "max": [float(omaxs.x), float(omaxs.y), float(omaxs.z)],
+        }
     payload = {
         "objects": [o.name for o in meshes],
         "mesh_count": len(meshes),
@@ -71,6 +87,7 @@ def write_metadata(path):
             "min": [float(mins.x), float(mins.y), float(mins.z)],
             "max": [float(maxs.x), float(maxs.y), float(maxs.z)],
         },
+        "object_bounds": object_bounds,
         "scales": {
             o.name: [float(s) for s in o.scale] for o in meshes
         },

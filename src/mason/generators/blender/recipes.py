@@ -22,10 +22,13 @@ def expand_recipe(
         return table_parts(dims, params, material)
     if name == "hydrant":
         return hydrant_parts(dims, params, material)
+    if name == "cart":
+        from mason.generators.blender.recipes_cart import cart_parts
+        return cart_parts(dims, params, material)
     raise MasonError(
         f"Unknown recipe '{name}'.",
         code="unknown_recipe",
-        hint="Use crate, shelf, table, hydrant, or explicit parts.",
+        hint="Use crate, shelf, table, hydrant, cart, or parts.",
     )
 
 

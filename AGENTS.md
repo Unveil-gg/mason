@@ -22,8 +22,9 @@ previews in a fresh pass and looks for reasons not to ship.
 2. Confirm the required capabilities are available.
 3. Run `mason vocab --json` and read the style profile
    (`styles/*.yaml`).
-4. Understand the request. If `references` exist, inspect them and
-   write `art_analysis` (shape language, proportions, materials).
+4. Understand the request. If `references` exist, run
+   `mason ingest <image> --asset <id> --json`, then write
+   `art_analysis` (shape language, proportions, materials).
 5. Write `art_direction`: subject, usage, silhouette goal, primary /
    secondary / tertiary forms, material families, detail density.
 6. Write `construction_plan` as intent (not compiled into meshes).
@@ -31,9 +32,11 @@ previews in a fresh pass and looks for reasons not to ship.
    `component`).
 8. Run `mason build <spec> --json`.
 9. Check technical validation. Do not ignore failures.
-10. Inspect **silhouettes first**
-    (`silhouette_front/side/three_quarter.png`). If the shape is not
-    immediately recognizable, revise geometry before materials.
+10. Open `previews/compare.png` before evaluate. Inspect
+    **silhouettes first** (`silhouette_front/side/three_quarter.png`).
+    If the shape is not immediately recognizable, revise geometry
+    before materials. Do not `ship` if inspect reports
+    `silhouette_regressed`.
 11. Inspect beauty views (`front`, `side`, `top`, `three_quarter`)
     and `detail.png`.
 12. Act as a production art director. Ask:
@@ -72,13 +75,14 @@ Important rules:
 Asset types:
 
 - `static_prop` — Blender parts (`box`, `cylinder`, `plane`, `cone`,
-  `torus`, `tapered_box`, `sphere`) with optional `parent`, `inset`,
-  `array` (linear or `radial`), `mirror`, `component`, `family`, and
-  `texture` (`{asset, file}`). Components: bolt, hinge, handle, caster,
-  bracket, trim, x_brace, rail, wire_wall, rivet_strip, cornice.
-  Recipes: crate, shelf, table, hydrant. Textured planes are decals
-  (stretch UV). `decals:` also expand to planes. Family `albedo` is
-  used when that PNG already exists.
+  `torus`, `tapered_box`, `sphere`) with optional `parent`, `snap`
+  (`{to, on}`), `inset`, `array` (linear or `radial`), `mirror`,
+  `component`, `family`, and `texture` (`{asset, file}`). Components:
+  bolt, hinge, handle, caster, bracket, trim, x_brace, rail,
+  wire_wall, rivet_strip, cornice. Recipes: crate, shelf, table,
+  hydrant, cart. Textured planes are decals (stretch UV). `decals:`
+  also expand to planes. Family `albedo` is used when that PNG
+  already exists.
 - `layered_raster` — Krita layers: fill, text (`font`, `align`),
   `stamp` (`l_corner`, `gem`, `rule`), or imported image. Source is
   `.kra`.
@@ -87,6 +91,7 @@ Asset types:
 - `image_process` — ImageMagick resize/crop/trim/composite/quantize/convert
 
 3D previews: beauty `front`/`side`/`top`/`three_quarter`, silhouettes,
-`detail.png`, plus `contact_sheet.png`. Raster: `previews/full.png`.
-Sprite-sheet previews are a 4× nearest-neighbor scale of the packed
-PNG. Compare previews to the spec, then `mason rebuild <id> --json`.
+`detail.png`, `contact_sheet.png`, and `compare.png`. Raster:
+`previews/full.png` and `compare.png`. Sprite-sheet previews are a
+4× nearest-neighbor scale of the packed PNG. Compare previews to
+the spec, then `mason rebuild <id> --json`.

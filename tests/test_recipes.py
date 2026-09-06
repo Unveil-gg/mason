@@ -41,6 +41,27 @@ def test_table_has_legs() -> None:
     assert sum(1 for p in parts if p.name.startswith("leg_")) == 4
 
 
+def test_cart_snaps_to_floor_and_rim() -> None:
+    from mason.generators.blender.snap import apply_snaps, snaps_touch
+
+    parts = expand_recipe(
+        "cart",
+        Dimensions3D(width=0.60, depth=0.50, height=0.78),
+        RecipeParams(flare=0.18, basket_height=0.42, handle_rise=0.16),
+        "steel",
+    )
+    names = [p.name for p in parts]
+    assert "floor" in names
+    assert "rim" in names
+    assert "wall_front" in names
+    assert "handle_left" in names
+    snapped = apply_snaps(parts)
+    ok, detail = snaps_touch(snapped)
+    assert ok, detail
+    walls = [p for p in snapped if p.name.startswith("wall_")]
+    assert all(p.snap is not None for p in walls)
+
+
 def test_explicit_parts_win() -> None:
     from mason.core.assets import parse_asset_spec
     from mason.pipelines.static_prop import resolved_parts

@@ -21,6 +21,7 @@ from mason.core.parts import (  # noqa: F401
     GeometrySpec,
     ImageSource,
     PartArray,
+    PartSnap,
     PropPart,
     RecipeParams,
 )

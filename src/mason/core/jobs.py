@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -280,3 +281,27 @@ def list_jobs(root: Path) -> list[AssetJob]:
         if child.is_dir() and (child / "asset.yaml").is_file():
             jobs.append(AssetJob(root, child.name))
     return jobs
+
+
+def clean_jobs(root: Path, asset_id: str | None = None) -> list[str]:
+    """Delete job directories. Returns removed asset ids."""
+    jobs_root = root / ".mason" / "jobs"
+    if asset_id:
+        path = jobs_root / asset_id
+        if not path.is_dir():
+            raise MasonError(
+                f"No job found for asset '{asset_id}'.",
+                code="job_not_found",
+                hint="Run mason build <spec.yaml> first.",
+                context={"asset_id": asset_id},
+            )
+        shutil.rmtree(path)
+        return [asset_id]
+    removed: list[str] = []
+    if not jobs_root.is_dir():
+        return removed
+    for child in sorted(jobs_root.iterdir()):
+        if child.is_dir():
+            shutil.rmtree(child)
+            removed.append(child.name)
+    return removed

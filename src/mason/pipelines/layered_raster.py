@@ -16,7 +16,9 @@ from mason.core.styles import StyleProfile
 from mason.errors import MasonError
 from mason.generators.krita.script_builder import build_krita_script
 from mason.generators.krita.stamps import expand_stamps
+from mason.pipelines.compare import write_compare_plate
 from mason.pipelines.common import finish_result, tool_failed
+from mason.pipelines.ingest import ensure_reference_silhouette
 from mason.tools.krita.adapter import KritaAdapter
 from mason.tools.registry import require_tool
 
@@ -47,6 +49,7 @@ def build_layered_raster(
         )
     width, height = canvas_size(spec, style)
     job.prepare()
+    ensure_reference_silhouette(job, spec)
     job.write_spec(spec)
     job.write_style(style)
     job.write_meta(source_spec)
@@ -99,6 +102,7 @@ def build_layered_raster(
     if not (job.previews / "full.png").is_file():
         raise tool_failed(job, result.command, result.exit_code, "krita")
 
+    write_compare_plate(job)
     report = validate_raster(job, spec, width, height, result.exit_code)
     outputs = {}
     if (job.output / "asset.kra").is_file():
@@ -108,6 +112,8 @@ def build_layered_raster(
     previews = {}
     if (job.previews / "full.png").is_file():
         previews["full"] = job.rel(job.previews / "full.png")
+    if (job.previews / "compare.png").is_file():
+        previews["compare"] = job.rel(job.previews / "compare.png")
     return finish_result(
         job,
         spec,

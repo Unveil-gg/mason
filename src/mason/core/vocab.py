@@ -11,7 +11,7 @@ SHAPES = (
     "box", "cylinder", "plane", "cone", "torus",
     "tapered_box", "sphere",
 )
-RECIPES = ("crate", "shelf", "table", "hydrant")
+RECIPES = ("crate", "shelf", "table", "hydrant", "cart")
 LAYER_ROLES = ("background", "fill", "text", "image", "overlay")
 FAMILIES = (
     "painted_metal", "bare_metal", "varnished_wood",
@@ -34,7 +34,11 @@ def vocab_payload() -> dict[str, Any]:
             "Style family.albedo applies when the file exists."
         ),
         "inspect": (
-            "Open silhouette_front/side/three_quarter first. "
-            "Beauty and detail after the shape reads."
+            "Open compare.png, then silhouette_front/side/"
+            "three_quarter. Do not ship if silhouette_regressed."
+        ),
+        "snap": (
+            "part.snap {to, on: top|bottom|front|back|left|right} "
+            "meets named faces before components expand."
         ),
     }

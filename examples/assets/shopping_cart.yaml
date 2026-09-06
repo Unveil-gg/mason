@@ -2,7 +2,7 @@ type: static_prop
 id: shopping_cart
 name: Shopping Cart
 
-# Grocery cart: flared rim, wire walls, short aft handle, casters.
+# Grocery cart via the cart recipe: flared rim, snapped walls, handle.
 dimensions:
   width: 0.60
   depth: 0.50
@@ -12,148 +12,11 @@ style: iron
 
 geometry:
   bevel: true
-  parts:
-    - name: floor
-      shape: box
-      size: [0.44, 0.30, 0.014]
-      location: [0.0, -0.02, 0.15]
-      material: steel
-      family: bare_metal
-    - name: rim
-      shape: box
-      size: [0.60, 0.44, 0.012]
-      location: [0.0, 0.0, 0.58]
-      material: steel
-      family: bare_metal
-      component: rail
-    - name: hoop
-      shape: box
-      size: [0.52, 0.38, 0.008]
-      location: [0.0, -0.01, 0.36]
-      material: steel_dark
-      family: bare_metal
-      component: rail
-    - name: wall_left
-      shape: box
-      size: [0.008, 0.36, 0.40]
-      location: [-0.26, -0.01, 0.36]
-      rotation: [0.0, 0.12, 0.0]
-      material: steel_dark
-      family: bare_metal
-      component: wire_wall
-      component_params: {count: 7}
-    - name: wall_right
-      shape: box
-      size: [0.008, 0.36, 0.40]
-      location: [0.26, -0.01, 0.36]
-      rotation: [0.0, -0.12, 0.0]
-      material: steel_dark
-      family: bare_metal
-      component: wire_wall
-      component_params: {count: 7}
-    - name: wall_front
-      shape: box
-      size: [0.48, 0.008, 0.40]
-      location: [0.0, -0.20, 0.36]
-      rotation: [-0.10, 0.0, 0.0]
-      material: steel_dark
-      family: bare_metal
-      component: wire_wall
-      component_params: {count: 7}
-    - name: wall_back
-      shape: box
-      size: [0.48, 0.008, 0.40]
-      location: [0.0, 0.18, 0.36]
-      material: steel_dark
-      family: bare_metal
-      component: wire_wall
-      component_params: {count: 5}
-    - name: seat_panel
-      shape: box
-      size: [0.22, 0.01, 0.14]
-      location: [0.0, 0.10, 0.46]
-      material: steel
-      family: bare_metal
-    - name: seat_ledge
-      shape: box
-      size: [0.22, 0.09, 0.01]
-      location: [0.0, 0.06, 0.39]
-      material: steel
-      family: bare_metal
-    - name: rail_left
-      shape: box
-      size: [0.02, 0.28, 0.02]
-      location: [-0.16, -0.02, 0.09]
-      material: steel_dark
-      family: bare_metal
-    - name: rail_right
-      shape: box
-      size: [0.02, 0.28, 0.02]
-      location: [0.16, -0.02, 0.09]
-      material: steel_dark
-      family: bare_metal
-    - name: axle_front
-      shape: box
-      size: [0.36, 0.02, 0.02]
-      location: [0.0, -0.14, 0.09]
-      material: steel_dark
-      family: bare_metal
-    - name: axle_back
-      shape: box
-      size: [0.36, 0.02, 0.02]
-      location: [0.0, 0.10, 0.09]
-      material: steel_dark
-      family: bare_metal
-    - name: wheel_fl
-      shape: box
-      size: [0.05, 0.032, 0.07]
-      location: [-0.16, -0.14, 0.04]
-      material: rubber
-      family: rubber
-      component: caster
-    - name: wheel_fr
-      shape: box
-      size: [0.05, 0.032, 0.07]
-      location: [0.16, -0.14, 0.04]
-      material: rubber
-      family: rubber
-      component: caster
-    - name: wheel_bl
-      shape: box
-      size: [0.05, 0.032, 0.07]
-      location: [-0.16, 0.10, 0.04]
-      material: rubber
-      family: rubber
-      component: caster
-    - name: wheel_br
-      shape: box
-      size: [0.05, 0.032, 0.07]
-      location: [0.16, 0.10, 0.04]
-      material: rubber
-      family: rubber
-      component: caster
-    - name: handle_left
-      shape: cylinder
-      size: [0.018, 0.018, 0.22]
-      location: [-0.16, 0.24, 0.67]
-      rotation: [0.22, 0.0, 0.0]
-      material: steel
-      family: bare_metal
-    - name: handle_right
-      shape: cylinder
-      size: [0.018, 0.018, 0.22]
-      location: [0.16, 0.24, 0.67]
-      rotation: [0.22, 0.0, 0.0]
-      material: steel
-      family: bare_metal
-    - name: handle_bar
-      shape: cylinder
-      size: [0.022, 0.022, 0.36]
-      location: [0.0, 0.265, 0.77]
-      rotation: [0.0, 1.5708, 0.0]
-      material: handle
-      family: painted_metal
-      wear: 0.1
+  recipe: cart
+  recipe_params:
+    flare: 0.18
+    basket_height: 0.42
+    handle_rise: 0.16
 
 materials:
   primary: steel
@@ -193,7 +56,7 @@ construction_plan:
   materials: [bare_metal, rubber]
   notes:
     - rim wider than floor so the front reads nestable
-    - handle sits behind the back rim
+    - walls snap to the floor; handle posts snap to the rim
 
 export:
   format: glb
