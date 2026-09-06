@@ -15,7 +15,8 @@
 ---
 
 <p align="center">
-  <img src="docs/images/grand_mansion_contact_sheet.png" alt="Grand Mansion demo preview — front, side, top, and three-quarter views with demo lighting" width="640">
+  <img src="docs/images/grand_mansion_contact_sheet.png" alt="Grand Mansion demo preview — front, side, top, and three-quarter views with demo lighting" width="640"><br>
+  <sub><em>Grand Mansion — built with Mason + Grok 4.6 Fast (High Effort)</em></sub>
 </p>
 
 Mason is a local developer CLI that orchestrates **already installed**
