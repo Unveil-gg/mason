@@ -81,3 +81,44 @@ def test_bond_staggers_tabs() -> None:
     assert any(n.startswith("tabs_h") for n in names)
     assert any(n.startswith("tabs_v") for n in names)
     assert len(layers) > 16
+
+
+def test_dapple_uses_ellipses() -> None:
+    layers = expand_stamps([
+        RasterLayer(
+            name="leaf",
+            fill="lawn",
+            stamp="dapple",
+            rect=LayerRect(x=0, y=0, width=64, height=64),
+        ),
+    ])
+    assert len(layers) > 8
+    assert all(ly.shape == "ellipse" for ly in layers)
+
+
+def test_vignette_has_rings() -> None:
+    layers = expand_stamps([
+        RasterLayer(
+            name="edge",
+            fill="ink",
+            stamp="vignette",
+            rect=LayerRect(x=0, y=0, width=200, height=100),
+        ),
+    ])
+    assert len(layers) == 12
+    assert layers[0].name.startswith("edge_r0")
+
+
+def test_figure_has_coat() -> None:
+    layers = expand_stamps([
+        RasterLayer(
+            name="hero",
+            fill="ink",
+            stamp="figure",
+            rect=LayerRect(x=10, y=10, width=80, height=160),
+        ),
+    ])
+    names = [ly.name for ly in layers]
+    assert "hero_hat" in names
+    assert "hero_coat" in names
+    assert "hero_flare" in names

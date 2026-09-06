@@ -55,10 +55,15 @@ def test_vocab_json() -> None:
     data = json.loads(result.stdout)
     assert "x_brace" in data["components"]
     assert "l_corner" in data["stamps"]
+    assert "dapple" in data["stamps"]
+    assert "figure" in data["stamps"]
     assert "cart" in data["recipes"]
     assert "estate" in data["recipes"]
+    assert "lawn" in data["families"]
     assert "cutout" in data
     assert "silhouette_regressed" in data["inspect"]
+    assert "pixels+keys" in data["raster"]
+    assert "barbarian.yaml" in data["sprites"]
 
 
 def test_clean_removes_jobs(project: Path, monkeypatch) -> None:

@@ -146,6 +146,7 @@ def build_geometry():
                 settings["metallic"],
                 settings.get("variation") or 0.0,
                 wear,
+                settings.get("noise_scale") or 0.0,
             )
         return mats[cache]
 
@@ -204,7 +205,9 @@ def build_geometry():
         use_bevel = part.get("bevel")
         if use_bevel is None:
             use_bevel = CONFIG["bevel"]
-        if part.get("cutout") or part.get("family") == "foliage":
+        if part.get("cutout") or part.get("family") == "lawn":
+            use_bevel = False
+        if (part.get("shape") or "box") == "sphere":
             use_bevel = False
         if use_bevel and not is_plane:
             apply_bevel(obj, CONFIG["bevel_width"], CONFIG["bevel_segments"])

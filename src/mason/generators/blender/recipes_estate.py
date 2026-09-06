@@ -211,13 +211,13 @@ def tree_parts(
     prefix: str = "tree",
     snap_ground: str | None = None,
 ) -> list[PropPart]:
-    """Trunk plus cone crown. Height comes from params or dims."""
+    """Trunk plus a squat sphere crown. Height from params or dims."""
     _ = material
     ox, oy, oz = origin or (0.0, 0.0, 0.0)
     total = params.tree_height if origin else dims.height
     trunk_h = min(0.28, total * 0.28)
     crown_h = max(total - trunk_h, 0.2)
-    crown = max(crown_h * 0.75, 0.35)
+    crown = max(crown_h * 0.85, 0.35)
     ground = (
         PartSnap(to=snap_ground, on="top") if snap_ground else None
     )
@@ -233,8 +233,8 @@ def tree_parts(
         ),
         PropPart(
             name=f"{prefix}_crown",
-            shape="cone",
-            size=(crown, crown, crown_h),
+            shape="sphere",
+            size=(crown, crown, crown_h * 0.92),
             location=(ox, oy, oz + trunk_h + crown_h / 2.0),
             material="hedge",
             family="foliage",
@@ -329,7 +329,7 @@ def estate_parts(
             size=(w - 0.20, 1.55, 0.05),
             location=(0.0, -1.82, 0.2),
             material="lawn",
-            family="foliage",
+            family="lawn",
             snap=PartSnap(to="lot", on="top"),
         ),
         PropPart(
@@ -337,7 +337,7 @@ def estate_parts(
             size=(w - 0.20, 1.72, 0.05),
             location=(0.0, 1.74, 0.2),
             material="lawn",
-            family="foliage",
+            family="lawn",
             snap=PartSnap(to="lot", on="top"),
         ),
     ]

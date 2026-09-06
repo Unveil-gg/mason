@@ -110,9 +110,13 @@ class RasterLayer(BaseModel):
     image: str | None = None
     pixels: list[str] | None = None
     keys: dict[str, str] = Field(default_factory=dict)
-    stamp: Literal["l_corner", "gem", "rule", "bond"] | None = None
+    stamp: Literal[
+        "l_corner", "gem", "rule", "bond",
+        "dapple", "vignette", "figure",
+    ] | None = None
     stamp_corner: Literal["tl", "tr", "bl", "br"] = "tl"
     stamp_inner: str | None = None
+    shape: Literal["rect", "ellipse"] = "rect"
 
     @model_validator(mode="after")
     def need_content(self) -> RasterLayer:

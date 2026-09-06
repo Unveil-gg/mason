@@ -19,7 +19,7 @@ LAYER_ROLES = ("background", "fill", "text", "image", "overlay")
 FAMILIES = (
     "painted_metal", "bare_metal", "varnished_wood",
     "rubber", "plastic", "cardboard",
-    "masonry", "roofing", "foliage", "water",
+    "masonry", "roofing", "foliage", "lawn", "water",
 )
 
 
@@ -39,7 +39,29 @@ def vocab_payload() -> dict[str, Any]:
             "textured shapes use world-space UVs. "
             "family.tile_size overrides style tile_size. "
             "Style family.albedo applies when the file "
-            "exists."
+            "exists. family.noise_scale tunes solid grain."
+        ),
+        "raster": (
+            "layered_raster: fill, text, image, stamp, "
+            "pixels+keys. shape rect|ellipse. "
+            "stamps: l_corner gem rule bond dapple "
+            "vignette figure."
+        ),
+        "sprites": (
+            "sprite_sheet via Aseprite. One animation per "
+            "row. Prefer pixels+keys and a shared style "
+            "palette. Example: examples/assets/barbarian.yaml."
+        ),
+        "style_tune": (
+            "Edit styles/<name>.yaml: palette, family "
+            "roughness/variation/noise_scale/tile_size/"
+            "albedo, bevel, lighting, render."
+        ),
+        "recipes_note": (
+            "Recipes are named clusters, not the path to "
+            "beauty. Novel assets use parts + style + stamps. "
+            "Add a recipe only after the same cluster appears "
+            "three times."
         ),
         "inspect": (
             "preview_roles.primary is three_quarter beauty. "

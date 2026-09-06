@@ -19,7 +19,10 @@ def hex_to_rgb(value):
     return tuple(srgb_to_linear(c) for c in raw)
 
 
-def create_material(name, hex_color, roughness, metallic, variation=0.0, wear=0.0):
+def create_material(
+    name, hex_color, roughness, metallic, variation=0.0, wear=0.0,
+    noise_scale=0.0,
+):
     """Create a Principled BSDF material. Returns the material."""
     mat = bpy.data.materials.new(name=name)
     mat.use_nodes = True
@@ -34,7 +37,8 @@ def create_material(name, hex_color, roughness, metallic, variation=0.0, wear=0.
     vary = max(float(variation), float(wear) * 0.25)
     if vary > 0.001:
         noise = nodes.new("ShaderNodeTexNoise")
-        noise.inputs["Scale"].default_value = 6.0 + float(wear) * 8.0
+        scale = float(noise_scale) if noise_scale else 24.0
+        noise.inputs["Scale"].default_value = scale + float(wear) * 8.0
         mix = nodes.new("ShaderNodeMixRGB")
         mix.blend_type = "MIX"
         mix.inputs["Fac"].default_value = min(vary, 0.45)

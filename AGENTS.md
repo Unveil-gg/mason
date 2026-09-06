@@ -104,8 +104,9 @@ Asset types:
   `materials.strategy`: `family` (default), `palette` (one shared
   swatch sheet), or `atlas` (`atlas` + `entry`).
 - `layered_raster` — Krita layers: fill, text (`font`, `align`),
-  `stamp` (`l_corner`, `gem`, `rule`), or imported image. Source is
-  `.kra`.
+  `stamp` (`l_corner`, `gem`, `rule`, `bond`, `dapple`, `vignette`,
+  `figure`), `shape` (`rect` / `ellipse`), `pixels` + `keys`, or
+  imported image. Source is `.kra`.
 - `sprite_sheet` — Aseprite animations of timed frames. Prefer
   `pixels` + `keys`. Source is `.aseprite`; outputs PNG + `frames.json`.
 - `image_process` — ImageMagick resize/crop/trim/composite/quantize/convert

@@ -138,21 +138,21 @@ ArtDirection, ConstructionPlan, silhouette/beauty/detail previews,
 `mason evaluate` / `mason history`, material families, components,
 and a `hydrant` recipe are in. ConstructionPlan is intent only.
 
-### 2g. Still on hold: material variants / booleans / kits
+### 2g. Still on hold: material variants / kits
 
 - **Material variants** — one `AssetSpec` fans out into several jobs
   with palette overrides (e.g. a crate in `wood_dark` and
   `wood_light`) instead of duplicating the whole spec file. Likely a
   `variants: [{suffix, palette_overrides}]` block on `static_prop`/
   `layered_raster`.
-- **Booleans** — Blender boolean modifiers (cut a window into a wall,
-  notch a shelf board), via a new `part.op.boolean: {with, mode}`.
-  Deferred: it multiplies the geometry-validation surface
-  (self-intersection, non-manifold results) and no concrete asset has
-  needed it yet.
 - **Kits** — a manifest grouping several already-built assets (e.g.
   "cafe furniture set") into one `mason export` call, building on the
   per-asset manifest-merge logic already in `pipelines/export.py`.
+- **Booleans** — single `cutout: {target}` shipped. Nested CSG stays
+  out until a concrete asset needs it.
 
-All three stay deferred until a concrete asset needs them, per "no new
-patterns without exhausting the existing implementation first."
+Krita stamps now include `bond`, `dapple`, `vignette`, and `figure`,
+plus `shape: ellipse` and `pixels` + `keys` on `layered_raster`.
+Further paint tools wait until those stall a real poster or UI.
+
+Variants and kits stay deferred until a concrete asset needs them.

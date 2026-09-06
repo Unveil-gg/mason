@@ -26,7 +26,6 @@ depends_on:
   - estate_stone_q
   - estate_shingle_q
   - estate_water_q
-  - estate_hedge_q
 
 art_direction:
   subject: grand estate mansion with formal garden and rear pool
@@ -62,7 +61,7 @@ construction_plan:
     - {type: box, purpose: hedges and parterre}
   tertiary_details:
     - {type: cutout, purpose: window recesses and pool basin}
-    - {type: cone, purpose: rear trees}
+    - {type: sphere, purpose: rear trees}
     - {type: sphere, purpose: topiary}
   materials: [masonry, roofing, foliage, water]
   notes:

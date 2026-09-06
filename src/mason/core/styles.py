@@ -28,6 +28,7 @@ class MaterialFamily(BaseModel):
     roughness: float = Field(default=0.75, ge=0, le=1)
     metallic: float = Field(default=0.0, ge=0, le=1)
     variation: float = Field(default=0.0, ge=0, le=1)
+    noise_scale: float | None = Field(default=None, gt=0)
     albedo: ImageSource | None = None
     roughness_map: ImageSource | None = None
     tile_size: float | None = Field(default=None, gt=0)

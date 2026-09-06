@@ -128,6 +128,35 @@ def test_krita_script_has_document(project: Path) -> None:
     assert "background" in script
     assert "#DDD0B4" in script
     assert "#8066A8" in script
+    assert "fill_ellipse" in script
+    assert "paint_pixels" in script
+
+
+def test_krita_script_wires_pixels_and_ellipse(project: Path) -> None:
+    spec = parse_asset_spec({
+        "type": "layered_raster",
+        "id": "mark",
+        "name": "Mark",
+        "dimensions": {"width": 16, "height": 16},
+        "layers": [
+            {
+                "name": "spot",
+                "fill": "ink",
+                "shape": "ellipse",
+                "rect": {"x": 2, "y": 2, "width": 8, "height": 8},
+            },
+            {
+                "name": "glyph",
+                "pixels": ["II", ".I"],
+                "keys": {"I": "ink"},
+            },
+        ],
+    })
+    style = load_style(project / "styles" / "default.yaml")
+    script = build_krita_script(spec, style, project / "job", 16, 16)
+    assert '"shape": "ellipse"' in script
+    assert '"pixels":' in script
+    assert spec.layers[1].pixels is not None
 
 
 def test_aseprite_script_draws_pixels(project: Path) -> None:

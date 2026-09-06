@@ -69,14 +69,16 @@ materials:
       albedo:
         asset: estate_water_q
         file: output/asset.png
+    lawn:
+      roughness: 0.94
+      metallic: 0.0
+      variation: 0.14
+      noise_scale: 48
     foliage:
       roughness: 0.9
       metallic: 0.0
-      variation: 0.04
-      tile_size: 0.50
-      albedo:
-        asset: estate_hedge_q
-        file: output/asset.png
+      variation: 0.12
+      noise_scale: 36
 
 textures:
   tile_size: 0.22

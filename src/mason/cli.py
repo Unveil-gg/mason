@@ -200,11 +200,19 @@ def inspect(
 def vocab(json_mode: JsonFlag = False) -> None:
     """Print shapes, components, recipes, stamps, and families."""
     payload = vocab_payload()
-    _emit(
-        json_mode,
-        payload,
-        lambda: typer.echo(" ".join(payload["components"])),
-    )
+    _emit(json_mode, payload, lambda: _print_vocab(payload))
+
+
+def _print_vocab(payload: dict[str, Any]) -> None:
+    """Human card: lists plus the short authoring hints."""
+    for key in (
+        "shapes", "recipes", "stamps", "families", "components",
+    ):
+        typer.echo(f"{key}: {', '.join(payload[key])}")
+    for key in (
+        "raster", "sprites", "style_tune", "recipes_note", "inspect",
+    ):
+        typer.echo(f"{key}: {payload[key]}")
 
 
 @app.command()

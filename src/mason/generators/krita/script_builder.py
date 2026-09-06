@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from mason.core.assets import LayeredRasterSpec
+from mason.core.assets import PIXEL_TRANSPARENT, LayeredRasterSpec
 from mason.core.paths import resolve_project_path
 from mason.core.styles import StyleProfile
 from mason.generators.krita.stamps import expand_stamps
@@ -32,8 +32,19 @@ def build_krita_script(
             "font_size": layer.font_size,
             "font": layer.font,
             "align": layer.align,
+            "shape": layer.shape,
             "image": None,
+            "pixels": None,
+            "keys": {},
         }
+        if layer.pixels:
+            entry["pixels"] = layer.pixels
+            entry["keys"] = {
+                ch: style.color(layer.keys[ch])
+                for row in layer.pixels
+                for ch in row
+                if ch not in PIXEL_TRANSPARENT and ch in layer.keys
+            }
         if layer.image and project_root is not None:
             entry["image"] = str(
                 resolve_project_path(project_root, layer.image),
@@ -90,6 +101,54 @@ def hex_to_bgra(value):
 def fill_layer(layer, color, x, y, w, h):
     pixel = hex_to_bgra(color)
     layer.setPixelData(pixel * (w * h), x, y, w, h)
+
+
+def fill_ellipse(layer, color, x, y, w, h):
+    img = QImage(w, h, QImage.Format_ARGB32)
+    img.fill(0)
+    painter = QPainter(img)
+    r, g, b = hex_rgb(color)
+    painter.setPen(Qt.NoPen)
+    painter.setBrush(QColor(r, g, b, 255))
+    painter.drawEllipse(0, 0, max(w - 1, 0), max(h - 1, 0))
+    painter.end()
+    bits = img.bits()
+    if hasattr(bits, "setsize"):
+        nbytes = (
+            img.sizeInBytes()
+            if hasattr(img, "sizeInBytes")
+            else img.byteCount()
+        )
+        bits.setsize(nbytes)
+    layer.setPixelData(bytes(bits), x, y, w, h)
+
+
+def paint_pixels(layer, rows, keys, x, y):
+    if not rows:
+        return
+    pw = max(len(row) for row in rows)
+    ph = len(rows)
+    img = QImage(pw, ph, QImage.Format_ARGB32)
+    img.fill(0)
+    skip = set(". _")
+    for j, row in enumerate(rows):
+        for i, ch in enumerate(row):
+            if ch in skip:
+                continue
+            hexv = keys.get(ch)
+            if not hexv:
+                continue
+            r, g, b = hex_rgb(hexv)
+            img.setPixel(i, j, QColor(r, g, b, 255).rgba())
+    bits = img.bits()
+    if hasattr(bits, "setsize"):
+        nbytes = (
+            img.sizeInBytes()
+            if hasattr(img, "sizeInBytes")
+            else img.byteCount()
+        )
+        bits.setsize(nbytes)
+    layer.setPixelData(bytes(bits), x, y, pw, ph)
 
 
 def paint_text(layer, text, color, x, y, w, h, font_size, font_name, align_name):
@@ -166,8 +225,16 @@ def main():
         else:
             node = doc.createNode(layer["name"], "paintlayer")
             root.addChildNode(node, None)
-            if layer.get("fill") and not layer.get("text"):
-                fill_layer(node, layer["fill"], x, y, lw, lh)
+            if layer.get("pixels"):
+                paint_pixels(
+                    node, layer["pixels"], layer.get("keys") or {},
+                    x, y,
+                )
+            elif layer.get("fill") and not layer.get("text"):
+                if layer.get("shape") == "ellipse":
+                    fill_ellipse(node, layer["fill"], x, y, lw, lh)
+                else:
+                    fill_layer(node, layer["fill"], x, y, lw, lh)
             if layer.get("text"):
                 paint_text(
                     node,

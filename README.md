@@ -109,20 +109,22 @@ export:
   save_blend: true
 ```
 
-`crate`, `shelf`, and `table` are optional **recipes**. The source of
-truth is a list of `parts` (`box`, `cylinder`, `plane`) with optional
-`parent`, `inset`, and linear `array`.
+**Recipes** (`crate`, `shelf`, `table`, `hydrant`, `cart`, `house`,
+`tree`, `pool`, `estate`) are named clusters, not the path to a
+beautiful asset. The source of truth is `parts` plus a style profile.
+Add a recipe only after the same cluster appears three times. Beauty
+comes from style (palette, families, bevel, tile size), secondary
+forms, stamps, and the critic loop — not from a longer recipe list.
 
 3D examples: `simple_crate`, `simple_shelf`, `simple_post`,
 `simple_sign`, `simple_fence`, `textured_crate` (tiled material),
 `crate_with_label`, `noir_billboard` (a two-post highway billboard with
-a decal face). Raster: `simple_panel`, `menu_card` (text + image
-import), `plank_texture` (tileable material), `shipping_label`,
-`noir_billboard_face` (black-and-white movie-poster decal),
-`barbarian` (`sprite_sheet`: idle ×2, walk ×4, attack ×3 on a 4×3
-grid, plus `frames.json`). Previews include a 2×2
-`contact_sheet.png`. EEVEE is preferred; Mason falls back to Cycles CPU
-if EEVEE fails.
+a decal face), `grand_mansion` (estate recipe). Raster: `simple_panel`,
+`menu_card`, `plank_texture`, `shipping_label`, `noir_billboard_face`,
+`rpg_status_frame`. Sprite: `barbarian` (`sprite_sheet`: idle ×2,
+walk ×4, attack ×3 on a 4×3 grid, plus `frames.json`). Previews
+include a 2×2 `contact_sheet.png`. EEVEE is preferred; Mason falls
+back to Cycles CPU if EEVEE fails.
 
 ## Textures on 3D parts
 
@@ -162,6 +164,57 @@ For the quality-loop example: `mason build examples/assets/fire_hydrant.yaml`,
 then inspect the beauty three-quarter render first. Use clay for
 geometry and silhouettes only when readability is in doubt.
 
+## Tuning a style
+
+Edit `styles/<name>.yaml`. Specs only name the style; they should not
+inline hex or PBR. Useful knobs:
+
+| Knob | What it changes |
+| --- | --- |
+| `palette.*` | Named colors used by parts and raster layers |
+| `materials.families.<name>.roughness` / `metallic` | PBR |
+| `materials.families.<name>.variation` | How much solid color mottles |
+| `materials.families.<name>.noise_scale` | Grain frequency (higher = finer) |
+| `materials.families.<name>.tile_size` | World meters per albedo tile |
+| `materials.families.<name>.albedo` | Shared 2D tile (`asset` + `file`) |
+| `geometry.bevel_width` / `bevel_segments` | Edge softness |
+| `textures.tile_size` / `wrap` | Default UV repeat |
+| `lighting.preset` | `neutral_studio` or `high_key` |
+| `render.resolution` / `samples` / `engine` | Preview quality |
+
+Organic families (`lawn`, `foliage`) should prefer solid color +
+`variation` / `noise_scale` over a coarse tiled albedo. Masonry and
+roofing keep bond-stamped tiles.
+
+## Raster stamps and sprites
+
+Krita `layered_raster` layers: fill, `shape: rect|ellipse`, text,
+image import, `pixels` + `keys`, and stamps (`l_corner`, `gem`,
+`rule`, `bond`, `dapple`, `vignette`, `figure`).
+
+Aseprite `sprite_sheet` is the animation path. Prefer `pixels` +
+`keys` and a shared style palette so idle / walk / attack stay
+cohesive. Mason writes `output/asset.png`, `output/frames.json`, and
+an optional `.aseprite` source.
+
+```bash
+mason build examples/assets/barbarian.yaml
+mason inspect barbarian --json
+```
+
+Example agent prompts:
+
+- *32×32 NES hero, side-on, facing right. Style `nes`. Animations:
+  idle ×2, walk ×4, attack ×3. One `pixels` map per frame, shared
+  `keys`.*
+- *16×16 coin sparkle, 4 frames, loop. Style palette only, no new
+  hex.*
+- *Rebuild `barbarian` walk so the stride reads at 4× preview scale.*
+
+`mason ingest <image> --asset <id>` extracts a **silhouette and
+height/width ratio** for the critic loop. It does not write a YAML
+spec or a mesh. Image → analysis notes → you write the spec.
+
 ## Commands
 
 | Command | Purpose |
@@ -178,6 +231,8 @@ geometry and silhouettes only when readability is in doubt.
 | `mason history <asset-id>` | Iteration snapshots and evaluations |
 | `mason export <asset-id>` | Copy finished outputs into another project |
 | `mason vocab` | Shapes, components, recipes, stamps, families |
+| `mason ingest <image>` | Silhouette + ratio from concept art |
+| `mason compare <id>` | Write `previews/compare.png` |
 | `mason clean [id]` | Delete stored jobs (all, or one id) |
 | `mason list` | Jobs in this project |
 | `mason tools scan` | Rediscover and store new tool paths |
@@ -252,10 +307,13 @@ a zero exit code as “it looks right.”
 
 ## Current limitations (v0.1)
 
-- Raster generation is palette fills, rects, text, stamps, image
-  import, and per-pixel maps. Not freehand painting.
+- Raster generation is palette fills, rects/ellipses, text, stamps,
+  image import, and per-pixel maps. Not freehand painting.
+- `mason ingest` is silhouette + ratio only. There is no image → YAML
+  → mesh compiler.
 - `mason export` copies files and a manifest only; it does not
   construct Godot scenes/resources or write `.import` sidecars.
+- No material-variant fan-out (one spec → several palette jobs).
 - No in-process LLM, no bundled creative apps.
 
 ## Roadmap
@@ -263,5 +321,7 @@ a zero exit code as “it looks right.”
 Design notes: [docs/roadmap.md](docs/roadmap.md).
 
 - In-engine / Godot preview (`preview_roles.context`) — hook only
-- Richer Krita paint tools beyond fill/text/stamp/image layers
-- Multi-asset kits (shared atlas families beyond one entry)
+- Material variants (`variants:` palette overrides on one spec)
+- Multi-asset kits (one export of a named set)
+- Optional richer Krita brushes — only if stamps + pixels stall
+- Image-to-spec stays an agent skill, not a Mason command
