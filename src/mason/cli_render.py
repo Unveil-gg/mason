@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from mason.core.jobs import AssetJob
-from mason.core.results import BuildResult, ExportResult
+from mason.core.results import BuildResult, ExportResult, KitExportResult
 from mason.core.workspace import find_project_root
 from mason.tools.base import ToolInfo
 from mason.tools.registry import ALL_CAPABILITIES, TOOL_GROUPS, capabilities_from
@@ -88,6 +88,18 @@ def print_export(result: ExportResult) -> None:
     console.print(f"Exported [bold]{result.asset_id}[/bold] ({status})")
     for key, path in result.installed.items():
         console.print(f"  {key}: {path}")
+    if result.manifest:
+        console.print(f"  manifest: {result.manifest}")
+
+
+def print_kit_export(result: KitExportResult) -> None:
+    status = "[green]ok[/green]" if result.success else "[red]failed[/red]"
+    console.print(f"Exported kit [bold]{result.kit_id}[/bold] ({status})")
+    for member_id, member in result.members.items():
+        m_status = (
+            "[green]ok[/green]" if member.success else "[red]failed[/red]"
+        )
+        console.print(f"  {member_id}: {m_status}")
     if result.manifest:
         console.print(f"  manifest: {result.manifest}")
 

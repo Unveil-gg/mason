@@ -162,16 +162,20 @@ screenshots/comparisons. Threaded as a plain kwarg
 it never touches the stored spec/style, so evaluation renders from
 plain `mason build`/`mason rebuild` stay comparable across iterations.
 
-### 2i. Still on hold: kits
+### 2i. Shipped: kits
 
-- **Kits** — a manifest grouping several already-built assets (e.g.
-  "cafe furniture set") into one `mason export` call, building on the
-  per-asset manifest-merge logic already in `pipelines/export.py`.
+`kits/<id>.yaml` (`id`, `name`, `members`) names several
+already-built assets. `mason export --kit <id>` fans the existing
+per-asset `run_export`/manifest-merge logic in `pipelines/export.py`
+over every member, failing before copying anything if a member has
+no successful build, then adds a `kits.<id>` block to the same
+`mason_manifest.json`. It is export-only: no auto-build, no merged
+mesh. See [examples/kits/cafe.yaml](examples/kits/cafe.yaml).
+
 - **Booleans** — single `cutout: {target}` shipped. Nested CSG stays
   out until a concrete asset needs it.
 
-Krita stamps now include `bond`, `dapple`, `vignette`, and `figure`,
-plus `shape: ellipse` and `pixels` + `keys` on `layered_raster`.
-Further paint tools wait until those stall a real poster or UI.
-
-Kits stay deferred until a concrete asset needs them.
+Krita stamps now include `bond`, `dapple`, `vignette`, `figure`, and
+`speckle`, plus `shape: ellipse`, `opacity`, and `pixels` + `keys` on
+`layered_raster`. Further paint tools wait until those stall a real
+poster or UI.

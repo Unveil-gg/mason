@@ -1,0 +1,6 @@
+id: cafe
+name: Cafe furniture
+members:
+  - simple_crate
+  - simple_shelf
+  - simple_post

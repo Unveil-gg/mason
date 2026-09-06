@@ -69,3 +69,16 @@ class ExportResult(BaseModel):
     engine: str
     installed: dict[str, str] = Field(default_factory=dict)
     manifest: str | None = None
+
+
+class KitExportResult(BaseModel):
+    """Result of exporting every member of a kit. Export-only -- no
+    member is built here."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    success: bool
+    kit_id: str
+    engine: str
+    members: dict[str, ExportResult] = Field(default_factory=dict)
+    manifest: str | None = None

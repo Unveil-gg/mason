@@ -11,7 +11,8 @@ from pathlib import Path
 
 from mason.core.config import load_project_config
 from mason.core.jobs import AssetJob, require_job
-from mason.core.results import ExportResult
+from mason.core.kits import KitSpec, resolve_kit
+from mason.core.results import ExportResult, KitExportResult
 from mason.core.workspace import find_project_root
 from mason.errors import MasonError
 
@@ -147,4 +148,72 @@ def run_export(
         engine=engine,
         installed=installed,
         manifest=manifest,
+    )
+
+
+def _update_kit_manifest(dest_dir: Path, kit: KitSpec) -> Path:
+    """Write `kits.<id>` alongside the `assets` block on the same
+    manifest members were installed to."""
+    manifest_path = dest_dir / "mason_manifest.json"
+    data: dict = {"assets": {}}
+    if manifest_path.is_file():
+        try:
+            data = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except ValueError:
+            data = {"assets": {}}
+    data.setdefault("kits", {})[kit.id] = {
+        "name": kit.name,
+        "members": list(kit.members),
+        "exported_at": datetime.now(timezone.utc).isoformat(),
+    }
+    manifest_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    return manifest_path
+
+
+def run_export_kit(
+    kit: str,
+    to: Path | None = None,
+    engine: str = "generic",
+) -> KitExportResult:
+    """Export every member of a kit (an already-built asset pack).
+
+    Reuses `run_export` per member so Godot layout and manifest
+    `assets` entries stay identical to a plain single-asset export.
+    Fails before copying anything if a member has no successful
+    build.
+
+    Args:
+        kit: Kit id, or a path to a kit YAML.
+        to: Optional destination dir, overriding spec/project config.
+        engine: "generic" or "godot".
+
+    Returns:
+        KitExportResult with each member's ExportResult.
+    """
+    root = find_project_root()
+    spec = resolve_kit(root, kit)
+    for member in spec.members:
+        job = require_job(root, member)
+        result = job.load_result()
+        if result is None or not result.success:
+            raise MasonError(
+                f"Kit member '{member}' has no successful build.",
+                code="kit_member_not_built",
+                hint=f"Run mason build for '{member}' first.",
+                context={"kit": spec.id, "member": member},
+            )
+    members: dict[str, ExportResult] = {
+        member: run_export(member, to, engine) for member in spec.members
+    }
+    manifest_path = next(
+        (Path(m.manifest) for m in members.values() if m.manifest), None,
+    )
+    if manifest_path:
+        manifest_path = _update_kit_manifest(manifest_path.parent, spec)
+    return KitExportResult(
+        success=all(m.success for m in members.values()),
+        kit_id=spec.id,
+        engine=engine,
+        members=members,
+        manifest=str(manifest_path) if manifest_path else None,
     )

@@ -7,12 +7,18 @@ from pathlib import Path
 
 import pytest
 
+import yaml
+from typer.testing import CliRunner
+
+from mason.cli import app
 from mason.core.assets import parse_asset_spec
 from mason.core.config import load_project_config, save_project_config
 from mason.core.jobs import AssetJob
 from mason.core.results import BuildResult
 from mason.errors import MasonError
-from mason.pipelines.export import run_export
+from mason.pipelines.export import run_export, run_export_kit
+
+runner = CliRunner()
 
 
 def _make_job(project: Path, asset_id: str = "box") -> AssetJob:
@@ -138,3 +144,86 @@ def test_export_frames_and_bounds(
     entry = manifest["assets"]["hero"]
     assert entry["frame_size"] == {"width": 8, "height": 8}
     assert entry["animations"][0]["name"] == "idle"
+
+
+def _write_kit(project: Path, kit_id: str, members: list[str]) -> Path:
+    kits_dir = project / "kits"
+    kits_dir.mkdir(parents=True, exist_ok=True)
+    path = kits_dir / f"{kit_id}.yaml"
+    path.write_text(
+        yaml.safe_dump({
+            "id": kit_id,
+            "name": "Cafe furniture",
+            "members": members,
+        }),
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_export_kit_exports_every_member(
+    project: Path, monkeypatch, tmp_path: Path,
+) -> None:
+    monkeypatch.chdir(project)
+    _make_job(project, "box")
+    _make_job(project, "crate")
+    _write_kit(project, "cafe", ["box", "crate"])
+    dest = tmp_path / "res"
+    result = run_export_kit("cafe", to=dest)
+    assert result.success
+    assert set(result.members) == {"box", "crate"}
+    assert (dest / "box.glb").is_file()
+    assert (dest / "crate.glb").is_file()
+    manifest = json.loads(Path(result.manifest).read_text(encoding="utf-8"))
+    assert set(manifest["assets"]) == {"box", "crate"}
+    assert manifest["kits"]["cafe"]["members"] == ["box", "crate"]
+    assert manifest["kits"]["cafe"]["name"] == "Cafe furniture"
+
+
+def test_export_kit_fails_if_member_unbuilt(
+    project: Path, monkeypatch, tmp_path: Path,
+) -> None:
+    monkeypatch.chdir(project)
+    _make_job(project, "box")
+    _write_kit(project, "cafe", ["box", "missing"])
+    with pytest.raises(MasonError):
+        run_export_kit("cafe", to=tmp_path / "res")
+
+
+def test_export_kit_by_path(
+    project: Path, monkeypatch, tmp_path: Path,
+) -> None:
+    monkeypatch.chdir(project)
+    _make_job(project, "box")
+    kit_path = _write_kit(project, "custom", ["box"])
+    dest = tmp_path / "res"
+    result = run_export_kit(str(kit_path), to=dest)
+    assert result.success
+    assert (dest / "box.glb").is_file()
+
+
+def test_export_cli_kit(
+    project: Path, monkeypatch, tmp_path: Path,
+) -> None:
+    monkeypatch.chdir(project)
+    _make_job(project, "box")
+    _make_job(project, "crate")
+    _write_kit(project, "cafe", ["box", "crate"])
+    dest = tmp_path / "res"
+    result = runner.invoke(
+        app, ["export", "--kit", "cafe", "--to", str(dest), "--json"],
+    )
+    assert result.exit_code == 0, result.stdout
+    data = json.loads(result.stdout)
+    assert data["success"] is True
+    assert set(data["members"]) == {"box", "crate"}
+
+
+def test_export_cli_requires_target(
+    project: Path, monkeypatch,
+) -> None:
+    monkeypatch.chdir(project)
+    result = runner.invoke(app, ["export", "--json"])
+    assert result.exit_code != 0
+    data = json.loads(result.stdout)
+    assert data["success"] is False

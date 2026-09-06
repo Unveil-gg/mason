@@ -69,6 +69,7 @@ def vocab_payload() -> dict[str, Any]:
             "three_quarter (3D) or full (2D). "
             "Inspect beauty first, clay for modeling, "
             "silhouette only for readability. "
+            "silhouette_regressed is advisory, not a ship blocker. "
             "history --summary for iteration diffs. "
             "mason style <name> --json for slim palette."
         ),
@@ -100,5 +101,23 @@ def vocab_payload() -> dict[str, Any]:
             "warmer/rim-lit rig for one-off screenshots. Off by "
             "default; never changes the stored spec/style, so "
             "plain build/rebuild renders stay comparable."
+        ),
+        "kits": (
+            "kits/<id>.yaml {id, name, members: [asset-id, ...]} is a "
+            "named list of already-built jobs. mason export --kit <id> "
+            "[--to dir] [--engine godot] fans mason export over every "
+            "member (fails first if any member has no successful "
+            "build) and adds kits.<id> to the same mason_manifest.json. "
+            "Export-only: no auto-build, no merged mesh."
+        ),
+        "ingest": (
+            "mason ingest <image> [--asset id] [--style name] "
+            "[--type static_prop|layered_raster] [--out path]: "
+            "OpenCV measures silhouette ratio, a k-means palette, "
+            "a few color regions, a simplified contour, and edge "
+            "character (hard/soft). Merges into art_analysis on an "
+            "existing spec (parts/layers untouched), or writes a "
+            "minimal buildable scaffold for a brand-new --asset id. "
+            "Not an image-to-mesh compiler."
         ),
     }

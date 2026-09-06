@@ -117,8 +117,31 @@ class PaletteDistribution(BaseModel):
     accent: str = ""
 
 
+class SourceSize(BaseModel):
+    """Pixel dimensions of a reference image."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    width: int = Field(gt=0)
+    height: int = Field(gt=0)
+
+
+class ImageRegion(BaseModel):
+    """One measured color region in a reference image."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    x: int = Field(ge=0)
+    y: int = Field(ge=0)
+    width: int = Field(gt=0)
+    height: int = Field(gt=0)
+    hex: str = ""
+    palette: str | None = None
+
+
 class ArtAnalysis(BaseModel):
-    """Optional notes an agent produces from reference images."""
+    """Optional notes an agent produces from reference images. Also
+    the target for measured fields written by `mason ingest`."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -133,6 +156,56 @@ class ArtAnalysis(BaseModel):
     palette_distribution: PaletteDistribution = Field(
         default_factory=PaletteDistribution,
     )
+    source_size: SourceSize | None = None
+    regions: list[ImageRegion] = Field(default_factory=list)
+
+
+class ImageBBox(BaseModel):
+    """Pixel bounding box of the detected subject."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    x: int = Field(ge=0)
+    y: int = Field(ge=0)
+    width: int = Field(gt=0)
+    height: int = Field(gt=0)
+
+
+class PaletteHexes(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    dominant: str = ""
+    secondary: str = ""
+    accent: str = ""
+
+
+class PaletteKeys(BaseModel):
+    """Nearest style palette key per palette slot, filled only when
+    `mason ingest` is given `--style`. Never invents new hex."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    dominant: str | None = None
+    secondary: str | None = None
+    accent: str | None = None
+
+
+class ImageAnalysis(BaseModel):
+    """Measured facts from `mason ingest`'s CV pass: silhouette
+    ratio, palette, color regions, contour, and edge character. A
+    structured document, not a mesh or layer compiler."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    source: str
+    source_size: SourceSize
+    bbox: ImageBBox
+    height_width_ratio: float
+    palette: PaletteHexes = Field(default_factory=PaletteHexes)
+    palette_keys: PaletteKeys = Field(default_factory=PaletteKeys)
+    regions: list[ImageRegion] = Field(default_factory=list)
+    contour: list[tuple[float, float]] = Field(default_factory=list)
+    edges: Literal["hard", "soft"] = "soft"
 
 
 class EvalScores(BaseModel):

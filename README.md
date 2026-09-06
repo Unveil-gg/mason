@@ -277,9 +277,17 @@ Example agent prompts:
   hex.*
 - *Rebuild `barbarian` walk so the stride reads at 4× preview scale.*
 
-`mason ingest <image> --asset <id>` extracts a **silhouette and
-height/width ratio** for the critic loop. It does not write a YAML
-spec or a mesh. Image → analysis notes → you write the spec.
+`mason ingest <image> --asset <id> [--style <name>] [--type
+static_prop|layered_raster] [--out path]` uses OpenCV to measure a
+reference image: silhouette ratio, a k-means palette, a few color
+regions, a simplified contour, and edge character (hard/soft). It
+writes that as `art_analysis`, mapping palette hexes onto the given
+style's keys when possible (never inventing new hex). If `--asset`
+already has a spec, only `art_analysis` is merged — `parts`/`layers`
+are never touched. If `--asset` names a brand-new id, ingest writes a
+minimal buildable scaffold (one box, or a background + reference
+layer) under `examples/assets/<id>.yaml` instead — it is still not an
+image-to-mesh compiler, so you write the real `parts`/`layers`.
 
 ## Commands
 
@@ -297,8 +305,9 @@ spec or a mesh. Image → analysis notes → you write the spec.
 | `mason history <asset-id>` | Iteration snapshots and evaluations |
 | `mason style [name]` | Slim style profile (palette, families, quality) |
 | `mason export <asset-id>` | Copy finished outputs into another project |
+| `mason export --kit <id>` | Copy every already-built member of a kit |
 | `mason vocab` | Shapes, components, recipes, stamps, families |
-| `mason ingest <image>` | Silhouette + ratio from concept art |
+| `mason ingest <image>` | OpenCV measurement (ratio, palette, regions) from concept art |
 | `mason compare <id>` | Write `previews/compare.png` |
 | `mason clean [id]` | Delete stored jobs (all, or one id) |
 | `mason list` | Jobs in this project |
@@ -335,6 +344,33 @@ out of the importer into project settings and per-`CanvasItem`
 overrides, so a hand-written `.import` file would be silently wrong.
 For pixel art, set Project Settings → Rendering → Textures → Canvas
 Textures → Default Texture Filter to Nearest instead.
+
+### Kits: multi-model asset packs
+
+One spec still always builds **one** job and one primary output. A
+kit is a named list of already-built jobs, exported together:
+
+```yaml
+# kits/cafe.yaml
+id: cafe
+name: Cafe furniture
+members:
+  - simple_crate
+  - simple_shelf
+  - simple_post
+```
+
+```bash
+mason export --kit cafe --to ../my_game/res/models --engine godot
+```
+
+This is export-only: it does not build members, does not merge
+meshes into one GLB, and fails before copying anything if a member
+has no successful `mason build` yet (build that id first). It reuses
+`mason export` per member, so Godot layout and manifest `assets`
+entries stay identical to a plain single-asset export, then adds a
+`kits.<id>` block (`name`, `members`, `exported_at`) to the same
+`mason_manifest.json`.
 
 ## JSON mode
 
@@ -376,10 +412,14 @@ a zero exit code as “it looks right.”
 
 - Raster generation is palette fills, rects/ellipses, text, stamps,
   image import, and per-pixel maps. Not freehand painting.
-- `mason ingest` is silhouette + ratio only. There is no image → YAML
-  → mesh compiler.
+- `mason ingest` measures ratio, palette, regions, contour, and edge
+  character with OpenCV, and can write a minimal buildable scaffold.
+  It is not an image → mesh compiler; you still author `parts`/
+  `layers`.
 - `mason export` copies files and a manifest only; it does not
   construct Godot scenes/resources or write `.import` sidecars.
+- Kits (`mason export --kit`) are export-only packs of already-built
+  jobs. They do not auto-build members or merge meshes into one GLB.
 - No in-process LLM, no bundled creative apps.
 
 ## Roadmap

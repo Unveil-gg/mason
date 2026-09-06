@@ -15,6 +15,7 @@ from mason.cli_render import (
     print_export,
     print_init,
     print_inspect,
+    print_kit_export,
     print_list,
 )
 from mason.core.config import (
@@ -33,7 +34,7 @@ from mason.pipelines.common import project_context
 from mason.pipelines.dispatch import run_build, run_rebuild
 from mason.pipelines.evaluate import history_payload, run_evaluate
 from mason.pipelines.stats import run_stats
-from mason.pipelines.export import run_export
+from mason.pipelines.export import run_export, run_export_kit
 from mason.tools.registry import detect_all, doctor_payload, scan_and_store
 
 app = typer.Typer(
@@ -168,7 +169,13 @@ def preview(
 
 @app.command()
 def export(
-    asset_id: Annotated[str, typer.Argument()],
+    asset_id: Annotated[str | None, typer.Argument()] = None,
+    kit: Annotated[
+        str | None,
+        typer.Option(
+            "--kit", help="Kit id or path; exports every member.",
+        ),
+    ] = None,
     to: Annotated[
         Path | None,
         typer.Option("--to", help="Install destination dir."),
@@ -179,9 +186,25 @@ def export(
     ] = "generic",
     json_mode: JsonFlag = False,
 ) -> None:
-    """Copy an asset's finished outputs into another project."""
+    """Copy an asset's finished outputs into another project, or
+    every already-built member of a --kit asset pack."""
 
     def _run():
+        if kit:
+            result = run_export_kit(kit, to, engine)
+            _emit(
+                json_mode, result.model_dump(),
+                lambda: print_kit_export(result),
+            )
+            if not result.success:
+                raise typer.Exit(code=1)
+            return
+        if not asset_id:
+            raise MasonError(
+                "Pass an asset id, or --kit <id>.",
+                code="export_missing_target",
+                hint="mason export <asset-id> | mason export --kit <id>",
+            )
         result = run_export(asset_id, to, engine)
         _emit(json_mode, result.model_dump(), lambda: print_export(result))
         if not result.success:
@@ -254,7 +277,7 @@ def _print_vocab(payload: dict[str, Any]) -> None:
         typer.echo(f"{key}: {', '.join(payload[key])}")
     for key in (
         "raster", "sprites", "style_tune", "recipes_note", "inspect",
-        "variants", "demo_lighting",
+        "variants", "demo_lighting", "ingest", "kits",
     ):
         typer.echo(f"{key}: {payload[key]}")
 
@@ -396,15 +419,42 @@ def ingest(
     image: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
     asset: Annotated[
         str | None,
-        typer.Option("--asset", help="Job id to attach the silhouette."),
+        typer.Option("--asset", help="Job id to attach the analysis."),
+    ] = None,
+    style: Annotated[
+        str | None,
+        typer.Option(
+            "--style",
+            help="Style for palette-key mapping and scaffold defaults.",
+        ),
+    ] = None,
+    spec_type: Annotated[
+        str | None,
+        typer.Option(
+            "--type",
+            help=(
+                "Scaffold type when --asset has no spec yet: "
+                "static_prop or layered_raster."
+            ),
+        ),
+    ] = None,
+    out: Annotated[
+        Path | None,
+        typer.Option("--out", help="Where to write a new scaffold spec."),
     ] = None,
     json_mode: JsonFlag = False,
 ) -> None:
-    """Extract a silhouette and height/width ratio from concept art."""
+    """Measure a reference image: silhouette ratio, palette, color
+    regions, contour, and edge character. Not an image-to-mesh
+    compiler; writes art_analysis, or a minimal buildable scaffold
+    for a brand-new --asset id."""
 
     def _run():
         from mason.pipelines.ingest import run_ingest
-        payload = run_ingest(image, asset)
+        payload = run_ingest(
+            image, asset,
+            style_name=style, spec_type=spec_type, out=out,
+        )
         _emit(
             json_mode,
             payload,

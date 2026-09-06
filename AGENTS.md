@@ -23,8 +23,11 @@ previews in a fresh pass and looks for reasons not to ship.
 3. Run `mason vocab --json` and read the style profile
    (`mason style <name> --json`, or `styles/*.yaml`).
 4. Understand the request. If `references` exist, run
-   `mason ingest <image> --asset <id> --json`, then write
-   `art_analysis` (shape language, proportions, materials).
+   `mason ingest <image> --asset <id> [--style <name>] --json`
+   (OpenCV measures ratio, palette, color regions, contour, and
+   edge character). If `--asset` has no spec yet, ingest writes a
+   minimal buildable scaffold instead of a finished mesh -- edit
+   `art_analysis`, `parts`, or `layers` from there.
 5. Write `art_direction`: subject, usage, silhouette goal, primary /
    secondary / tertiary forms, material families, detail density.
 6. Write `construction_plan` as intent (not compiled into meshes).
@@ -57,7 +60,10 @@ previews in a fresh pass and looks for reasons not to ship.
 17. Treat `asset.yaml`, `art_direction.yaml`, `construction_plan.yaml`,
     and `build.py` as reproducible source.
 18. Export with `mason export <id> --to <dir>` when needed. Only
-    finished glb/png (and sprite `frames.json`) are copied.
+    finished glb/png (and sprite `frames.json`) are copied. For a
+    multi-asset pack, write `kits/<id>.yaml` ({id, name, members})
+    and run `mason export --kit <id> --to <dir>` once every member
+    has a successful build.
 
 The beauty three-quarter render is the primary artistic
 evaluation image. Inspect it before diagnostic renders. Do not
