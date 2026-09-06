@@ -2,12 +2,11 @@ type: layered_raster
 id: noir_billboard_face
 name: Noir Billboard Face
 
-# Black-and-white movie poster: dramatic title, a spotlight patch, and
-# a blocky fedora+trenchcoat silhouette built from rects (same
-# technique as the barbarian sprite, applied to a noir detective).
+# Wide highway poster (~3.4:1), not a square movie-poster tile.
+# Detective silhouette occupies the left; title reads across the right.
 dimensions:
-  width: 480
-  height: 300
+  width: 960
+  height: 280
 
 style: default
 
@@ -15,60 +14,60 @@ layers:
   - name: bg
     role: background
     fill: ink
+  - name: spotlight
+    role: fill
+    fill: charcoal
+    rect: {x: 24, y: 20, width: 280, height: 240}
+  - name: spotlight_inner
+    role: fill
+    fill: smoke
+    rect: {x: 56, y: 40, width: 216, height: 200}
+  - name: hat_crown
+    role: fill
+    fill: ink
+    rect: {x: 148, y: 28, width: 40, height: 22}
+  - name: hat_brim
+    role: fill
+    fill: ink
+    rect: {x: 124, y: 46, width: 88, height: 10}
+  - name: head
+    role: fill
+    fill: ink
+    rect: {x: 154, y: 56, width: 28, height: 20}
+  - name: shoulders
+    role: fill
+    fill: ink
+    rect: {x: 128, y: 74, width: 80, height: 20}
+  - name: coat_upper
+    role: fill
+    fill: ink
+    rect: {x: 118, y: 92, width: 100, height: 56}
+  - name: coat_lower
+    role: fill
+    fill: ink
+    rect: {x: 96, y: 146, width: 144, height: 94}
   - name: title
     role: text
     text: MIDNIGHT ALIBI
     fill: cream
-    font_size: 34
-    rect: {x: 10, y: 8, width: 460, height: 56}
+    font_size: 48
+    rect: {x: 330, y: 36, width: 610, height: 72}
   - name: divider
     role: fill
     fill: cream
-    rect: {x: 90, y: 68, width: 300, height: 3}
-  - name: spotlight_outer
-    role: fill
-    fill: charcoal
-    rect: {x: 140, y: 68, width: 200, height: 190}
-  - name: spotlight_inner
-    role: fill
-    fill: smoke
-    rect: {x: 168, y: 86, width: 144, height: 154}
-  - name: hat_crown
-    role: fill
-    fill: ink
-    rect: {x: 222, y: 78, width: 36, height: 18}
-  - name: hat_brim
-    role: fill
-    fill: ink
-    rect: {x: 203, y: 92, width: 74, height: 8}
-  - name: head
-    role: fill
-    fill: ink
-    rect: {x: 227, y: 100, width: 26, height: 16}
-  - name: shoulders
-    role: fill
-    fill: ink
-    rect: {x: 205, y: 114, width: 70, height: 16}
-  - name: coat_upper
-    role: fill
-    fill: ink
-    rect: {x: 200, y: 128, width: 80, height: 48}
-  - name: coat_lower
-    role: fill
-    fill: ink
-    rect: {x: 183, y: 174, width: 114, height: 74}
+    rect: {x: 330, y: 118, width: 420, height: 4}
   - name: tagline
     role: text
     text: SHE KNEW TOO MUCH
     fill: cream
-    font_size: 18
-    rect: {x: 0, y: 252, width: 480, height: 22}
+    font_size: 26
+    rect: {x: 330, y: 140, width: 610, height: 40}
   - name: credit
     role: text
     text: A NOIR PICTURE
     fill: cream
-    font_size: 12
-    rect: {x: 0, y: 280, width: 480, height: 16}
+    font_size: 16
+    rect: {x: 330, y: 220, width: 610, height: 28}
 
 export:
   kra: true

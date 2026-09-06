@@ -1,0 +1,70 @@
+type: layered_raster
+id: pause_menu_item
+name: Pause Menu Item Frame
+
+# One horizontal pause-menu row for a medieval RPG: wood outer frame,
+# gold inner rule, parchment field, gem pip, sample label.
+dimensions:
+  width: 640
+  height: 96
+
+style: medieval
+
+layers:
+  - name: wood
+    role: background
+    fill: wood
+  - name: gold_outer
+    role: fill
+    fill: gold_dark
+    rect: {x: 8, y: 8, width: 624, height: 80}
+  - name: parchment
+    role: fill
+    fill: parchment
+    rect: {x: 14, y: 14, width: 612, height: 68}
+  - name: gold_rule_top
+    role: fill
+    fill: gold
+    rect: {x: 20, y: 18, width: 600, height: 3}
+  - name: gold_rule_bottom
+    role: fill
+    fill: gold
+    rect: {x: 20, y: 75, width: 600, height: 3}
+  - name: corner_tl
+    role: fill
+    fill: gold
+    rect: {x: 16, y: 16, width: 10, height: 10}
+  - name: corner_tr
+    role: fill
+    fill: gold
+    rect: {x: 614, y: 16, width: 10, height: 10}
+  - name: corner_bl
+    role: fill
+    fill: gold
+    rect: {x: 16, y: 70, width: 10, height: 10}
+  - name: corner_br
+    role: fill
+    fill: gold
+    rect: {x: 614, y: 70, width: 10, height: 10}
+  - name: gem
+    role: fill
+    fill: gem
+    rect: {x: 36, y: 36, width: 22, height: 22}
+  - name: gem_shine
+    role: fill
+    fill: gold
+    rect: {x: 40, y: 40, width: 6, height: 6}
+  - name: divider
+    role: fill
+    fill: gold_dark
+    rect: {x: 72, y: 28, width: 3, height: 40}
+  - name: label
+    role: text
+    text: RESUME
+    fill: ink
+    font_size: 28
+    rect: {x: 90, y: 24, width: 420, height: 48}
+
+export:
+  kra: true
+  png: true

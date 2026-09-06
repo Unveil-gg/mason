@@ -2,13 +2,12 @@ type: static_prop
 id: noir_billboard
 name: Noir Movie Billboard
 
-# Two-post highway billboard (not a single sign post): a wide board
-# framed by a crossbeam and mounted on two support legs, matching the
-# 480x300 (1.6:1) aspect of noir_billboard_face.
+# Highway billboard: wide rectangular face (matches 960x280 art),
+# two posts, catwalk, and a frame around the board.
 dimensions:
-  width: 1.4
-  depth: 0.13
-  height: 2.875
+  width: 4.2
+  depth: 0.36
+  height: 3.12
 
 style: default
 
@@ -17,26 +16,49 @@ geometry:
   parts:
     - name: left_post
       shape: cylinder
-      size: [0.1, 0.1, 2.0]
-      location: [-0.45, 0.0, 1.0]
+      size: [0.12, 0.12, 2.2]
+      location: [-1.5, 0.0, 1.1]
       material: wood_dark
     - name: right_post
       shape: cylinder
-      size: [0.1, 0.1, 2.0]
-      location: [0.45, 0.0, 1.0]
+      size: [0.12, 0.12, 2.2]
+      location: [1.5, 0.0, 1.1]
       material: wood_dark
     - name: crossbeam
       shape: box
-      size: [1.0, 0.08, 0.08]
-      location: [0.0, 0.0, 2.0]
-      parent: left_post
+      size: [3.2, 0.1, 0.1]
+      location: [0.0, 0.0, 2.2]
+      material: wood_dark
+    - name: catwalk
+      shape: box
+      size: [4.1, 0.28, 0.05]
+      location: [0.0, 0.06, 2.24]
+      material: wood_light
+    - name: frame_bottom
+      shape: box
+      size: [4.2, 0.08, 0.08]
+      location: [0.0, -0.08, 2.32]
+      material: wood_dark
+    - name: frame_top
+      shape: box
+      size: [4.2, 0.08, 0.08]
+      location: [0.0, -0.08, 3.08]
+      material: wood_dark
+    - name: frame_left
+      shape: box
+      size: [0.08, 0.08, 0.84]
+      location: [-2.06, -0.08, 2.7]
+      material: wood_dark
+    - name: frame_right
+      shape: box
+      size: [0.08, 0.08, 0.84]
+      location: [2.06, -0.08, 2.7]
       material: wood_dark
     - name: board
       shape: plane
-      size: [1.4, 0.875, 0.0]
-      location: [0.0, -0.08, 2.4375]
+      size: [4.0, 1.167, 0.0]
+      location: [0.0, -0.12, 2.7]
       rotation: [1.5708, 0.0, 0.0]
-      parent: left_post
       texture:
         asset: noir_billboard_face
         file: output/asset.png

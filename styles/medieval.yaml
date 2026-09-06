@@ -1,0 +1,12 @@
+name: medieval
+version: 1
+
+palette:
+  parchment: "#E4D4B4"
+  gold: "#C4A35A"
+  gold_dark: "#8A6E32"
+  wood: "#3D2A1C"
+  wood_light: "#6B4A32"
+  ink: "#1A1410"
+  gem: "#4A6B4A"
+  primary: "#3D2A1C"

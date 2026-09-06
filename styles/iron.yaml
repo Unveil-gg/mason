@@ -1,0 +1,20 @@
+name: iron
+version: 1
+
+palette:
+  iron: "#4A453C"
+  iron_dark: "#2C2822"
+  iron_light: "#6B6458"
+  steel: "#8A9196"
+  steel_dark: "#4A5054"
+  rubber: "#1A1A1A"
+  handle: "#8C2F2F"
+  primary: "#4A453C"
+
+geometry:
+  bevel_width: 0.008
+  bevel_segments: 2
+
+materials:
+  roughness: 0.55
+  metallic: 0.35

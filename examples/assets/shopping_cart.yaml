@@ -1,0 +1,124 @@
+type: static_prop
+id: shopping_cart
+name: Shopping Cart
+
+# Wire basket on four wheels with a rear handle. Bars use arrays.
+dimensions:
+  width: 0.54
+  depth: 0.40
+  height: 0.86
+
+style: iron
+
+geometry:
+  bevel: true
+  parts:
+    - name: floor
+      shape: box
+      size: [0.54, 0.38, 0.02]
+      location: [0.0, 0.0, 0.18]
+      material: steel
+    - name: rim_left
+      shape: box
+      size: [0.02, 0.38, 0.02]
+      location: [-0.26, 0.0, 0.48]
+      material: steel
+    - name: rim_right
+      shape: box
+      size: [0.02, 0.38, 0.02]
+      location: [0.26, 0.0, 0.48]
+      material: steel
+    - name: rim_front
+      shape: box
+      size: [0.54, 0.02, 0.02]
+      location: [0.0, -0.18, 0.48]
+      material: steel
+    - name: rim_back
+      shape: box
+      size: [0.54, 0.02, 0.02]
+      location: [0.0, 0.18, 0.48]
+      material: steel
+    - name: bar_left
+      shape: box
+      size: [0.015, 0.015, 0.28]
+      location: [-0.26, -0.16, 0.33]
+      material: steel_dark
+      array:
+        count: 8
+        offset: [0.0, 0.046, 0.0]
+    - name: bar_right
+      shape: box
+      size: [0.015, 0.015, 0.28]
+      location: [0.26, -0.16, 0.33]
+      material: steel_dark
+      array:
+        count: 8
+        offset: [0.0, 0.046, 0.0]
+    - name: bar_front
+      shape: box
+      size: [0.015, 0.015, 0.28]
+      location: [-0.22, -0.18, 0.33]
+      material: steel_dark
+      array:
+        count: 8
+        offset: [0.063, 0.0, 0.0]
+    - name: bar_back
+      shape: box
+      size: [0.015, 0.015, 0.28]
+      location: [-0.22, 0.18, 0.33]
+      material: steel_dark
+      array:
+        count: 8
+        offset: [0.063, 0.0, 0.0]
+    - name: undercarriage
+      shape: box
+      size: [0.5, 0.36, 0.04]
+      location: [0.0, 0.0, 0.14]
+      material: steel_dark
+    - name: wheel_fl
+      shape: cylinder
+      size: [0.12, 0.12, 0.04]
+      location: [-0.22, -0.16, 0.07]
+      rotation: [1.5708, 0.0, 1.5708]
+      material: rubber
+    - name: wheel_fr
+      shape: cylinder
+      size: [0.12, 0.12, 0.04]
+      location: [0.22, -0.16, 0.07]
+      rotation: [1.5708, 0.0, 1.5708]
+      material: rubber
+    - name: wheel_bl
+      shape: cylinder
+      size: [0.12, 0.12, 0.04]
+      location: [-0.22, 0.16, 0.07]
+      rotation: [1.5708, 0.0, 1.5708]
+      material: rubber
+    - name: wheel_br
+      shape: cylinder
+      size: [0.12, 0.12, 0.04]
+      location: [0.22, 0.16, 0.07]
+      rotation: [1.5708, 0.0, 1.5708]
+      material: rubber
+    - name: handle_left
+      shape: cylinder
+      size: [0.03, 0.03, 0.42]
+      location: [-0.2, 0.20, 0.62]
+      material: steel
+    - name: handle_right
+      shape: cylinder
+      size: [0.03, 0.03, 0.42]
+      location: [0.2, 0.20, 0.62]
+      material: steel
+    - name: handle_bar
+      shape: cylinder
+      size: [0.035, 0.035, 0.44]
+      location: [0.0, 0.20, 0.84]
+      rotation: [0.0, 1.5708, 0.0]
+      material: handle
+
+materials:
+  primary: steel
+
+export:
+  format: glb
+  save_blend: true

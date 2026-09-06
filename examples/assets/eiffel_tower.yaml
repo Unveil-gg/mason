@@ -1,0 +1,218 @@
+type: static_prop
+id: eiffel_tower
+name: Eiffel Tower
+
+# Tapered lattice from stacked stories: 4 legs per stage, decks,
+# and a spire. Primitive stand-in, not a measured replica.
+dimensions:
+  width: 1.28
+  depth: 1.28
+  height: 3.16
+
+style: iron
+
+geometry:
+  bevel: true
+  parts:
+    - name: leg_sw
+      shape: box
+      size: [0.14, 0.14, 1.1]
+      location: [-0.48, -0.48, 0.55]
+      rotation: [-0.18, 0.18, 0.0]
+      material: iron
+    - name: leg_se
+      shape: box
+      size: [0.14, 0.14, 1.1]
+      location: [0.48, -0.48, 0.55]
+      rotation: [-0.18, -0.18, 0.0]
+      material: iron
+    - name: leg_nw
+      shape: box
+      size: [0.14, 0.14, 1.1]
+      location: [-0.48, 0.48, 0.55]
+      rotation: [0.18, 0.18, 0.0]
+      material: iron
+    - name: leg_ne
+      shape: box
+      size: [0.14, 0.14, 1.1]
+      location: [0.48, 0.48, 0.55]
+      rotation: [0.18, -0.18, 0.0]
+      material: iron
+    - name: brace_s1
+      shape: box
+      size: [1.12, 0.04, 0.04]
+      location: [0.0, -0.48, 0.6]
+      rotation: [0.0, 0.5, 0.0]
+      material: iron_dark
+    - name: brace_s2
+      shape: box
+      size: [1.12, 0.04, 0.04]
+      location: [0.0, -0.48, 0.6]
+      rotation: [0.0, -0.5, 0.0]
+      material: iron_dark
+    - name: brace_n1
+      shape: box
+      size: [1.12, 0.04, 0.04]
+      location: [0.0, 0.48, 0.6]
+      rotation: [0.0, 0.5, 0.0]
+      material: iron_dark
+    - name: brace_n2
+      shape: box
+      size: [1.12, 0.04, 0.04]
+      location: [0.0, 0.48, 0.6]
+      rotation: [0.0, -0.5, 0.0]
+      material: iron_dark
+    - name: brace_w1
+      shape: box
+      size: [0.04, 1.12, 0.04]
+      location: [-0.48, 0.0, 0.6]
+      rotation: [0.5, 0.0, 0.0]
+      material: iron_dark
+    - name: brace_w2
+      shape: box
+      size: [0.04, 1.12, 0.04]
+      location: [-0.48, 0.0, 0.6]
+      rotation: [-0.5, 0.0, 0.0]
+      material: iron_dark
+    - name: brace_e1
+      shape: box
+      size: [0.04, 1.12, 0.04]
+      location: [0.48, 0.0, 0.6]
+      rotation: [0.5, 0.0, 0.0]
+      material: iron_dark
+    - name: brace_e2
+      shape: box
+      size: [0.04, 1.12, 0.04]
+      location: [0.48, 0.0, 0.6]
+      rotation: [-0.5, 0.0, 0.0]
+      material: iron_dark
+    - name: base_beam_s
+      shape: box
+      size: [1.1, 0.07, 0.07]
+      location: [0.0, -0.48, 0.2]
+      material: iron_dark
+    - name: base_beam_n
+      shape: box
+      size: [1.1, 0.07, 0.07]
+      location: [0.0, 0.48, 0.2]
+      material: iron_dark
+    - name: base_beam_w
+      shape: box
+      size: [0.07, 1.1, 0.07]
+      location: [-0.48, 0.0, 0.2]
+      material: iron_dark
+    - name: base_beam_e
+      shape: box
+      size: [0.07, 1.1, 0.07]
+      location: [0.48, 0.0, 0.2]
+      material: iron_dark
+    - name: arch_beam_s
+      shape: box
+      size: [1.1, 0.07, 0.07]
+      location: [0.0, -0.48, 1.0]
+      material: iron_dark
+    - name: arch_beam_n
+      shape: box
+      size: [1.1, 0.07, 0.07]
+      location: [0.0, 0.48, 1.0]
+      material: iron_dark
+    - name: arch_beam_w
+      shape: box
+      size: [0.07, 1.1, 0.07]
+      location: [-0.48, 0.0, 1.0]
+      material: iron_dark
+    - name: arch_beam_e
+      shape: box
+      size: [0.07, 1.1, 0.07]
+      location: [0.48, 0.0, 1.0]
+      material: iron_dark
+    - name: deck_1
+      shape: box
+      size: [1.2, 1.2, 0.06]
+      location: [0.0, 0.0, 1.13]
+      material: iron_light
+    - name: mid_sw
+      shape: box
+      size: [0.1, 0.1, 0.8]
+      location: [-0.28, -0.28, 1.56]
+      rotation: [-0.16, 0.16, 0.0]
+      material: iron
+    - name: mid_se
+      shape: box
+      size: [0.1, 0.1, 0.8]
+      location: [0.28, -0.28, 1.56]
+      rotation: [-0.16, -0.16, 0.0]
+      material: iron
+    - name: mid_nw
+      shape: box
+      size: [0.1, 0.1, 0.8]
+      location: [-0.28, 0.28, 1.56]
+      rotation: [0.16, 0.16, 0.0]
+      material: iron
+    - name: mid_ne
+      shape: box
+      size: [0.1, 0.1, 0.8]
+      location: [0.28, 0.28, 1.56]
+      rotation: [0.16, -0.16, 0.0]
+      material: iron
+    - name: mid_beam_s
+      shape: box
+      size: [0.66, 0.05, 0.05]
+      location: [0.0, -0.28, 1.56]
+      material: iron_dark
+    - name: mid_beam_n
+      shape: box
+      size: [0.66, 0.05, 0.05]
+      location: [0.0, 0.28, 1.56]
+      material: iron_dark
+    - name: deck_2
+      shape: box
+      size: [0.7, 0.7, 0.05]
+      location: [0.0, 0.0, 1.99]
+      material: iron_light
+    - name: top_sw
+      shape: box
+      size: [0.07, 0.07, 0.58]
+      location: [-0.12, -0.12, 2.3]
+      rotation: [-0.14, 0.14, 0.0]
+      material: iron
+    - name: top_se
+      shape: box
+      size: [0.07, 0.07, 0.58]
+      location: [0.12, -0.12, 2.3]
+      rotation: [-0.14, -0.14, 0.0]
+      material: iron
+    - name: top_nw
+      shape: box
+      size: [0.07, 0.07, 0.58]
+      location: [-0.12, 0.12, 2.3]
+      rotation: [0.14, 0.14, 0.0]
+      material: iron
+    - name: top_ne
+      shape: box
+      size: [0.07, 0.07, 0.58]
+      location: [0.12, 0.12, 2.3]
+      rotation: [0.14, -0.14, 0.0]
+      material: iron
+    - name: deck_3
+      shape: box
+      size: [0.34, 0.34, 0.04]
+      location: [0.0, 0.0, 2.61]
+      material: iron_light
+    - name: spire
+      shape: box
+      size: [0.1, 0.1, 0.28]
+      location: [0.0, 0.0, 2.78]
+      material: iron
+    - name: antenna
+      shape: cylinder
+      size: [0.03, 0.03, 0.22]
+      location: [0.0, 0.0, 3.05]
+      material: iron_light
+
+materials:
+  primary: iron
+
+export:
+  format: glb
+  save_blend: true
