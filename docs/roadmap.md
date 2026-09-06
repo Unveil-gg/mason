@@ -138,13 +138,32 @@ ArtDirection, ConstructionPlan, silhouette/beauty/detail previews,
 `mason evaluate` / `mason history`, material families, components,
 and a `hydrant` recipe are in. ConstructionPlan is intent only.
 
-### 2g. Still on hold: material variants / kits
+### 2g. Shipped: material variants (`static_prop` only)
 
-- **Material variants** — one `AssetSpec` fans out into several jobs
-  with palette overrides (e.g. a crate in `wood_dark` and
-  `wood_light`) instead of duplicating the whole spec file. Likely a
-  `variants: [{suffix, palette_overrides}]` block on `static_prop`/
-  `layered_raster`.
+`StaticPropSpec.variants: [{suffix, primary, palette_overrides}]`
+fans one spec out into sibling jobs at build time
+(`pipelines/dispatch.py::_variant_specs` / `_build_variants`). Each
+variant is snapshotted from the parent spec *before* recipe
+expansion, so its auto-written sibling YAML (`<id>_<suffix>.yaml`)
+keeps `recipe:`/`recipe_params:` instead of a frozen part list.
+`materials.palette_overrides` (a small dict merged onto the resolved
+style's palette, in-memory, never touching `styles/*.yaml`) is what
+each variant actually overrides; it also works standalone on a
+non-variant spec. `layered_raster` variants are not wired up yet —
+same shape would apply if a concrete asset needs it.
+
+### 2h. Shipped: demo lighting toggle
+
+`mason preview <id> --demo-lighting` (default off) swaps the studio
+three-point rig for a warmer key + cool rim setup, for one-off
+screenshots/comparisons. Threaded as a plain kwarg
+(`run_rebuild` → `_run` → `build_static_prop` → `build_blender_script`
+→ `CONFIG["demo_lighting"]` → `setup_studio_lights(..., demo=True)`);
+it never touches the stored spec/style, so evaluation renders from
+plain `mason build`/`mason rebuild` stay comparable across iterations.
+
+### 2i. Still on hold: kits
+
 - **Kits** — a manifest grouping several already-built assets (e.g.
   "cafe furniture set") into one `mason export` call, building on the
   per-asset manifest-merge logic already in `pipelines/export.py`.
@@ -155,4 +174,4 @@ Krita stamps now include `bond`, `dapple`, `vignette`, and `figure`,
 plus `shape: ellipse` and `pixels` + `keys` on `layered_raster`.
 Further paint tools wait until those stall a real poster or UI.
 
-Variants and kits stay deferred until a concrete asset needs them.
+Kits stay deferred until a concrete asset needs them.

@@ -53,6 +53,7 @@ class MaterialsSpec(BaseModel):
     metallic: float | None = None
     atlas: str | None = None
     entry: str | None = None
+    palette_overrides: dict[str, str] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def atlas_needs_ids(self) -> MaterialsSpec:
@@ -61,6 +62,16 @@ class MaterialsSpec(BaseModel):
         ):
             raise ValueError("atlas strategy needs atlas and entry")
         return self
+
+
+class MaterialVariant(BaseModel):
+    """One palette-swap sibling asset, fanned out at build time."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    suffix: str
+    primary: str | None = None
+    palette_overrides: dict[str, str] = Field(default_factory=dict)
 
 
 class StaticPropSpec(ArtFields):
@@ -76,6 +87,7 @@ class StaticPropSpec(ArtFields):
     geometry: GeometrySpec
     materials: MaterialsSpec = Field(default_factory=MaterialsSpec)
     decals: list[DecalSpec] = Field(default_factory=list)
+    variants: list[MaterialVariant] = Field(default_factory=list)
     export: Export3D = Field(default_factory=Export3D)
     metadata: dict[str, str] = Field(default_factory=dict)
 

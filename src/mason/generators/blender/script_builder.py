@@ -29,6 +29,7 @@ def build_blender_script(
     swatch_rects: dict[str, list[float]] | None = None,
     atlas_image: str | None = None,
     atlas_rect: list[float] | None = None,
+    demo_lighting: bool = False,
 ) -> str:
     """Return a self-contained Blender Python script.
 
@@ -57,6 +58,7 @@ def build_blender_script(
         "samples": style.render.samples,
         "engine": style.render.engine,
         "lighting_preset": style.lighting.preset,
+        "demo_lighting": demo_lighting,
         "families": {
             key: fam.model_dump(mode="json")
             for key, fam in style.materials.families.items()
@@ -280,6 +282,7 @@ def main():
             CONFIG["resolution"],
             CONFIG["samples"],
             CONFIG.get("engine") or "eevee",
+            demo_lighting=bool(CONFIG.get("demo_lighting")),
         )
     if mode in ("all", "build"):
         write_metadata(os.path.join(output, "metadata.json"))

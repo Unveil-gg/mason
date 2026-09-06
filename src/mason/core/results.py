@@ -55,6 +55,7 @@ class BuildResult(BaseModel):
     source_spec: str | None = None
     style: str | None = None
     error: dict[str, Any] | None = None
+    variants: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class ExportResult(BaseModel):

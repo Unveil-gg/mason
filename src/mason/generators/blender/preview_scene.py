@@ -74,18 +74,40 @@ def setup_renderer(resolution, samples, preferred, transparent=False):
     return "cycles"
 
 
-def setup_studio_lights(center, distance, preset="neutral_studio"):
-    """Three-point lights around the asset."""
+def setup_studio_lights(
+    center, distance, preset="neutral_studio", demo=False,
+):
+    """Three-point lights around the asset. `demo` swaps in a
+    warmer/higher-contrast rig for one-off demo screenshots."""
     scale = 1.6 if preset == "high_key" else 1.0
 
-    def add_light(name, energy, loc):
+    def add_light(name, energy, loc, color=(1.0, 1.0, 1.0)):
         light = bpy.data.lights.new(name=name, type="AREA")
         light.energy = energy * scale
         light.size = max(distance * 0.4, 0.5)
+        light.color = color
         obj = bpy.data.objects.new(name, light)
         obj.location = loc
         bpy.context.scene.collection.objects.link(obj)
         return obj
+
+    if demo:
+        add_light(
+            "key", 56.0,
+            center + Vector((distance, -distance, distance * 1.1)),
+            color=(1.0, 0.93, 0.82),
+        )
+        add_light(
+            "fill", 9.0,
+            center + Vector((-distance, -distance * 0.4, distance * 0.6)),
+            color=(0.85, 0.9, 1.0),
+        )
+        add_light(
+            "rim", 30.0,
+            center + Vector((-distance * 0.3, distance, distance * 0.9)),
+            color=(0.8, 0.88, 1.0),
+        )
+        return
 
     add_light("key", 40.0, center + Vector((distance, -distance, distance)))
     add_light(
@@ -192,8 +214,12 @@ def apply_silhouette_override():
         obj.data.materials.append(mat)
 
 
-def render_previews(preview_dir, resolution, samples, engine="eevee"):
-    """Render beauty, clay, and silhouette views."""
+def render_previews(
+    preview_dir, resolution, samples, engine="eevee", demo_lighting=False,
+):
+    """Render beauty, clay, and silhouette views. `demo_lighting` is
+    an opt-in, prettier rig for one-off demo/comparison screenshots;
+    it does not change the stored spec or style, only this render."""
     clear_non_mesh()
     used = setup_renderer(resolution, samples, engine, transparent=False)
     mins, maxs = scene_bounds()
@@ -203,9 +229,12 @@ def render_previews(preview_dir, resolution, samples, engine="eevee"):
     dist = radius * 2.4
     clip_end = dist * 8.0
     preset = CONFIG.get("lighting_preset") or "neutral_studio"
-    set_world((0.62, 0.62, 0.65), 0.35)
+    if demo_lighting:
+        set_world((0.5, 0.55, 0.62), 0.5)
+    else:
+        set_world((0.62, 0.62, 0.65), 0.35)
     setup_studio_plate(center, mins, radius)
-    setup_studio_lights(center, dist, preset)
+    setup_studio_lights(center, dist, preset, demo=demo_lighting)
     views = {
         "front": center + Vector((0.0, -dist, size.z * 0.15)),
         "side": center + Vector((dist, 0.0, size.z * 0.15)),

@@ -139,11 +139,24 @@ def rebuild(
 def preview(
     asset_id: Annotated[str, typer.Argument()],
     json_mode: JsonFlag = False,
+    demo_lighting: Annotated[
+        bool,
+        typer.Option(
+            "--demo-lighting",
+            help=(
+                "Nicer warm/rim-lit studio rig for one-off demo or "
+                "comparison screenshots. Off by default; does not "
+                "change the stored spec or style."
+            ),
+        ),
+    ] = False,
 ) -> None:
     """Re-render previews for an existing job."""
 
     def _run():
-        result = run_rebuild(asset_id, mode="preview")
+        result = run_rebuild(
+            asset_id, mode="preview", demo_lighting=demo_lighting,
+        )
         _emit(json_mode, result.model_dump(), lambda: print_build(result))
         if not result.success:
             raise typer.Exit(code=1)
@@ -211,6 +224,7 @@ def _print_vocab(payload: dict[str, Any]) -> None:
         typer.echo(f"{key}: {', '.join(payload[key])}")
     for key in (
         "raster", "sprites", "style_tune", "recipes_note", "inspect",
+        "variants", "demo_lighting",
     ):
         typer.echo(f"{key}: {payload[key]}")
 

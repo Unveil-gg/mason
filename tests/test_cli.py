@@ -64,6 +64,8 @@ def test_vocab_json() -> None:
     assert "silhouette_regressed" in data["inspect"]
     assert "pixels+keys" in data["raster"]
     assert "barbarian.yaml" in data["sprites"]
+    assert "shopping_cart.yaml" in data["variants"]
+    assert "--demo-lighting" in data["demo_lighting"]
 
 
 def test_clean_removes_jobs(project: Path, monkeypatch) -> None:

@@ -84,4 +84,19 @@ def vocab_payload() -> dict[str, Any]:
             "named part, then discards the cutter. One subtract "
             "each. No nested CSG."
         ),
+        "variants": (
+            "static_prop only: top-level variants: "
+            "[{suffix, primary, palette_overrides}] fans one "
+            "spec into sibling jobs (<id>_<suffix>) on the same "
+            "geometry. materials.palette_overrides on the spec "
+            "itself works standalone too, patching style palette "
+            "keys for this job only. See "
+            "examples/assets/shopping_cart.yaml."
+        ),
+        "demo_lighting": (
+            "mason preview <id> --demo-lighting swaps in a "
+            "warmer/rim-lit rig for one-off screenshots. Off by "
+            "default; never changes the stored spec/style, so "
+            "plain build/rebuild renders stay comparable."
+        ),
     }

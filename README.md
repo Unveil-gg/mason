@@ -119,12 +119,14 @@ forms, stamps, and the critic loop — not from a longer recipe list.
 3D examples: `simple_crate`, `simple_shelf`, `simple_post`,
 `simple_sign`, `simple_fence`, `textured_crate` (tiled material),
 `crate_with_label`, `noir_billboard` (a two-post highway billboard with
-a decal face), `grand_mansion` (estate recipe). Raster: `simple_panel`,
-`menu_card`, `plank_texture`, `shipping_label`, `noir_billboard_face`,
-`rpg_status_frame`. Sprite: `barbarian` (`sprite_sheet`: idle ×2,
-walk ×4, attack ×3 on a 4×3 grid, plus `frames.json`). Previews
-include a 2×2 `contact_sheet.png`. EEVEE is preferred; Mason falls
-back to Cycles CPU if EEVEE fails.
+a decal face), `shopping_cart` (flared wire cart, plus a `black`
+palette variant), `grand_mansion` (estate recipe). Raster:
+`simple_panel`, `menu_card`, `plank_texture`, `shipping_label`,
+`noir_billboard_face`, `rpg_status_frame`. Sprite: `barbarian`
+(`sprite_sheet`: idle ×2, walk ×4, attack ×3 on a 4×3 grid) and
+`swordsman` (walk ×4, sword-swing attack ×3). Previews include a 2×2
+`contact_sheet.png`. EEVEE is preferred; Mason falls back to Cycles
+CPU if EEVEE fails.
 
 ## Textures on 3D parts
 
@@ -186,6 +188,47 @@ Organic families (`lawn`, `foliage`) should prefer solid color +
 `variation` / `noise_scale` over a coarse tiled albedo. Masonry and
 roofing keep bond-stamped tiles.
 
+## Material variants
+
+A `static_prop` spec can fan out into palette-swap siblings from one
+`mason build` call, instead of hand-copying the whole spec:
+
+```yaml
+materials:
+  primary: steel
+  palette_overrides:      # optional: tweak this asset's own palette
+    steel: "#8A9196"
+
+variants:
+  - suffix: black          # -> builds shopping_cart_black as well
+    palette_overrides:
+      steel: "#2B2E31"
+      steel_dark: "#1A1C1E"
+  - suffix: brass
+    primary: brass          # swap the whole material key instead
+```
+
+Each variant becomes its own stored job (`<id>_<suffix>`) with its own
+auto-written sibling spec (`<id>_<suffix>.yaml` next to the parent),
+so it is independently inspectable and rebuildable. `palette_overrides`
+patches specific palette keys for that job only; it never edits
+`styles/*.yaml`. See `examples/assets/shopping_cart.yaml`.
+
+## Demo lighting for screenshots
+
+`mason preview <id>` normally uses the same neutral studio rig every
+time, so evaluation renders stay comparable across iterations. For a
+one-off nicer screenshot (docs, comparisons), pass `--demo-lighting`
+to swap in a warmer key light + a subtle rim light:
+
+```bash
+mason preview grand_mansion --demo-lighting
+```
+
+This only affects that render call; it does not change the stored
+spec, style, or `mason build`/`mason rebuild` output. Run
+`mason preview <id>` again (no flag) to go back to neutral lighting.
+
 ## Raster stamps and sprites
 
 Krita `layered_raster` layers: fill, `shape: rect|ellipse`, text,
@@ -199,7 +242,8 @@ an optional `.aseprite` source.
 
 ```bash
 mason build examples/assets/barbarian.yaml
-mason inspect barbarian --json
+mason build examples/assets/swordsman.yaml
+mason inspect swordsman --json
 ```
 
 Example agent prompts:
@@ -313,7 +357,6 @@ a zero exit code as “it looks right.”
   → mesh compiler.
 - `mason export` copies files and a manifest only; it does not
   construct Godot scenes/resources or write `.import` sidecars.
-- No material-variant fan-out (one spec → several palette jobs).
 - No in-process LLM, no bundled creative apps.
 
 ## Roadmap
@@ -321,7 +364,6 @@ a zero exit code as “it looks right.”
 Design notes: [docs/roadmap.md](docs/roadmap.md).
 
 - In-engine / Godot preview (`preview_roles.context`) — hook only
-- Material variants (`variants:` palette overrides on one spec)
 - Multi-asset kits (one export of a named set)
 - Optional richer Krita brushes — only if stamps + pixels stall
 - Image-to-spec stays an agent skill, not a Mason command

@@ -185,9 +185,21 @@ def build_static_prop(
     source_spec: str | None,
     *,
     mode: str = "all",
+    demo_lighting: bool = False,
 ) -> BuildResult:
-    """Generate script, run Blender, validate, write result.json."""
+    """Generate script, run Blender, validate, write result.json.
+
+    `demo_lighting` swaps in a nicer preview-only light rig (opt-in,
+    default off); it never touches the stored spec/style.
+    """
     info = require_tool("blender")
+    if spec.materials.palette_overrides:
+        style = style.model_copy(update={
+            "palette": {
+                **style.palette,
+                **spec.materials.palette_overrides,
+            },
+        })
     touch = snap_touch_report(spec)
     parts = resolved_parts(spec)
     assert_known_families(parts, style)
@@ -212,6 +224,7 @@ def build_static_prop(
         metallic=metal,
         part_textures=part_textures,
         part_roughness=part_roughness,
+        demo_lighting=demo_lighting,
         **surface,
     )
     job.build_py.write_text(script, encoding="utf-8")

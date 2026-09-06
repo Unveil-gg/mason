@@ -1,0 +1,101 @@
+art_direction:
+  subject: wire grocery shopping cart
+  style:
+    realism: 0.4
+    stylization: 0.6
+    shape_language:
+    - flared
+    - wire
+    - nestable
+  usage:
+    importance: standard_prop
+    viewing_distance: medium
+  silhouette: 'Flared basket wider at the rim than the floor, four casters, short
+    handle aft of the back rim, child-seat flap.
+
+    '
+  forms:
+    primary:
+    - flared basket
+    - short handle
+    - casters
+    secondary:
+    - rim rail
+    - mid hoop
+    - child seat
+    tertiary:
+    - red grip
+    - caster forks
+  materials:
+  - family: bare_metal
+    palette: steel
+  - family: rubber
+    palette: rubber
+  - family: painted_metal
+    palette: handle
+  detail_density: medium
+  references: []
+  constraints: []
+construction_plan:
+  primary_forms:
+  - type: rail
+    purpose: flared rim
+  - type: cylinder
+    purpose: short aft handle
+  secondary_forms:
+  - type: wire_wall
+    purpose: basket sides
+  - type: caster
+    purpose: wheels
+    count: 4
+  - type: box
+    purpose: child-seat flap
+  tertiary_details:
+  - type: cylinder
+    purpose: red grip
+  materials:
+  - bare_metal
+  - rubber
+  notes:
+  - rim wider than floor so the front reads nestable
+  - walls snap to the floor; handle posts snap to the rim
+type: static_prop
+id: shopping_cart_black
+name: Shopping Cart (black)
+dimensions:
+  width: 0.6
+  depth: 0.5
+  height: 0.78
+style: iron
+geometry:
+  bevel: true
+  recipe: cart
+  recipe_params:
+    board_thickness: 0.03
+    shelf_count: 4
+    side_panels: true
+    back_panel: false
+    leg_thickness: 0.06
+    body_radius: 0.11
+    body_height: 0.42
+    cap_count: 2
+    bolt_count: 6
+    flare: 0.18
+    basket_height: 0.42
+    handle_rise: 0.16
+    wing_width: 0.64
+    tree_height: 1.0
+    pool_width: 1.78
+    pool_depth: 1.02
+  parts: []
+materials:
+  strategy: family
+  primary: steel
+  palette_overrides:
+    steel: '#2B2E31'
+    steel_dark: '#1A1C1E'
+variants: []
+export:
+  format: glb
+  save_blend: true
+metadata: {}

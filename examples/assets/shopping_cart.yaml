@@ -21,6 +21,14 @@ geometry:
 materials:
   primary: steel
 
+# One extra sibling job (shopping_cart_black) built automatically
+# from this same geometry, with the steel palette swapped darker.
+variants:
+  - suffix: black
+    palette_overrides:
+      steel: "#2B2E31"
+      steel_dark: "#1A1C1E"
+
 art_direction:
   subject: wire grocery shopping cart
   style:

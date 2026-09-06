@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 from mason.core.assets import Dimensions3D, PropPart, RecipeParams
 from mason.core.parts import PartSnap
 
@@ -52,6 +54,19 @@ def cart_parts(
     under_floor = PartSnap(to="floor", on="bottom")
     on_rim = PartSnap(to="rim", on="top")
 
+    # Wire walls are flared: bars widen from the floor footprint to
+    # the wider rim footprint instead of standing straight up, so the
+    # rim sits on the wall tops (no floating gap from side/top views).
+    dx = (rim_w - floor_w) / 2.0
+    theta = math.atan2(dx, basket_h)
+    wall_x_len = math.hypot(dx, basket_h)
+    wall_x_center = (floor_w + rim_w) / 4.0
+
+    dy = (rim_d - floor_d) / 2.0
+    phi = math.atan2(dy, basket_h)
+    wall_y_len = math.hypot(dy, basket_h)
+    wall_y_center = (floor_d + rim_d) / 4.0
+
     return [
         PropPart(
             name="floor",
@@ -78,8 +93,9 @@ def cart_parts(
         ),
         PropPart(
             name="wall_left",
-            size=(wall_t, floor_d, basket_h),
-            location=(-floor_w / 2.0, 0.0, mid_z),
+            size=(wall_t, floor_d, wall_x_len),
+            location=(-wall_x_center, 0.0, mid_z),
+            rotation=(0.0, -theta, 0.0),
             material=dark,
             family="bare_metal",
             component="wire_wall",
@@ -88,8 +104,9 @@ def cart_parts(
         ),
         PropPart(
             name="wall_right",
-            size=(wall_t, floor_d, basket_h),
-            location=(floor_w / 2.0, 0.0, mid_z),
+            size=(wall_t, floor_d, wall_x_len),
+            location=(wall_x_center, 0.0, mid_z),
+            rotation=(0.0, theta, 0.0),
             material=dark,
             family="bare_metal",
             component="wire_wall",
@@ -98,8 +115,9 @@ def cart_parts(
         ),
         PropPart(
             name="wall_front",
-            size=(floor_w, wall_t, basket_h),
-            location=(0.0, -floor_d / 2.0, mid_z),
+            size=(floor_w, wall_t, wall_y_len),
+            location=(0.0, -wall_y_center, mid_z),
+            rotation=(phi, 0.0, 0.0),
             material=dark,
             family="bare_metal",
             component="wire_wall",
@@ -108,8 +126,9 @@ def cart_parts(
         ),
         PropPart(
             name="wall_back",
-            size=(floor_w, wall_t, basket_h),
-            location=(0.0, floor_d / 2.0, mid_z),
+            size=(floor_w, wall_t, wall_y_len),
+            location=(0.0, wall_y_center, mid_z),
+            rotation=(-phi, 0.0, 0.0),
             material=dark,
             family="bare_metal",
             component="wire_wall",

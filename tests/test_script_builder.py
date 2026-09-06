@@ -74,6 +74,26 @@ def test_blender_script_wires_part_textures(project: Path) -> None:
     assert '"wrap": "repeat"' in script
 
 
+def test_blender_script_wires_demo_lighting(project: Path) -> None:
+    spec = parse_asset_spec({
+        "type": "static_prop",
+        "id": "crate",
+        "name": "Crate",
+        "dimensions": {"width": 1, "depth": 1, "height": 1},
+        "geometry": {"recipe": "crate"},
+    })
+    style = load_style(project / "styles" / "default.yaml")
+    parts = resolved_parts(spec)
+    bw, bs, r, m = apply_style_defaults(spec, style)
+    script = build_blender_script(
+        spec, style, parts, project / ".mason" / "jobs" / "crate",
+        bevel_width=bw, bevel_segments=bs, roughness=r, metallic=m,
+        demo_lighting=True,
+    )
+    assert '"demo_lighting": true' in script
+    assert "def setup_studio_lights" in script
+
+
 def test_blender_script_stretches_textured_planes(project: Path) -> None:
     """A textured plane is a decal: unwrap_stretch, not cube_project."""
     spec = parse_asset_spec({
