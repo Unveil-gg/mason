@@ -86,6 +86,78 @@ def test_decal_becomes_textured_plane() -> None:
     assert label.texture is not None
 
 
+def test_x_brace_two_diagonals() -> None:
+    parts = expand_components([
+        PropPart(
+            name="brace",
+            component="x_brace",
+            size=(1.0, 0.04, 0.8),
+            location=(0.0, -0.5, 1.0),
+        ),
+    ])
+    assert [p.name for p in parts] == ["brace_a", "brace_b"]
+    assert parts[0].rotation[1] > 0
+    assert parts[1].rotation[1] < 0
+
+
+def test_rail_four_sides() -> None:
+    parts = expand_components([
+        PropPart(
+            name="rim",
+            component="rail",
+            size=(0.56, 0.42, 0.012),
+            location=(0.0, 0.0, 0.6),
+        ),
+    ])
+    assert [p.name for p in parts] == [
+        "rim_s", "rim_n", "rim_w", "rim_e",
+    ]
+
+
+def test_wire_wall_count() -> None:
+    parts = expand_components([
+        PropPart(
+            name="side",
+            component="wire_wall",
+            size=(0.01, 0.4, 0.4),
+            location=(-0.2, 0.0, 0.4),
+            component_params={"count": 5},
+        ),
+    ])
+    assert len(parts) == 5
+    assert parts[0].name == "side_1"
+    assert parts[-1].name == "side_5"
+
+
+def test_rivet_strip_linear_bolts() -> None:
+    parts = expand_components([
+        PropPart(
+            name="rivets",
+            component="rivet_strip",
+            size=(0.4, 0.02, 0.02),
+            location=(0.0, 0.0, 0.1),
+            component_params={"count": 3},
+        ),
+    ])
+    assert len(parts) == 6
+    assert parts[0].name == "rivets_1_head"
+    assert parts[1].shape == "cylinder"
+
+
+def test_cornice_steps() -> None:
+    parts = expand_components([
+        PropPart(
+            name="lip",
+            component="cornice",
+            size=(0.4, 0.1, 0.06),
+            location=(0.0, 0.0, 0.5),
+            component_params={"steps": 3},
+        ),
+    ])
+    assert len(parts) == 3
+    assert parts[-1].size[0] > parts[0].size[0]
+
+
 def test_unknown_family(project, monkeypatch) -> None:
     spec = parse_asset_spec({
         "type": "static_prop",

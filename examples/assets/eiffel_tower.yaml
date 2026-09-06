@@ -2,8 +2,7 @@ type: static_prop
 id: eiffel_tower
 name: Eiffel Tower
 
-# Taller thinner lattice. Decks are thin plates with rails.
-# X-braces on all four faces at each story.
+# Taller thinner lattice. Decks use rail; faces use x_brace.
 dimensions:
   width: 1.40
   depth: 1.40
@@ -42,37 +41,21 @@ geometry:
       rotation: [0.20, -0.20, 0.0]
       material: iron
       family: bare_metal
-    - name: brace_s1
+    - name: brace_s
       shape: box
-      size: [1.18, 0.03, 0.03]
+      size: [1.18, 0.04, 1.00]
       location: [0.0, -0.54, 0.64]
-      rotation: [0.0, 0.48, 0.0]
       material: iron_dark
       family: bare_metal
+      component: x_brace
       mirror: y
-    - name: brace_s2
+    - name: brace_w
       shape: box
-      size: [1.18, 0.03, 0.03]
-      location: [0.0, -0.54, 0.64]
-      rotation: [0.0, -0.48, 0.0]
-      material: iron_dark
-      family: bare_metal
-      mirror: y
-    - name: brace_w1
-      shape: box
-      size: [0.03, 1.18, 0.03]
+      size: [0.04, 1.18, 1.00]
       location: [-0.54, 0.0, 0.64]
-      rotation: [0.48, 0.0, 0.0]
       material: iron_dark
       family: bare_metal
-      mirror: x
-    - name: brace_w2
-      shape: box
-      size: [0.03, 1.18, 0.03]
-      location: [-0.54, 0.0, 0.64]
-      rotation: [-0.48, 0.0, 0.0]
-      material: iron_dark
-      family: bare_metal
+      component: x_brace
       mirror: x
     - name: base_beam_s
       shape: box
@@ -108,20 +91,13 @@ geometry:
       location: [0.0, 0.0, 1.28]
       material: iron_light
       family: bare_metal
-    - name: rail_1_s
+    - name: rail_1
       shape: box
-      size: [1.04, 0.03, 0.04]
-      location: [0.0, -0.50, 1.32]
+      size: [1.04, 1.04, 0.04]
+      location: [0.0, 0.0, 1.32]
       material: iron
       family: bare_metal
-      mirror: y
-    - name: rail_1_w
-      shape: box
-      size: [0.03, 1.04, 0.04]
-      location: [-0.50, 0.0, 1.32]
-      material: iron
-      family: bare_metal
-      mirror: x
+      component: rail
     - name: mid_sw
       shape: box
       size: [0.065, 0.065, 0.90]
@@ -150,51 +126,21 @@ geometry:
       rotation: [0.15, -0.15, 0.0]
       material: iron
       family: bare_metal
-    - name: mid_beam_s
+    - name: mid_brace_s
       shape: box
-      size: [0.58, 0.035, 0.035]
+      size: [0.60, 0.03, 0.80]
       location: [0.0, -0.26, 1.75]
       material: iron_dark
       family: bare_metal
+      component: x_brace
       mirror: y
-    - name: mid_beam_w
+    - name: mid_brace_w
       shape: box
-      size: [0.035, 0.58, 0.035]
+      size: [0.03, 0.60, 0.80]
       location: [-0.26, 0.0, 1.75]
       material: iron_dark
       family: bare_metal
-      mirror: x
-    - name: mid_brace_s1
-      shape: box
-      size: [0.60, 0.03, 0.03]
-      location: [0.0, -0.26, 1.75]
-      rotation: [0.0, 0.42, 0.0]
-      material: iron_dark
-      family: bare_metal
-      mirror: y
-    - name: mid_brace_s2
-      shape: box
-      size: [0.60, 0.03, 0.03]
-      location: [0.0, -0.26, 1.75]
-      rotation: [0.0, -0.42, 0.0]
-      material: iron_dark
-      family: bare_metal
-      mirror: y
-    - name: mid_brace_w1
-      shape: box
-      size: [0.03, 0.60, 0.03]
-      location: [-0.26, 0.0, 1.75]
-      rotation: [0.42, 0.0, 0.0]
-      material: iron_dark
-      family: bare_metal
-      mirror: x
-    - name: mid_brace_w2
-      shape: box
-      size: [0.03, 0.60, 0.03]
-      location: [-0.26, 0.0, 1.75]
-      rotation: [-0.42, 0.0, 0.0]
-      material: iron_dark
-      family: bare_metal
+      component: x_brace
       mirror: x
     - name: deck_2
       shape: box
@@ -202,20 +148,13 @@ geometry:
       location: [0.0, 0.0, 2.22]
       material: iron_light
       family: bare_metal
-    - name: rail_2_s
+    - name: rail_2
       shape: box
-      size: [0.58, 0.025, 0.03]
-      location: [0.0, -0.28, 2.25]
+      size: [0.58, 0.58, 0.03]
+      location: [0.0, 0.0, 2.25]
       material: iron
       family: bare_metal
-      mirror: y
-    - name: rail_2_w
-      shape: box
-      size: [0.025, 0.58, 0.03]
-      location: [-0.28, 0.0, 2.25]
-      material: iron
-      family: bare_metal
-      mirror: x
+      component: rail
     - name: top_sw
       shape: box
       size: [0.045, 0.045, 0.70]
@@ -244,21 +183,13 @@ geometry:
       rotation: [0.12, -0.12, 0.0]
       material: iron
       family: bare_metal
-    - name: top_brace_s1
+    - name: top_brace_s
       shape: box
-      size: [0.26, 0.022, 0.022]
+      size: [0.26, 0.022, 0.60]
       location: [0.0, -0.11, 2.58]
-      rotation: [0.0, 0.38, 0.0]
       material: iron_dark
       family: bare_metal
-      mirror: y
-    - name: top_brace_s2
-      shape: box
-      size: [0.26, 0.022, 0.022]
-      location: [0.0, -0.11, 2.58]
-      rotation: [0.0, -0.38, 0.0]
-      material: iron_dark
-      family: bare_metal
+      component: x_brace
       mirror: y
     - name: deck_3
       shape: box
@@ -304,17 +235,16 @@ art_direction:
 
 construction_plan:
   primary_forms:
-    - {type: box, purpose: thin splayed legs, count: 12}
-    - {type: box, purpose: thin deck plates, count: 3}
+    - {type: box, purpose: thin splayed legs}
+    - {type: box, purpose: thin deck plates}
   secondary_forms:
-    - {type: box, purpose: X-braces every face}
-    - {type: box, purpose: deck rails}
+    - {type: x_brace, purpose: lattice faces}
+    - {type: rail, purpose: deck rails}
   tertiary_details:
     - {type: cylinder, purpose: antenna}
   materials: [bare_metal]
   notes:
-    - thin the legs and decks from the first pass
-    - brace mid and top on all four faces
+    - x_brace plus rail, not one box per member
     - do not chase a measured replica
 
 export:

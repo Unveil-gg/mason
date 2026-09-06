@@ -37,6 +37,9 @@ materials:
       roughness: 0.35
       metallic: 0.0
       variation: 0.06
+      albedo:
+        asset: plank_texture
+        file: output/asset.png
     rubber:
       roughness: 0.9
       metallic: 0.0

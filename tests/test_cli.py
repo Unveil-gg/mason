@@ -49,6 +49,15 @@ def test_not_a_project(tmp_path: Path, monkeypatch) -> None:
     assert data["error"]["code"] == "not_a_project"
 
 
+def test_vocab_json() -> None:
+    result = runner.invoke(app, ["vocab", "--json"])
+    assert result.exit_code == 0
+    data = json.loads(result.stdout)
+    assert "x_brace" in data["components"]
+    assert "l_corner" in data["stamps"]
+    assert "silhouette_front" in data["inspect"]
+
+
 def test_inspect_missing(project: Path, monkeypatch) -> None:
     monkeypatch.chdir(project)
     result = runner.invoke(app, ["inspect", "missing", "--json"])

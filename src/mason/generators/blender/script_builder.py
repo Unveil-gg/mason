@@ -24,6 +24,7 @@ def build_blender_script(
     roughness: float,
     metallic: float,
     part_textures: dict[str, str] | None = None,
+    part_roughness: dict[str, str] | None = None,
 ) -> str:
     """Return a self-contained Blender Python script.
 
@@ -58,6 +59,7 @@ def build_blender_script(
         },
         "palette": palette,
         "part_textures": part_textures or {},
+        "part_roughness": part_roughness or {},
         "tile_size": style.textures.tile_size,
         "wrap": style.textures.wrap,
         "parts": [p.model_dump(mode="json") for p in parts],
@@ -141,15 +143,20 @@ def build_geometry():
     def texture_material(image_path, part):
         """Cache one material per distinct texture path."""
         settings = family_settings(part)
-        if image_path not in tex_mats:
-            tex_mats[image_path] = create_textured_material(
+        rough_path = (CONFIG.get("part_roughness") or {}).get(
+            part["name"],
+        )
+        cache = (image_path, rough_path)
+        if cache not in tex_mats:
+            tex_mats[cache] = create_textured_material(
                 f"tex_{len(tex_mats)}",
                 image_path,
                 settings["roughness"],
                 settings["metallic"],
                 CONFIG["wrap"],
+                rough_path,
             )
-        return tex_mats[image_path]
+        return tex_mats[cache]
 
     created = {}
     for part in CONFIG["parts"]:

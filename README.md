@@ -175,6 +175,7 @@ then inspect silhouettes before beauty views.
 | `mason evaluate <id> <json>` | Store a critic visual evaluation |
 | `mason history <asset-id>` | Iteration snapshots and evaluations |
 | `mason export <asset-id>` | Copy finished outputs into another project |
+| `mason vocab` | Shapes, components, recipes, stamps, families |
 | `mason list` | Jobs in this project |
 | `mason tools scan` | Rediscover and store new tool paths |
 | `mason config get/set` | Machine config (`tools.blender.path`, …) |

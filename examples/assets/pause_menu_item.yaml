@@ -25,55 +25,43 @@ layers:
   - name: gold_rule_top
     role: fill
     fill: gold
+    stamp: rule
     rect: {x: 20, y: 18, width: 600, height: 3}
   - name: gold_rule_bottom
     role: fill
     fill: gold
+    stamp: rule
     rect: {x: 20, y: 75, width: 600, height: 3}
-  - name: corner_tl_h
+  - name: corner_tl
     role: fill
     fill: gold
-    rect: {x: 16, y: 16, width: 18, height: 4}
-  - name: corner_tl_v
+    stamp: l_corner
+    stamp_corner: tl
+    rect: {x: 16, y: 16, width: 18, height: 18}
+  - name: corner_tr
     role: fill
     fill: gold
-    rect: {x: 16, y: 16, width: 4, height: 18}
-  - name: corner_tr_h
+    stamp: l_corner
+    stamp_corner: tr
+    rect: {x: 606, y: 16, width: 18, height: 18}
+  - name: corner_bl
     role: fill
     fill: gold
-    rect: {x: 606, y: 16, width: 18, height: 4}
-  - name: corner_tr_v
+    stamp: l_corner
+    stamp_corner: bl
+    rect: {x: 16, y: 62, width: 18, height: 18}
+  - name: corner_br
     role: fill
     fill: gold
-    rect: {x: 620, y: 16, width: 4, height: 18}
-  - name: corner_bl_h
+    stamp: l_corner
+    stamp_corner: br
+    rect: {x: 606, y: 62, width: 18, height: 18}
+  - name: pip
     role: fill
     fill: gold
-    rect: {x: 16, y: 76, width: 18, height: 4}
-  - name: corner_bl_v
-    role: fill
-    fill: gold
-    rect: {x: 16, y: 62, width: 4, height: 18}
-  - name: corner_br_h
-    role: fill
-    fill: gold
-    rect: {x: 606, y: 76, width: 18, height: 4}
-  - name: corner_br_v
-    role: fill
-    fill: gold
-    rect: {x: 620, y: 62, width: 4, height: 18}
-  - name: gem_bezel
-    role: fill
-    fill: gold
+    stamp: gem
+    stamp_inner: gem
     rect: {x: 32, y: 32, width: 30, height: 30}
-  - name: gem
-    role: fill
-    fill: gem
-    rect: {x: 36, y: 36, width: 22, height: 22}
-  - name: gem_shine
-    role: fill
-    fill: gold
-    rect: {x: 40, y: 40, width: 6, height: 6}
   - name: divider
     role: fill
     fill: gold_dark

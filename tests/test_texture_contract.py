@@ -56,6 +56,34 @@ def test_resolve_part_textures_missing_raises(project: Path) -> None:
     assert exc.value.code == "texture_missing"
 
 
+def test_family_albedo_skipped_when_missing(project: Path) -> None:
+    from mason.core.styles import load_style
+    job = _job(project)
+    style = load_style(project / "styles" / "default.yaml")
+    part = PropPart(
+        name="board", size=(1, 1, 1), location=(0, 0, 0.5),
+        family="varnished_wood",
+    )
+    textures = resolve_part_textures(job, [part], style)
+    assert textures == {}
+
+
+def test_family_albedo_applies_when_present(project: Path) -> None:
+    from mason.core.styles import load_style
+    out = project / ".mason" / "jobs" / "plank_texture" / "output"
+    out.mkdir(parents=True)
+    png = out / "asset.png"
+    png.write_bytes(b"fake-png")
+    job = _job(project)
+    style = load_style(project / "styles" / "default.yaml")
+    part = PropPart(
+        name="board", size=(1, 1, 1), location=(0, 0, 0.5),
+        family="varnished_wood",
+    )
+    textures = resolve_part_textures(job, [part], style)
+    assert textures["board"] == str(png.resolve())
+
+
 def test_no_texture_returns_empty(project: Path) -> None:
     job = _job(project)
     part = PropPart(name="crate", size=(1, 1, 1), location=(0, 0, 0.5))

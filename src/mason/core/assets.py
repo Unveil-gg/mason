@@ -97,9 +97,16 @@ class RasterLayer(BaseModel):
     image: str | None = None
     pixels: list[str] | None = None
     keys: dict[str, str] = Field(default_factory=dict)
+    stamp: Literal["l_corner", "gem", "rule"] | None = None
+    stamp_corner: Literal["tl", "tr", "bl", "br"] = "tl"
+    stamp_inner: str | None = None
 
     @model_validator(mode="after")
     def need_content(self) -> RasterLayer:
+        if self.stamp:
+            if not self.fill or self.rect is None:
+                raise ValueError("stamp needs fill and rect")
+            return self
         if not self.fill and not self.text and not self.image and not self.pixels:
             raise ValueError("layer needs fill, text, image, or pixels")
         if self.pixels:

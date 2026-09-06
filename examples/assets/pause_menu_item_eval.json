@@ -4,7 +4,7 @@
   "scores": {
     "silhouette": 8,
     "proportions": 7,
-    "secondary_forms": 7,
+    "secondary_forms": 8,
     "tertiary_detail": 6,
     "materials": 7,
     "visual_hierarchy": 8,
@@ -15,8 +15,8 @@
     {
       "category": "tertiary_detail",
       "severity": "low",
-      "description": "Ornament is still rectangle-built; no filigree or engraved wood.",
-      "suggested_change": "Add a second inner gold rule or a small crest if this becomes a hero UI."
+      "description": "Stamps read as L-corners and a gem; still rectangle-built.",
+      "suggested_change": "Add a crest stamp if this becomes a hero UI."
     }
   ]
 }

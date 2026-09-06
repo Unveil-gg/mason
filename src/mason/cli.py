@@ -24,6 +24,7 @@ from mason.core.config import (
     set_dotted,
 )
 from mason.core.inspect import inspect_payload
+from mason.core.vocab import vocab_payload
 from mason.core.jobs import list_jobs, require_job
 from mason.core.workspace import find_project_root, init_project
 from mason.errors import MasonError
@@ -51,14 +52,14 @@ JsonFlag = Annotated[
 
 def _emit(json_mode: bool, data: dict[str, Any], render) -> None:
     if json_mode:
-        typer.echo(json.dumps(data, indent=2))
+        typer.echo(json.dumps(data, separators=(",", ":")))
     else:
         render()
 
 
 def _fail(json_mode: bool, exc: MasonError) -> None:
     if json_mode:
-        typer.echo(json.dumps(exc.to_dict(), indent=2))
+        typer.echo(json.dumps(exc.to_dict(), separators=(",", ":")))
     else:
         typer.secho(exc.message, err=True, fg=typer.colors.RED)
         if exc.hint:
@@ -177,17 +178,32 @@ def export(
 def inspect(
     asset_id: Annotated[str, typer.Argument()],
     json_mode: JsonFlag = False,
+    full: Annotated[
+        bool,
+        typer.Option("--full", help="Include spec and full validation."),
+    ] = False,
 ) -> None:
     """Show stored job state for an asset."""
 
     def _run():
         root = find_project_root()
         job = require_job(root, asset_id)
-        payload = inspect_payload(job)
+        payload = inspect_payload(job, full=full)
         result = job.load_result()
         _emit(json_mode, payload, lambda: print_inspect(job, result))
 
     _guard(json_mode, _run)
+
+
+@app.command()
+def vocab(json_mode: JsonFlag = False) -> None:
+    """Print shapes, components, recipes, stamps, and families."""
+    payload = vocab_payload()
+    _emit(
+        json_mode,
+        payload,
+        lambda: typer.echo(" ".join(payload["components"])),
+    )
 
 
 @app.command()

@@ -20,7 +20,8 @@ previews in a fresh pass and looks for reasons not to ship.
 
 1. Run `mason doctor --json`.
 2. Confirm the required capabilities are available.
-3. Read the project's Mason style profile (`styles/*.yaml`).
+3. Run `mason vocab --json` and read the style profile
+   (`styles/*.yaml`).
 4. Understand the request. If `references` exist, inspect them and
    write `art_analysis` (shape language, proportions, materials).
 5. Write `art_direction`: subject, usage, silhouette goal, primary /
@@ -73,11 +74,14 @@ Asset types:
 - `static_prop` — Blender parts (`box`, `cylinder`, `plane`, `cone`,
   `torus`, `tapered_box`, `sphere`) with optional `parent`, `inset`,
   `array` (linear or `radial`), `mirror`, `component`, `family`, and
-  `texture` (`{asset, file}`). Recipes: crate, shelf, table, hydrant.
-  Textured planes are decals (stretch UV). `decals:` also expand to
-  planes. Build texture assets before the prop that references them.
-- `layered_raster` — Krita layers: fill, text (`font`, `align`), or
-  imported image. Source is `.kra`.
+  `texture` (`{asset, file}`). Components: bolt, hinge, handle, caster,
+  bracket, trim, x_brace, rail, wire_wall, rivet_strip, cornice.
+  Recipes: crate, shelf, table, hydrant. Textured planes are decals
+  (stretch UV). `decals:` also expand to planes. Family `albedo` is
+  used when that PNG already exists.
+- `layered_raster` — Krita layers: fill, text (`font`, `align`),
+  `stamp` (`l_corner`, `gem`, `rule`), or imported image. Source is
+  `.kra`.
 - `sprite_sheet` — Aseprite animations of timed frames. Prefer
   `pixels` + `keys`. Source is `.aseprite`; outputs PNG + `frames.json`.
 - `image_process` — ImageMagick resize/crop/trim/composite/quantize/convert

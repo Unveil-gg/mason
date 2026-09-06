@@ -8,6 +8,7 @@ from pathlib import Path
 from mason.core.assets import LayeredRasterSpec
 from mason.core.paths import resolve_project_path
 from mason.core.styles import StyleProfile
+from mason.generators.krita.stamps import expand_stamps
 
 
 def build_krita_script(
@@ -20,7 +21,7 @@ def build_krita_script(
 ) -> str:
     """Return a self-contained Krita Python script."""
     layers = []
-    for layer in spec.layers:
+    for layer in expand_stamps(spec.layers):
         fill_key = layer.fill
         fill = style.color(fill_key) if fill_key else None
         entry = {

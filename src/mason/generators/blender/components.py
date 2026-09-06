@@ -4,10 +4,18 @@ from __future__ import annotations
 
 from mason.core.parts import PropPart
 from mason.errors import MasonError
+from mason.generators.blender.components_ornament import (
+    cornice,
+    rail,
+    rivet_strip,
+    wire_wall,
+    x_brace,
+)
 
-_COMPONENTS = frozenset({
-    "bolt", "hinge", "handle", "caster", "bracket", "trim",
-})
+_HARDWARE = ("bolt", "hinge", "handle", "caster", "bracket", "trim")
+_ORNAMENT = ("x_brace", "rail", "wire_wall", "rivet_strip", "cornice")
+COMPONENTS = frozenset(_HARDWARE + _ORNAMENT)
+_COMPONENTS = COMPONENTS
 
 
 def expand_components(parts: list[PropPart]) -> list[PropPart]:
@@ -34,6 +42,11 @@ def _expand_one(part: PropPart) -> list[PropPart]:
         "caster": _caster,
         "bracket": _bracket,
         "trim": _trim,
+        "x_brace": x_brace,
+        "rail": rail,
+        "wire_wall": wire_wall,
+        "rivet_strip": rivet_strip,
+        "cornice": cornice,
     }
     return dispatch[part.component](part)
 

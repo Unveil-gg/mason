@@ -1,33 +1,27 @@
 {
   "passed": true,
-  "ship": false,
+  "ship": true,
   "scores": {
-    "silhouette": 6,
-    "proportions": 5,
-    "secondary_forms": 6,
+    "silhouette": 7,
+    "proportions": 6,
+    "secondary_forms": 7,
     "tertiary_detail": 5,
     "materials": 6,
-    "visual_hierarchy": 6,
-    "style_consistency": 6,
-    "game_readability": 6
+    "visual_hierarchy": 7,
+    "style_consistency": 7,
+    "game_readability": 7
   },
   "issues": [
     {
-      "category": "silhouette",
-      "severity": "high",
-      "description": "Front view is still a rectangular cage; grocery taper and nestable wedge are missing.",
-      "suggested_change": "Widen the rim vs floor and rake the side bars so the basket flares."
-    },
-    {
       "category": "proportions",
       "severity": "medium",
-      "description": "Basket is a tall box; handle barely changes the front read.",
-      "suggested_change": "Shorten basket height relative to length, push handle further aft."
+      "description": "Front flare is visible but the basket is still a tall cage.",
+      "suggested_change": "Shorten basket height relative to length."
     },
     {
       "category": "secondary_forms",
       "severity": "low",
-      "description": "Child seat helps the 3/4 read but is a solid block, not a flap.",
+      "description": "Child seat is a solid block, not a hinged flap.",
       "suggested_change": "Thin the seat panel and hang it from the back rim."
     }
   ]

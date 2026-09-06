@@ -9,6 +9,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from mason.core.parts import ImageSource
 from mason.errors import MasonError
 
 
@@ -27,6 +28,8 @@ class MaterialFamily(BaseModel):
     roughness: float = Field(default=0.75, ge=0, le=1)
     metallic: float = Field(default=0.0, ge=0, le=1)
     variation: float = Field(default=0.0, ge=0, le=1)
+    albedo: ImageSource | None = None
+    roughness_map: ImageSource | None = None
 
 
 class StyleMaterials(BaseModel):
@@ -196,6 +199,9 @@ materials:
       roughness: 0.35
       metallic: 0.0
       variation: 0.06
+      albedo:
+        asset: plank_texture
+        file: output/asset.png
     rubber:
       roughness: 0.9
       metallic: 0.0

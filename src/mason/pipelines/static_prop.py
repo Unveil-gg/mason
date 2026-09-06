@@ -81,24 +81,50 @@ def assert_known_families(
 def resolve_part_textures(
     job: AssetJob,
     parts: list[PropPart],
+    style: StyleProfile | None = None,
 ) -> dict[str, str]:
-    """Map each textured part's name to its resolved PNG path (a
-    literal project path, or another asset's built output). Raises if
-    the referenced file doesn't exist yet."""
-    textures: dict[str, str] = {}
-    for part in parts:
-        if not part.texture:
-            continue
-        path = resolve_image_source(part.texture, job.project_root)
-        if not path.is_file():
-            raise MasonError(
-                f"Texture for part '{part.name}' not found: {path}",
-                code="texture_missing",
-                hint="Build the referenced texture asset first.",
-                context={"part": part.name, "path": str(path)},
-            )
-        textures[part.name] = str(path)
+    """Map each textured part's name to its resolved PNG path."""
+    textures, _rough = resolve_part_maps(job, parts, style)
     return textures
+
+
+def resolve_part_maps(
+    job: AssetJob,
+    parts: list[PropPart],
+    style: StyleProfile | None = None,
+) -> tuple[dict[str, str], dict[str, str]]:
+    """Resolve albedo and optional roughness maps. Explicit
+    part.texture is required if named; family albedo is used only
+    when the file already exists."""
+    textures: dict[str, str] = {}
+    roughness: dict[str, str] = {}
+    families = style.materials.families if style else {}
+    for part in parts:
+        if part.texture:
+            path = resolve_image_source(part.texture, job.project_root)
+            if not path.is_file():
+                raise MasonError(
+                    f"Texture for part '{part.name}' not found: {path}",
+                    code="texture_missing",
+                    hint="Build the referenced texture asset first.",
+                    context={"part": part.name, "path": str(path)},
+                )
+            textures[part.name] = str(path)
+            continue
+        fam = families.get(part.family or "")
+        if fam is None:
+            continue
+        if fam.albedo:
+            path = resolve_image_source(fam.albedo, job.project_root)
+            if path.is_file():
+                textures[part.name] = str(path)
+        if fam.roughness_map:
+            path = resolve_image_source(
+                fam.roughness_map, job.project_root,
+            )
+            if path.is_file():
+                roughness[part.name] = str(path)
+    return textures, roughness
 
 
 def apply_style_defaults(spec: StaticPropSpec, style: StyleProfile):
@@ -146,7 +172,7 @@ def build_static_prop(
     job.write_meta(source_spec)
 
     bw, bs, rough, metal = apply_style_defaults(spec, style)
-    part_textures = resolve_part_textures(job, parts)
+    part_textures, part_roughness = resolve_part_maps(job, parts, style)
     script = build_blender_script(
         spec,
         style,
@@ -157,6 +183,7 @@ def build_static_prop(
         roughness=rough,
         metallic=metal,
         part_textures=part_textures,
+        part_roughness=part_roughness,
     )
     job.build_py.write_text(script, encoding="utf-8")
 

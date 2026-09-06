@@ -87,6 +87,7 @@ class PropPart(BaseModel):
     mirror: Literal["x", "y", "z"] | None = None
     component: Literal[
         "bolt", "hinge", "handle", "caster", "bracket", "trim",
+        "x_brace", "rail", "wire_wall", "rivet_strip", "cornice",
     ] | None = None
     component_params: dict[str, float] = Field(default_factory=dict)
 

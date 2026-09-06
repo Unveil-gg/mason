@@ -15,7 +15,7 @@ Separate creator and critic even if you are one model.
 
 1. Run `mason doctor --json`.
 2. Confirm the required capabilities are available.
-3. Read the project's Mason style profile.
+3. Run `mason vocab --json` and read the style profile.
 4. If references exist, inspect them and write `art_analysis`.
 5. Write `art_direction` (forms, usage, silhouette, materials).
 6. Write `construction_plan` as intent, not executable geometry.

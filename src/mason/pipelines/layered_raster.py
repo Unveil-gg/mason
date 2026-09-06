@@ -15,6 +15,7 @@ from mason.core.results import BuildResult, ValidationCheck, ValidationReport
 from mason.core.styles import StyleProfile
 from mason.errors import MasonError
 from mason.generators.krita.script_builder import build_krita_script
+from mason.generators.krita.stamps import expand_stamps
 from mason.pipelines.common import finish_result, tool_failed
 from mason.tools.krita.adapter import KritaAdapter
 from mason.tools.registry import require_tool
@@ -157,13 +158,14 @@ def validate_raster(
             passed=size == (width, height),
             detail=f"{size[0]}x{size[1]} vs {width}x{height}",
         ))
-    metrics: dict = {"width": width, "height": height, "layers": len(spec.layers)}
+    expanded = expand_stamps(spec.layers)
+    metrics: dict = {"width": width, "height": height, "layers": len(expanded)}
     meta = job.output / "metadata.json"
     if meta.is_file():
         data = json.loads(meta.read_text(encoding="utf-8"))
         checks.append(ValidationCheck(
             name="layer_count",
-            passed=int(data.get("layer_count") or 0) == len(spec.layers),
+            passed=int(data.get("layer_count") or 0) == len(expanded),
         ))
         metrics["layer_names"] = data.get("layers")
     return ValidationReport(

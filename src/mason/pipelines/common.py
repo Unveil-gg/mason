@@ -59,7 +59,14 @@ def finish_result(
         previews=previews,
         validation={
             "passed": report.passed,
-            **report.metrics,
+            **{
+                key: value
+                for key, value in report.metrics.items()
+                if key != "objects"
+            },
+            "failed_checks": [
+                c.name for c in report.checks if not c.passed
+            ],
         },
         job_dir=job.rel(job.dir),
         built_at=datetime.now(timezone.utc).isoformat(),
