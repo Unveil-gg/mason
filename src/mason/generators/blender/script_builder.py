@@ -25,6 +25,10 @@ def build_blender_script(
     metallic: float,
     part_textures: dict[str, str] | None = None,
     part_roughness: dict[str, str] | None = None,
+    palette_image: str | None = None,
+    swatch_rects: dict[str, list[float]] | None = None,
+    atlas_image: str | None = None,
+    atlas_rect: list[float] | None = None,
 ) -> str:
     """Return a self-contained Blender Python script.
 
@@ -62,6 +66,11 @@ def build_blender_script(
         "part_roughness": part_roughness or {},
         "tile_size": style.textures.tile_size,
         "wrap": style.textures.wrap,
+        "surface_strategy": spec.materials.strategy,
+        "palette_image": palette_image or "",
+        "swatch_rects": swatch_rects or {},
+        "atlas_image": atlas_image or "",
+        "atlas_rect": atlas_rect or [],
         "parts": [p.model_dump(mode="json") for p in parts],
     }
     return (
@@ -119,6 +128,7 @@ def family_settings(part):
 def build_geometry():
     """Create parts, materials, bevels, and UVs."""
     mats = {}
+    strategy = CONFIG.get("surface_strategy") or "family"
 
     def solid_material(part, key):
         settings = family_settings(part)
@@ -158,13 +168,33 @@ def build_geometry():
             )
         return tex_mats[cache]
 
+    shared = None
+    if strategy == "palette" and CONFIG.get("palette_image"):
+        shared = create_textured_material(
+            "mason_palette",
+            CONFIG["palette_image"],
+            CONFIG["roughness"],
+            CONFIG["metallic"],
+            "clamp",
+        )
+    elif strategy == "atlas" and CONFIG.get("atlas_image"):
+        shared = create_textured_material(
+            "mason_atlas",
+            CONFIG["atlas_image"],
+            CONFIG["roughness"],
+            CONFIG["metallic"],
+            "clamp",
+        )
+
     created = {}
     for part in CONFIG["parts"]:
         obj = create_primitive(part)
         created[obj.name] = obj
         is_plane = (part.get("shape") or "box") == "plane"
         tex_path = CONFIG["part_textures"].get(part["name"])
-        if tex_path:
+        if shared is not None:
+            assign_material(obj, shared)
+        elif tex_path:
             assign_material(obj, texture_material(tex_path, part))
         else:
             key = part.get("material") or "primary"
@@ -173,9 +203,24 @@ def build_geometry():
         use_bevel = part.get("bevel")
         if use_bevel is None:
             use_bevel = CONFIG["bevel"]
+        if part.get("cutout"):
+            use_bevel = False
         if use_bevel and not is_plane:
             apply_bevel(obj, CONFIG["bevel_width"], CONFIG["bevel_segments"])
-        if tex_path and is_plane:
+        if strategy == "palette":
+            key = part.get("material") or "primary"
+            rect = (CONFIG.get("swatch_rects") or {}).get(key)
+            if rect:
+                unwrap_swatch(obj, rect)
+            else:
+                unwrap_cube(obj, CONFIG["tile_size"])
+        elif strategy == "atlas":
+            rect = CONFIG.get("atlas_rect")
+            if rect:
+                unwrap_swatch(obj, rect)
+            else:
+                unwrap_cube(obj, CONFIG["tile_size"])
+        elif tex_path and is_plane:
             # A textured plane is a decal (label/sign face): fit the
             # whole image to the one face instead of tiling it.
             unwrap_stretch(obj)
@@ -190,6 +235,7 @@ def build_geometry():
             child.parent = parent
             child.matrix_parent_inverse = parent.matrix_world.inverted()
             child.matrix_world = world
+    apply_cutouts(created)
 
 
 def parse_mode():

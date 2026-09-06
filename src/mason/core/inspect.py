@@ -7,6 +7,11 @@ from typing import Any
 from mason.core.jobs import AssetJob
 from mason.core.styles import QualityGuidance, StyleProfile, load_style
 from mason.pipelines.compare import reference_iou, silhouette_regressed
+from mason.tools.blender.preview import (
+    BEAUTY_VIEWS,
+    DIAGNOSTIC_VIEWS,
+    PRIMARY_VIEW,
+)
 
 
 def inspect_payload(job: AssetJob, *, full: bool = False) -> dict[str, Any]:
@@ -55,6 +60,7 @@ def inspect_payload(job: AssetJob, *, full: bool = False) -> dict[str, Any]:
         "evaluations": evaluations,
         "compare": _compare_path(job, result),
         "silhouette_regressed": _silhouette_regressed(job),
+        "preview_roles": _preview_roles(),
     }
     iou = _silhouette_iou(job)
     if iou is not None:
@@ -134,6 +140,16 @@ def _compare_path(job: AssetJob, result) -> str | None:
     if result and result.previews.get("compare"):
         return result.previews["compare"]
     return None
+
+
+def _preview_roles() -> dict[str, Any]:
+    """Tell an agent which PNGs to inspect first."""
+    return {
+        "primary": PRIMARY_VIEW,
+        "beauty": list(BEAUTY_VIEWS),
+        "diagnostic": list(DIAGNOSTIC_VIEWS),
+        "context": None,
+    }
 
 
 def _silhouette_regressed(job: AssetJob) -> bool:

@@ -1,0 +1,18 @@
+type: image_process
+id: estate_hedge_q
+name: Estate Hedge Quantized
+
+style: estate
+depends_on: [estate_hedge]
+
+source:
+  asset: estate_hedge
+  file: output/asset.png
+
+operations:
+  - op: quantize
+    palette: style
+    dither: false
+
+export:
+  format: png

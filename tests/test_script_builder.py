@@ -43,6 +43,8 @@ def test_blender_script_has_helpers(project: Path) -> None:
     assert "CYCLES" in script
     assert "def unwrap_cube" in script
     assert "def unwrap_stretch" in script
+    assert "def unwrap_swatch" in script
+    assert "def apply_clay_override" in script
     assert "def create_textured_material" in script
     assert 'path + "@"' in script
 

@@ -159,7 +159,8 @@ Try it: `mason build examples/assets/plank_texture.yaml`, then
 `mason build examples/assets/shipping_label.yaml` then
 `mason build examples/assets/crate_with_label.yaml` (decal face).
 For the quality-loop example: `mason build examples/assets/fire_hydrant.yaml`,
-then inspect silhouettes before beauty views.
+then inspect the beauty three-quarter render first. Use clay for
+geometry and silhouettes only when readability is in doubt.
 
 ## Commands
 

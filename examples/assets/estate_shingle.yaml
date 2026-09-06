@@ -1,0 +1,47 @@
+type: layered_raster
+id: estate_shingle
+name: Estate Shingle
+
+dimensions:
+  width: 256
+  height: 256
+
+style: estate
+
+layers:
+  - name: base
+    role: background
+    fill: roof
+  - name: row_a
+    role: fill
+    fill: ink
+    stamp: rule
+    rect: {x: 0, y: 16, width: 256, height: 20}
+  - name: row_b
+    role: fill
+    fill: stone_dark
+    stamp: rule
+    rect: {x: 24, y: 64, width: 232, height: 20}
+  - name: row_c
+    role: fill
+    fill: ink
+    stamp: rule
+    rect: {x: 0, y: 112, width: 256, height: 20}
+  - name: row_d
+    role: fill
+    fill: stone_dark
+    stamp: rule
+    rect: {x: 24, y: 160, width: 232, height: 20}
+  - name: row_e
+    role: fill
+    fill: ink
+    stamp: rule
+    rect: {x: 0, y: 208, width: 256, height: 20}
+  - name: ridge
+    role: overlay
+    fill: cream
+    rect: {x: 0, y: 0, width: 256, height: 4}
+
+export:
+  kra: true
+  png: true

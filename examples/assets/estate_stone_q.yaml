@@ -1,0 +1,18 @@
+type: image_process
+id: estate_stone_q
+name: Estate Stone Quantized
+
+style: estate
+depends_on: [estate_stone]
+
+source:
+  asset: estate_stone
+  file: output/asset.png
+
+operations:
+  - op: quantize
+    palette: style
+    dither: true
+
+export:
+  format: png

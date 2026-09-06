@@ -1,0 +1,9 @@
+id: test_labels
+grid:
+  columns: 2
+  rows: 2
+entries:
+  alpha: 0
+  beta: 1
+  gamma: 2
+  delta: 3

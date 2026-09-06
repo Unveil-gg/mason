@@ -87,6 +87,27 @@ def test_visual_evaluation_scores() -> None:
     })
     assert evaluation.scores.secondary_forms == 4
     assert evaluation.issues[0].severity == "high"
+    assert evaluation.scores.overall_visual_quality is None
+
+
+def test_visual_evaluation_beauty_scores() -> None:
+    evaluation = VisualEvaluation.model_validate({
+        "passed": True,
+        "ship": True,
+        "scores": {
+            "overall_visual_quality": 7,
+            "detail_density": 6,
+            "proportions": 7,
+            "secondary_forms": 6,
+            "tertiary_detail": 5,
+            "materials": 6,
+            "visual_hierarchy": 7,
+            "style_consistency": 8,
+            "game_readability": 7,
+        },
+    })
+    assert evaluation.scores.overall_visual_quality == 7
+    assert evaluation.scores.silhouette is None
 
 
 def test_construction_plan_empty() -> None:

@@ -22,22 +22,25 @@ Separate creator and critic even if you are one model.
 7. Create or modify the AssetSpec YAML.
 8. Run `mason build <spec> --json`.
 9. Check technical validation. Do not ignore failures.
-10. Inspect silhouette previews first. Fix shape before materials.
-11. Inspect beauty and detail previews.
-12. Critically evaluate: silhouette, secondary/tertiary forms,
-    materials, hierarchy, style, game readability.
-13. Record the critique with `mason evaluate <id> <evaluation.json>`.
-14. If it should not ship, revise and rebuild. Use `mason history`.
-15. Repeat until validation passes and evaluation `ship` is true.
-16. Treat asset.yaml, art_direction.yaml, construction_plan.yaml,
+10. Inspect beauty three_quarter.png first.
+11. Inspect clay_three_quarter.png if geometry needs review.
+12. Inspect front/side/top for structure. Silhouette only if
+    readability is questionable.
+13. Critically evaluate the beauty render: overall quality,
+    materials, secondary forms, style, game readability.
+14. Record the critique with `mason evaluate <id> <evaluation.json>`.
+15. If it should not ship, revise and rebuild. Use `mason history`.
+16. Repeat until validation passes and evaluation `ship` is true.
+17. Treat asset.yaml, art_direction.yaml, construction_plan.yaml,
     and build.py as reproducible source.
 
 Important rules:
 
+- Mason drives Blender only through generated bpy scripts.
 - Do not manually operate Blender, Krita, or Aseprite when Mason can invoke them.
 - Prefer editing specs/generator source and rebuilding.
 - Do not assume a successful tool exit means the asset looks correct.
-- Always inspect previews. Silhouette before beauty.
+- Always inspect previews. Beauty three-quarter first.
 - Do not ignore validation failures.
 - Use `--json` when operating autonomously.
 - When a style palette matters for rasters, follow generation with

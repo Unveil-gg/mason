@@ -4,9 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from mason.core.parts import PartSnap, PropPart
+from mason.core.parts import PartCutout, PartSnap, PropPart
+from mason.generators.blender.snap import (
+    apply_snaps,
+    parents_touch_bounds,
+    snaps_touch,
+)
 from mason.errors import MasonError
-from mason.generators.blender.snap import apply_snaps, snaps_touch
 
 
 def test_snap_box_onto_top() -> None:
@@ -69,6 +73,21 @@ def test_snap_embed_pushes_into_target() -> None:
     assert out[1].location[2] == pytest.approx(0.3)
     ok, _detail = snaps_touch(out)
     assert ok
+
+
+def test_parents_touch_skips_cutout() -> None:
+    cutter = PropPart(
+        name="hole",
+        size=(0.2, 0.2, 0.2),
+        location=(0.0, 0.0, 0.5),
+        parent="wall",
+        cutout=PartCutout(target="wall"),
+    )
+    ok, detail = parents_touch_bounds(
+        [cutter],
+        {"wall": {"min": [0, 0, 0], "max": [1, 1, 1]}},
+    )
+    assert ok, detail
 
 
 def test_unknown_to_raises() -> None:

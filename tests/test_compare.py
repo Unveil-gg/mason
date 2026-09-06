@@ -102,3 +102,24 @@ def test_silhouette_regressed(project: Path) -> None:
     job.write_evaluation(_eval(1, 8))
     job.write_evaluation(_eval(2, 3))
     assert silhouette_regressed(job) is True
+
+
+def test_silhouette_regressed_skips_missing_score(project: Path) -> None:
+    job = _seed(project)
+    job.write_evaluation(VisualEvaluation.model_validate({
+        "passed": True,
+        "ship": True,
+        "scores": {
+            "overall_visual_quality": 7,
+            "proportions": 7,
+            "secondary_forms": 6,
+            "tertiary_detail": 5,
+            "materials": 6,
+            "visual_hierarchy": 7,
+            "style_consistency": 8,
+            "game_readability": 7,
+        },
+        "iteration": 1,
+    }))
+    job.write_evaluation(_eval(2, 3))
+    assert silhouette_regressed(job) is False

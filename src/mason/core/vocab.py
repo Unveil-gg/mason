@@ -11,11 +11,15 @@ SHAPES = (
     "box", "cylinder", "plane", "cone", "torus",
     "tapered_box", "sphere",
 )
-RECIPES = ("crate", "shelf", "table", "hydrant", "cart")
+RECIPES = (
+    "crate", "shelf", "table", "hydrant", "cart",
+    "house", "tree", "pool", "estate",
+)
 LAYER_ROLES = ("background", "fill", "text", "image", "overlay")
 FAMILIES = (
     "painted_metal", "bare_metal", "varnished_wood",
     "rubber", "plastic", "cardboard",
+    "masonry", "roofing", "foliage", "water",
 )
 
 
@@ -29,17 +33,27 @@ def vocab_payload() -> dict[str, Any]:
         "stamps": list(STAMPS),
         "families": list(FAMILIES),
         "texture": (
-            "part.texture {path|asset+file} is albedo. "
-            "Planes stretch UV (decals). Other shapes tile. "
-            "Style family.albedo applies when the file exists."
+            "Prefer materials.strategy palette, then atlas, "
+            "then bespoke. part.texture {path|asset+file} is "
+            "albedo. Planes stretch UV (decals). Other shapes "
+            "tile. Style family.albedo applies when the file "
+            "exists."
         ),
         "inspect": (
-            "Open compare.png, then silhouette_front/side/"
-            "three_quarter. Do not ship if silhouette_regressed."
+            "preview_roles.primary is three_quarter beauty. "
+            "Inspect beauty first, clay for modeling, "
+            "silhouette only for readability. "
+            "silhouette_regressed is advisory. "
+            "context is future in-engine preview."
         ),
         "snap": (
             "part.snap {to, on: top|bottom|front|back|left|right, "
             "embed} meets a named face. embed pushes into the "
             "target so sloped roofs get a through-joint."
+        ),
+        "cutout": (
+            "part.cutout {target} subtracts this mesh from the "
+            "named part, then discards the cutter. One subtract "
+            "each. No nested CSG."
         ),
     }

@@ -78,7 +78,11 @@ def silhouette_regressed(job: AssetJob) -> bool:
     newer = job.load_evaluation(found[-1][0])
     if older is None or newer is None:
         return False
-    return newer.scores.silhouette < older.scores.silhouette
+    older_s = older.scores.silhouette
+    newer_s = newer.scores.silhouette
+    if older_s is None or newer_s is None:
+        return False
+    return newer_s < older_s
 
 
 def run_compare(asset_id: str) -> dict:

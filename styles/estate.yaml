@@ -45,6 +45,38 @@ materials:
       roughness: 0.88
       metallic: 0.0
       variation: 0.03
+    masonry:
+      roughness: 0.78
+      metallic: 0.0
+      variation: 0.04
+      albedo:
+        asset: estate_stone_q
+        file: output/asset.png
+    roofing:
+      roughness: 0.7
+      metallic: 0.0
+      variation: 0.03
+      albedo:
+        asset: estate_shingle_q
+        file: output/asset.png
+    water:
+      roughness: 0.16
+      metallic: 0.08
+      variation: 0.02
+      albedo:
+        asset: estate_water_q
+        file: output/asset.png
+    foliage:
+      roughness: 0.9
+      metallic: 0.0
+      variation: 0.04
+      albedo:
+        asset: estate_hedge_q
+        file: output/asset.png
+
+textures:
+  tile_size: 0.7
+  wrap: repeat
 
 render:
   resolution:

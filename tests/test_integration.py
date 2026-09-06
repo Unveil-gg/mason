@@ -37,6 +37,7 @@ def test_blender_crate_build(project: Path, crate_yaml: Path, monkeypatch) -> No
     assert data["validation"]["passed"] is True
     job = project / ".mason" / "jobs" / "simple_crate" / "previews"
     assert (job / "silhouette_front.png").is_file()
+    assert (job / "clay_three_quarter.png").is_file()
     assert (job / "detail.png").is_file()
 
 
@@ -68,6 +69,7 @@ def test_blender_hydrant_previews(
         "three_quarter.png",
         "silhouette_front.png",
         "silhouette_three_quarter.png",
+        "clay_three_quarter.png",
         "detail.png",
     ):
         assert (previews / name).is_file()

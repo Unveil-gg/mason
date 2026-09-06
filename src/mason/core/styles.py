@@ -79,6 +79,18 @@ class StyleTextures(BaseModel):
     wrap: Literal["repeat", "clamp"] = "repeat"
 
 
+class ContextPreview(BaseModel):
+    """Future in-engine / Godot preview. Unused until implemented."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    camera_angle: str = ""
+    camera_distance: str = ""
+    lighting: str = ""
+    environment: str = ""
+    scale_ref: str = ""
+
+
 class StyleProfile(BaseModel):
     """Named palette and default geometry/material/render settings."""
 
@@ -94,6 +106,7 @@ class StyleProfile(BaseModel):
     lighting: StyleLighting = Field(default_factory=StyleLighting)
     textures: StyleTextures = Field(default_factory=StyleTextures)
     quality: dict[str, QualityGuidance] = Field(default_factory=dict)
+    context_preview: ContextPreview | None = None
 
     def color(self, key: str) -> str:
         """Return a palette hex color or raise if missing."""

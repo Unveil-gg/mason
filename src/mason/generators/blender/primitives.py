@@ -169,11 +169,17 @@ def unwrap_stretch(obj):
     """Stretch UVs to fill 0..1 on a single-quad plane, so one decal
     image (a label, sign face, poster) shows whole and centered
     instead of being cropped by tile-based projection."""
+    unwrap_swatch(obj, (0.0, 0.0, 1.0, 1.0))
+
+
+def unwrap_swatch(obj, rect):
+    """Map every face onto a UV rect (u0, v0, u1, v1)."""
     mesh = obj.data
     if not mesh.uv_layers:
         mesh.uv_layers.new(name="UVMap")
     uv_layer = mesh.uv_layers.active.data
-    corners = ((0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0))
+    u0, v0, u1, v1 = rect
+    corners = ((u0, v0), (u1, v0), (u1, v1), (u0, v1))
     for face in mesh.polygons:
         for i, loop_index in enumerate(face.loop_indices):
             uv_layer[loop_index].uv = corners[i % 4]
@@ -189,4 +195,34 @@ def apply_bevel(obj, width, segments):
     mod.limit_method = "ANGLE"
     bpy.context.view_layer.objects.active = obj
     bpy.ops.object.modifier_apply(modifier=mod.name)
+
+
+def apply_cutouts(created):
+    """Subtract each cutout cutter from its target, then delete it."""
+    for part in CONFIG["parts"]:
+        spec = part.get("cutout")
+        if not spec:
+            continue
+        cutter = created.get(part["name"])
+        target = created.get(spec.get("target"))
+        if target is None:
+            prefix = spec.get("target") + "_"
+            matches = [
+                created[name] for name in created
+                if name == spec.get("target") or name.startswith(prefix)
+            ]
+            target = matches[0] if matches else None
+        if cutter is None or target is None:
+            continue
+        bpy.ops.object.select_all(action="DESELECT")
+        target.select_set(True)
+        bpy.context.view_layer.objects.active = target
+        mod = target.modifiers.new(name="mason_cut", type="BOOLEAN")
+        mod.operation = "DIFFERENCE"
+        mod.object = cutter
+        if hasattr(mod, "solver"):
+            mod.solver = "EXACT"
+        bpy.ops.object.modifier_apply(modifier=mod.name)
+        bpy.data.objects.remove(cutter, do_unlink=True)
+        created.pop(part["name"], None)
 '''

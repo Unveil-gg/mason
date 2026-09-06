@@ -1,0 +1,51 @@
+type: static_prop
+id: palette_block
+name: Palette Block
+
+dimensions:
+  width: 0.64
+  depth: 0.54
+  height: 0.68
+
+style: default
+
+geometry:
+  parts:
+    - name: body
+      shape: box
+      size: [0.6, 0.5, 0.5]
+      location: [0, 0, 0.25]
+      material: wood_dark
+    - name: trim
+      shape: box
+      size: [0.64, 0.54, 0.08]
+      location: [0, 0, 0.54]
+      material: wood_light
+      snap:
+        to: body
+        "on": top
+    - name: hardware
+      shape: box
+      size: [0.08, 0.08, 0.1]
+      location: [0.22, 0.22, 0.62]
+      material: steel
+      snap:
+        to: trim
+        "on": top
+
+materials:
+  strategy: palette
+  primary: wood_dark
+
+export:
+  format: glb
+  save_blend: true
+
+art_direction:
+  subject: three-tone block using one shared palette material
+  silhouette: stepped box with a small cap
+  forms:
+    primary: [body]
+    secondary: [trim]
+    tertiary: [hardware]
+  detail_density: low

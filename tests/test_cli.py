@@ -56,6 +56,8 @@ def test_vocab_json() -> None:
     assert "x_brace" in data["components"]
     assert "l_corner" in data["stamps"]
     assert "cart" in data["recipes"]
+    assert "estate" in data["recipes"]
+    assert "cutout" in data
     assert "silhouette_regressed" in data["inspect"]
 
 

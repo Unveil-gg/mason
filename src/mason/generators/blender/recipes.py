@@ -25,10 +25,14 @@ def expand_recipe(
     if name == "cart":
         from mason.generators.blender.recipes_cart import cart_parts
         return cart_parts(dims, params, material)
+    if name in ("house", "tree", "pool", "estate"):
+        from mason.generators.blender.recipes_estate import expand_estate
+        return expand_estate(name, dims, params, material)
     raise MasonError(
         f"Unknown recipe '{name}'.",
         code="unknown_recipe",
-        hint="Use crate, shelf, table, hydrant, cart, or parts.",
+        hint="Use crate, shelf, table, hydrant, cart, house, "
+        "tree, pool, estate, or parts.",
     )
 
 

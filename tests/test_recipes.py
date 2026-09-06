@@ -62,6 +62,45 @@ def test_cart_snaps_to_floor_and_rim() -> None:
     assert all(p.snap is not None for p in walls)
 
 
+def test_house_tree_pool_estate() -> None:
+    house = expand_recipe(
+        "house",
+        Dimensions3D(width=3.2, depth=1.6, height=2.0),
+        RecipeParams(),
+        "stone",
+    )
+    names = [p.name for p in house]
+    assert "main" in names
+    assert "roof" in names
+    assert any(p.cutout for p in house)
+    tree = expand_recipe(
+        "tree",
+        Dimensions3D(width=0.6, depth=0.6, height=1.0),
+        RecipeParams(),
+        "hedge",
+    )
+    assert any(p.name.endswith("crown") for p in tree)
+    pool = expand_recipe(
+        "pool",
+        Dimensions3D(width=1.8, depth=1.0, height=0.2),
+        RecipeParams(),
+        "stone",
+    )
+    assert any(p.name == "pool_water" for p in pool)
+    assert any(p.cutout for p in pool)
+    estate = expand_recipe(
+        "estate",
+        Dimensions3D(width=4.2, depth=5.4, height=2.2),
+        RecipeParams(),
+        "stone",
+    )
+    enames = [p.name for p in estate]
+    assert "lot" in enames
+    assert "main" in enames
+    assert "pool_water" in enames
+    assert "tree_trunk" in enames
+
+
 def test_explicit_parts_win() -> None:
     from mason.core.assets import parse_asset_spec
     from mason.pipelines.static_prop import resolved_parts

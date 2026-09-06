@@ -21,6 +21,7 @@ from mason.core.parts import (  # noqa: F401
     GeometrySpec,
     ImageSource,
     PartArray,
+    PartCutout,
     PartSnap,
     PropPart,
     RecipeParams,
@@ -46,9 +47,20 @@ class Export3D(BaseModel):
 class MaterialsSpec(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    strategy: Literal["family", "palette", "atlas"] = "family"
     primary: str = "primary"
     roughness: float | None = None
     metallic: float | None = None
+    atlas: str | None = None
+    entry: str | None = None
+
+    @model_validator(mode="after")
+    def atlas_needs_ids(self) -> MaterialsSpec:
+        if self.strategy == "atlas" and (
+            not self.atlas or not self.entry
+        ):
+            raise ValueError("atlas strategy needs atlas and entry")
+        return self
 
 
 class StaticPropSpec(ArtFields):

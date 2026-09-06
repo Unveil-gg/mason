@@ -23,6 +23,7 @@ def test_load_default_style(tmp_path: Path) -> None:
     assert style.geometry.bevel_width == 0.02
     assert style.textures.tile_size == 1.0
     assert style.textures.wrap == "repeat"
+    assert style.context_preview is None
 
 
 def test_missing_palette_key(tmp_path: Path) -> None:

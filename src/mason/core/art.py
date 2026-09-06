@@ -138,7 +138,11 @@ class ArtAnalysis(BaseModel):
 class EvalScores(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    silhouette: int = Field(ge=1, le=10)
+    overall_visual_quality: int | None = Field(
+        default=None, ge=1, le=10,
+    )
+    detail_density: int | None = Field(default=None, ge=1, le=10)
+    silhouette: int | None = Field(default=None, ge=1, le=10)
     proportions: int = Field(ge=1, le=10)
     secondary_forms: int = Field(ge=1, le=10)
     tertiary_detail: int = Field(ge=1, le=10)

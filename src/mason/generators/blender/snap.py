@@ -110,7 +110,7 @@ def parents_touch_bounds(
     details: list[str] = []
     ok = True
     for part in parts:
-        if not part.parent:
+        if not part.parent or part.cutout:
             continue
         child = _bounds_named(object_bounds, part.name)
         parent = _bounds_named(object_bounds, part.parent)

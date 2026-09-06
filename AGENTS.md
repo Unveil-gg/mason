@@ -32,43 +32,56 @@ previews in a fresh pass and looks for reasons not to ship.
    `component`).
 8. Run `mason build <spec> --json`.
 9. Check technical validation. Do not ignore failures.
-10. Open `previews/compare.png` before evaluate. Inspect
-    **silhouettes first** (`silhouette_front/side/three_quarter.png`).
-    If the shape is not immediately recognizable, revise geometry
-    before materials. Do not `ship` if inspect reports
-    `silhouette_regressed`.
-11. Inspect beauty views (`front`, `side`, `top`, `three_quarter`)
-    and `detail.png`.
-12. Act as a production art director. Ask:
-    - Is the silhouette immediately recognizable?
-    - Are proportions intentional, not default cubes?
-    - Does it look like primitive geometry assembled by a programmer?
-    - Are secondary forms present? Tertiary details appropriate?
-    - Are edges unnaturally perfect? Materials readable?
-    - Does detail density match viewing distance?
-    - Would this sit next to professional indie-game props?
-13. Record the critique: `mason evaluate <id> <evaluation.json>`.
-    Identify specific reasons not to ship. No praise-only reviews.
-14. If `ship` is false, modify spec/plan/source and rebuild.
+   Success is not “Blender exited” or “the GLB exists.”
+10. Inspect `previews/three_quarter.png` first (beauty). This is
+    the primary artistic target. Ask:
+    - Does this look like a good game asset?
+    - Does it match the intended style?
+    - Does it look overly primitive?
+    - Are materials convincing?
+    - Are secondary forms present?
+    - Is the detail level appropriate?
+11. Inspect `clay_three_quarter.png` if geometry needs review
+    (proportions, bevels, intersections, shape language).
+12. Inspect `front` / `side` / `top` for structural problems.
+13. Inspect silhouettes only if readability, identity, or
+    negative space is questionable. Do not ship or fail
+    primarily on silhouette. `silhouette_regressed` is advisory.
+14. Record the critique: `mason evaluate <id> <evaluation.json>`.
+    Score the beauty render (`overall_visual_quality`). Treat
+    `silhouette` as optional. Identify reasons not to ship.
+15. If `ship` is false, modify spec/plan/source and rebuild.
     Compare `iterations/NNN` via `mason history <id> --json`.
-15. Repeat until validation passes, silhouette is strong, evaluation
-    `ship` is true, and the asset matches style at intended distance.
-16. Treat `asset.yaml`, `art_direction.yaml`, `construction_plan.yaml`,
+16. Repeat until validation passes, the beauty render looks
+    production-ready, and evaluation `ship` is true.
+17. Treat `asset.yaml`, `art_direction.yaml`, `construction_plan.yaml`,
     and `build.py` as reproducible source.
-17. Export with `mason export <id> --to <dir>` when needed. Only
+18. Export with `mason export <id> --to <dir>` when needed. Only
     finished glb/png (and sprite `frames.json`) are copied.
+
+The beauty three-quarter render is the primary artistic
+evaluation image. Inspect it before diagnostic renders. Do not
+treat silhouette success as proof that an asset is visually
+complete. Use clay for modeling quality. Use silhouettes for
+readability and shape. When `preview_roles.context` is set,
+prefer that in-engine preview as the last look.
 
 Important rules:
 
+- Mason drives Blender only through generated `bpy` scripts
+  (`blender --background --python build.py`). Do not operate
+  the GUI.
 - Do not manually operate Blender, Krita, or Aseprite when Mason can
   invoke them.
 - Prefer editing specs/generator source and rebuilding.
 - Do not assume a successful tool exit means the asset looks correct.
-- Always inspect previews. Silhouette before beauty.
+- Always inspect previews. Beauty three-quarter first.
 - Do not ignore validation failures.
 - Use `--json` when operating autonomously.
 - When a style palette matters for rasters, follow generation with
   an `image_process` quantize step.
+- Prefer `materials.strategy: palette`, then `atlas`, then
+  bespoke `part.texture` / family albedo.
 - ConstructionPlan is intent. Generation stays `parts` / `recipe` /
   `component`.
 
@@ -80,9 +93,12 @@ Asset types:
   `component`, `family`, and `texture` (`{asset, file}`). Components:
   bolt, hinge, handle, caster, bracket, trim, x_brace, rail,
   wire_wall, rivet_strip, cornice. Recipes: crate, shelf, table,
-  hydrant, cart. Textured planes are decals (stretch UV). `decals:`
-  also expand to planes. Family `albedo` is used when that PNG
-  already exists.
+  hydrant, cart, house, tree, pool, estate. `cutout: {target}`
+  subtracts this part from another, then discards the cutter.
+  Textured planes are decals (stretch UV). `decals:` also expand
+  to planes. Family `albedo` is used when that PNG already exists.
+  `materials.strategy`: `family` (default), `palette` (one shared
+  swatch sheet), or `atlas` (`atlas` + `entry`).
 - `layered_raster` — Krita layers: fill, text (`font`, `align`),
   `stamp` (`l_corner`, `gem`, `rule`), or imported image. Source is
   `.kra`.
@@ -90,7 +106,8 @@ Asset types:
   `pixels` + `keys`. Source is `.aseprite`; outputs PNG + `frames.json`.
 - `image_process` — ImageMagick resize/crop/trim/composite/quantize/convert
 
-3D previews: beauty `front`/`side`/`top`/`three_quarter`, silhouettes,
+3D previews: beauty `front`/`side`/`top`/`three_quarter` (primary
+is three-quarter), diagnostic `clay_three_quarter` and silhouettes,
 `detail.png`, `contact_sheet.png`, and `compare.png`. Raster:
 `previews/full.png` and `compare.png`. Sprite-sheet previews are a
 4× nearest-neighbor scale of the packed PNG. Compare previews to

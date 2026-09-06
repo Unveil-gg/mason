@@ -1,0 +1,40 @@
+type: layered_raster
+id: estate_hedge
+name: Estate Hedge
+
+dimensions:
+  width: 16
+  height: 16
+
+style: estate
+
+layers:
+  - name: base
+    role: background
+    fill: hedge
+  - name: speckle
+    role: overlay
+    pixels:
+      - "L..I..L..I..L."
+      - "....L.....I..."
+      - ".I....L....L.."
+      - "..L..I...L...."
+      - "L....L.I....L."
+      - "...I.....L..I."
+      - ".L...L....I..."
+      - "I..L....L....L"
+      - "..I...L...I..."
+      - "L....I..L....."
+      - "...L....I..L.."
+      - ".I...L.....I.."
+      - "L..I....L....L"
+      - "....L.I....L.."
+      - ".L.....L..I..."
+      - "I...L....L...I"
+    keys:
+      L: lawn
+      I: ink
+
+export:
+  kra: true
+  png: true

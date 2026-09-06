@@ -1,0 +1,60 @@
+type: layered_raster
+id: estate_stone
+name: Estate Stone
+
+dimensions:
+  width: 256
+  height: 256
+
+style: estate
+
+layers:
+  - name: base
+    role: background
+    fill: stone
+  - name: mortar_h1
+    role: fill
+    fill: stone_dark
+    rect: {x: 0, y: 60, width: 256, height: 6}
+  - name: mortar_h2
+    role: fill
+    fill: stone_dark
+    rect: {x: 0, y: 126, width: 256, height: 6}
+  - name: mortar_h3
+    role: fill
+    fill: stone_dark
+    rect: {x: 0, y: 192, width: 256, height: 6}
+  - name: mortar_v1
+    role: fill
+    fill: stone_dark
+    rect: {x: 62, y: 0, width: 6, height: 60}
+  - name: mortar_v2
+    role: fill
+    fill: stone_dark
+    rect: {x: 190, y: 66, width: 6, height: 60}
+  - name: mortar_v3
+    role: fill
+    fill: stone_dark
+    rect: {x: 62, y: 132, width: 6, height: 60}
+  - name: mortar_v4
+    role: fill
+    fill: stone_dark
+    rect: {x: 190, y: 198, width: 6, height: 58}
+  - name: block_a
+    role: fill
+    fill: cream
+    rect: {x: 8, y: 8, width: 48, height: 44}
+  - name: block_b
+    role: fill
+    fill: stone_dark
+    rect: {x: 140, y: 140, width: 40, height: 36}
+  - name: corner
+    role: overlay
+    fill: cream
+    stamp: l_corner
+    stamp_corner: tl
+    rect: {x: 4, y: 4, width: 36, height: 36}
+
+export:
+  kra: true
+  png: true

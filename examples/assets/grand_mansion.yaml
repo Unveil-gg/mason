@@ -2,7 +2,7 @@ type: static_prop
 id: grand_mansion
 name: Grand Mansion
 
-# Estate diorama: house, front garden, rear pool. Front is -Y.
+# Estate recipe: house, garden, pool. Surfaces from 2D tiles.
 dimensions:
   width: 4.20
   depth: 5.40
@@ -12,285 +12,27 @@ style: estate
 
 geometry:
   bevel: true
-  parts:
-    - name: lot
-      size: [4.20, 5.40, 0.06]
-      location: [0.0, 0.0, 0.03]
-      material: path
-      family: cardboard
-
-    - name: front_lawn
-      size: [4.00, 1.55, 0.05]
-      location: [0.0, -1.82, 0.2]
-      material: lawn
-      family: rubber
-      snap: {to: lot, "on": top}
-
-    - name: rear_lawn
-      size: [4.00, 1.72, 0.05]
-      location: [0.0, 1.74, 0.2]
-      material: lawn
-      family: rubber
-      snap: {to: lot, "on": top}
-
-    - name: plinth
-      size: [3.28, 1.58, 0.14]
-      location: [0.0, -0.18, 0.3]
-      material: stone_dark
-      family: cardboard
-      snap: {to: lot, "on": top}
-
-    - name: main
-      size: [1.92, 1.42, 1.05]
-      location: [0.0, -0.18, 1.0]
-      material: stone
-      family: cardboard
-      snap: {to: plinth, "on": top}
-
-    - name: wing
-      size: [0.64, 1.22, 0.78]
-      location: [-1.28, -0.18, 0.8]
-      material: stone
-      family: cardboard
-      snap: {to: plinth, "on": top}
-      mirror: x
-
-    - name: cornice
-      size: [2.02, 1.52, 0.10]
-      location: [0.0, -0.18, 1.4]
-      material: cream
-      family: cardboard
-      component: cornice
-      component_params: {steps: 3}
-      snap: {to: main, "on": top}
-
-    - name: roof
-      shape: tapered_box
-      taper: [0.16, 0.22]
-      size: [2.12, 1.58, 0.48]
-      location: [0.0, -0.18, 1.8]
-      material: roof
-      family: cardboard
-      snap: {to: cornice, "on": top}
-
-    - name: wing_roof
-      shape: tapered_box
-      taper: [0.20, 0.20]
-      size: [0.74, 1.32, 0.30]
-      location: [-1.28, -0.18, 1.4]
-      material: roof
-      family: cardboard
-      snap: {to: wing, "on": top}
-      mirror: x
-
-    - name: chimney
-      size: [0.16, 0.22, 0.42]
-      location: [-0.42, 0.12, 2.0]
-      material: stone_dark
-      family: cardboard
-      snap: {to: roof, "on": top, embed: 0.24}
-      mirror: x
-
-    - name: chimney_cap
-      size: [0.20, 0.26, 0.04]
-      location: [-0.42, 0.12, 2.1]
-      material: roof
-      family: cardboard
-      snap: {to: chimney, "on": top}
-      mirror: x
-
-    - name: portico
-      size: [1.12, 0.40, 0.08]
-      location: [0.0, -1.08, 0.4]
-      material: stone
-      family: cardboard
-      snap: {to: plinth, "on": top}
-
-    - name: column
-      shape: cylinder
-      size: [0.09, 0.09, 0.88]
-      location: [-0.34, -1.10, 0.8]
-      material: cream
-      family: cardboard
-      snap: {to: portico, "on": top}
-      mirror: x
-
-    - name: entablature
-      size: [1.16, 0.36, 0.08]
-      location: [0.0, -1.10, 1.2]
-      material: cream
-      family: cardboard
-      snap: {to: column, "on": top}
-
-    - name: pediment
-      shape: tapered_box
-      taper: [0.08, 1.0]
-      size: [1.18, 0.16, 0.32]
-      location: [0.0, -1.18, 1.5]
-      material: stone
-      family: cardboard
-      snap: {to: entablature, "on": top}
-
-    - name: door
-      size: [0.24, 0.05, 0.46]
-      location: [0.0, -0.92, 0.6]
-      material: wood
-      family: varnished_wood
-      snap: {to: main, "on": front}
-
-    - name: win_lo
-      size: [0.18, 0.04, 0.22]
-      location: [-0.52, -0.95, 0.55]
-      material: ink
-      family: plastic
-      snap: {to: main, "on": front}
-      mirror: x
-
-    - name: win_hi
-      size: [0.16, 0.04, 0.20]
-      location: [-0.52, -0.95, 1.05]
-      material: ink
-      family: plastic
-      snap: {to: main, "on": front}
-      array:
-        count: 3
-        offset: [0.52, 0.0, 0.0]
-
-    - name: win_wing
-      size: [0.16, 0.04, 0.22]
-      location: [-1.28, -0.82, 0.70]
-      material: ink
-      family: plastic
-      snap: {to: wing, "on": front}
-      mirror: x
-
-    - name: stair
-      size: [0.72, 0.14, 0.05]
-      location: [0.0, -1.32, 0.3]
-      material: stone_dark
-      family: cardboard
-      snap: {to: portico, "on": front}
-
-    - name: path
-      size: [0.38, 1.28, 0.03]
-      location: [0.0, -1.92, 0.2]
-      material: path
-      family: cardboard
-      snap: {to: front_lawn, "on": top}
-
-    - name: hedge_side
-      size: [0.16, 1.42, 0.32]
-      location: [-1.88, -1.78, 0.4]
-      material: hedge
-      family: rubber
-      snap: {to: front_lawn, "on": top}
-      mirror: x
-
-    - name: parterre
-      size: [0.58, 0.42, 0.10]
-      location: [-0.92, -1.72, 0.3]
-      material: hedge
-      family: rubber
-      snap: {to: front_lawn, "on": top}
-      mirror: x
-
-    - name: topiary_stem
-      shape: cylinder
-      size: [0.07, 0.07, 0.22]
-      location: [-1.48, -2.22, 0.4]
-      material: wood
-      family: varnished_wood
-      snap: {to: front_lawn, "on": top}
-      mirror: x
-
-    - name: topiary_ball
-      shape: sphere
-      size: [0.28, 0.28, 0.28]
-      location: [-1.48, -2.22, 0.7]
-      material: hedge
-      family: rubber
-      snap: {to: topiary_stem, "on": top}
-      mirror: x
-
-    - name: fountain_base
-      shape: cylinder
-      size: [0.42, 0.42, 0.08]
-      location: [0.0, -2.28, 0.3]
-      material: stone
-      family: cardboard
-      snap: {to: front_lawn, "on": top}
-
-    - name: fountain_bowl
-      shape: torus
-      size: [0.28, 0.28, 0.08]
-      location: [0.0, -2.28, 0.4]
-      material: stone
-      family: cardboard
-      snap: {to: fountain_base, "on": top}
-
-    - name: fountain_jet
-      shape: cylinder
-      size: [0.04, 0.04, 0.16]
-      location: [0.0, -2.28, 0.5]
-      material: cream
-      family: cardboard
-      snap: {to: fountain_base, "on": top}
-
-    - name: pool_water
-      size: [1.78, 1.02, 0.05]
-      location: [0.0, 1.78, 0.3]
-      material: water
-      family: plastic
-      snap: {to: rear_lawn, "on": top}
-
-    - name: pool_coping
-      size: [2.02, 1.24, 0.06]
-      location: [0.0, 1.78, 0.3]
-      material: stone
-      family: cardboard
-      component: rail
-      snap: {to: rear_lawn, "on": top}
-
-    - name: pool_step
-      size: [0.36, 0.16, 0.04]
-      location: [0.0, 1.19, 0.3]
-      material: stone
-      family: cardboard
-      snap: {to: rear_lawn, "on": top}
-
-    - name: rear_hedge
-      size: [3.80, 0.18, 0.48]
-      location: [0.0, 2.48, 0.5]
-      material: hedge
-      family: rubber
-      snap: {to: rear_lawn, "on": top}
-
-    - name: tree_trunk
-      shape: cylinder
-      size: [0.10, 0.10, 0.28]
-      location: [-1.72, 2.12, 0.4]
-      material: wood
-      family: varnished_wood
-      snap: {to: rear_lawn, "on": top}
-      mirror: x
-
-    - name: tree_crown
-      shape: cone
-      size: [0.55, 0.55, 0.72]
-      location: [-1.72, 2.12, 0.9]
-      material: hedge
-      family: rubber
-      snap: {to: tree_trunk, "on": top}
-      mirror: x
+  recipe: estate
+  recipe_params:
+    wing_width: 0.64
+    tree_height: 1.0
+    pool_width: 1.78
+    pool_depth: 1.02
 
 materials:
   primary: stone
 
+depends_on:
+  - estate_stone_q
+  - estate_shingle_q
+  - estate_water_q
+  - estate_hedge_q
+
 art_direction:
   subject: grand estate mansion with formal garden and rear pool
   style:
-    realism: 0.35
-    stylization: 0.65
+    realism: 0.4
+    stylization: 0.6
     shape_language: [axial, terraced, classical]
   usage:
     importance: focal_prop
@@ -301,12 +43,12 @@ art_direction:
   forms:
     primary: [house mass, pitched roof, lawns, pool]
     secondary: [wings, portico columns, hedges, fountain]
-    tertiary: [windows, door, chimneys, topiary, trees]
+    tertiary: [cut windows, door, chimneys, topiary, trees]
   materials:
-    - {family: cardboard, palette: stone}
-    - {family: rubber, palette: lawn}
-    - {family: plastic, palette: water}
-    - {family: varnished_wood, palette: wood}
+    - {family: masonry, palette: stone}
+    - {family: roofing, palette: roof}
+    - {family: foliage, palette: lawn}
+    - {family: water, palette: water}
   detail_density: medium
 
 construction_plan:
@@ -319,14 +61,14 @@ construction_plan:
     - {type: rail, purpose: pool coping}
     - {type: box, purpose: hedges and parterre}
   tertiary_details:
-    - {type: box, purpose: window rhythm}
+    - {type: cutout, purpose: window recesses and pool basin}
     - {type: cone, purpose: rear trees}
     - {type: sphere, purpose: topiary}
-  materials: [cardboard, rubber, plastic, varnished_wood]
+  materials: [masonry, roofing, foliage, water]
   notes:
-    - front garden toward -Y, pool toward +Y
-    - snap lawns and house to the lot so masses meet
-    - keep walls vertical; sell grandeur with wings and pediment
+    - recipe estate expands house tree and pool clusters
+    - family albedo tiles when the 2D assets exist
+    - cutout subtracts then discards the cutter
 
 export:
   format: glb

@@ -72,6 +72,14 @@ class PartSnap(BaseModel):
     embed: float = Field(default=0.0, ge=0)
 
 
+class PartCutout(BaseModel):
+    """This part subtracts from `target`, then is discarded."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    target: str
+
+
 class PropPart(BaseModel):
     """One primitive or component instance in a static prop."""
 
@@ -93,6 +101,7 @@ class PropPart(BaseModel):
     bevel: bool | None = None
     parent: str | None = None
     snap: PartSnap | None = None
+    cutout: PartCutout | None = None
     inset: float = Field(default=0.0, ge=0)
     array: PartArray | None = None
     mirror: Literal["x", "y", "z"] | None = None
@@ -120,6 +129,10 @@ class RecipeParams(BaseModel):
     flare: float = Field(default=0.18, ge=0, le=0.6)
     basket_height: float = Field(default=0.42, gt=0)
     handle_rise: float = Field(default=0.16, gt=0)
+    wing_width: float = Field(default=0.64, gt=0)
+    tree_height: float = Field(default=1.0, gt=0)
+    pool_width: float = Field(default=1.78, gt=0)
+    pool_depth: float = Field(default=1.02, gt=0)
 
 
 class GeometrySpec(BaseModel):
@@ -130,6 +143,7 @@ class GeometrySpec(BaseModel):
     bevel_segments: int | None = None
     recipe: Literal[
         "crate", "shelf", "table", "hydrant", "cart",
+        "house", "tree", "pool", "estate",
     ] | None = None
     recipe_params: RecipeParams = Field(default_factory=RecipeParams)
     parts: list[PropPart] = Field(default_factory=list)

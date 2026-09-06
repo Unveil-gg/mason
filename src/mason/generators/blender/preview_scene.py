@@ -152,6 +152,24 @@ def _render_view(preview_dir, name, center, loc, clip_end):
         raise RuntimeError("empty preview " + name)
 
 
+def apply_clay_override():
+    """Neutral gray Principled on every non-studio mesh."""
+    mat = bpy.data.materials.new(name="_mason_clay")
+    mat.use_nodes = True
+    bsdf = next(
+        n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED"
+    )
+    color_in = bsdf.inputs.get("Base Color") or bsdf.inputs.get("Color")
+    color_in.default_value = (0.55, 0.55, 0.55, 1.0)
+    bsdf.inputs["Roughness"].default_value = 0.7
+    bsdf.inputs["Metallic"].default_value = 0.0
+    for obj in bpy.data.objects:
+        if obj.type != "MESH" or obj.name.startswith("_mason_"):
+            continue
+        obj.data.materials.clear()
+        obj.data.materials.append(mat)
+
+
 def apply_silhouette_override():
     """Black emission on every non-studio mesh."""
     mat = bpy.data.materials.new(name="_mason_silhouette")
@@ -175,7 +193,7 @@ def apply_silhouette_override():
 
 
 def render_previews(preview_dir, resolution, samples, engine="eevee"):
-    """Render beauty, detail, and silhouette views."""
+    """Render beauty, clay, and silhouette views."""
     clear_non_mesh()
     used = setup_renderer(resolution, samples, engine, transparent=False)
     mins, maxs = scene_bounds()
@@ -214,6 +232,12 @@ def render_previews(preview_dir, resolution, samples, engine="eevee"):
             render_beauty()
         else:
             raise
+
+    apply_clay_override()
+    _render_view(
+        preview_dir, "clay_three_quarter",
+        center, views["three_quarter"], clip_end,
+    )
 
     apply_silhouette_override()
     set_world((1.0, 1.0, 1.0), 1.0)

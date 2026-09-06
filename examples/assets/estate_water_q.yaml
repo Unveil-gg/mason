@@ -1,0 +1,18 @@
+type: image_process
+id: estate_water_q
+name: Estate Water Quantized
+
+style: estate
+depends_on: [estate_water]
+
+source:
+  asset: estate_water
+  file: output/asset.png
+
+operations:
+  - op: quantize
+    palette: style
+    dither: true
+
+export:
+  format: png

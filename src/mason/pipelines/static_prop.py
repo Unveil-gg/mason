@@ -10,6 +10,7 @@ from mason.core.parts import PropPart
 from mason.core.paths import resolve_image_source
 from mason.core.results import BuildResult
 from mason.core.styles import StyleProfile
+from mason.core.surfaces import prepare_surface_maps
 from mason.core.workspace import find_project_root
 from mason.errors import MasonError
 from mason.generators.blender.components import expand_components
@@ -199,6 +200,7 @@ def build_static_prop(
 
     bw, bs, rough, metal = apply_style_defaults(spec, style)
     part_textures, part_roughness = resolve_part_maps(job, parts, style)
+    surface = prepare_surface_maps(job, spec, style)
     script = build_blender_script(
         spec,
         style,
@@ -210,6 +212,7 @@ def build_static_prop(
         metallic=metal,
         part_textures=part_textures,
         part_roughness=part_roughness,
+        **surface,
     )
     job.build_py.write_text(script, encoding="utf-8")
 
