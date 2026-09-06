@@ -69,6 +69,7 @@ class PartSnap(BaseModel):
 
     to: str
     on: Literal["top", "bottom", "front", "back", "left", "right"]
+    embed: float = Field(default=0.0, ge=0)
 
 
 class PropPart(BaseModel):

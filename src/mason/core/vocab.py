@@ -38,7 +38,8 @@ def vocab_payload() -> dict[str, Any]:
             "three_quarter. Do not ship if silhouette_regressed."
         ),
         "snap": (
-            "part.snap {to, on: top|bottom|front|back|left|right} "
-            "meets named faces before components expand."
+            "part.snap {to, on: top|bottom|front|back|left|right, "
+            "embed} meets a named face. embed pushes into the "
+            "target so sloped roofs get a through-joint."
         ),
     }

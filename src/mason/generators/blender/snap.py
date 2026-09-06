@@ -46,9 +46,13 @@ def apply_snaps(parts: list[PropPart]) -> list[PropPart]:
             out.append(part)
             continue
         current = list(by_name.values())
-        targets = _lookup(current, by_name, part.snap.to)
+        targets = _lookup(
+            current, by_name, _snap_target(part.name, part.snap.to),
+        )
         target_lo, target_hi = union_aabb(targets)
-        loc = _snapped_location(part, target_lo, target_hi, part.snap.on)
+        loc = _snapped_location(
+            part, target_lo, target_hi, part.snap.on, part.snap.embed,
+        )
         moved = part.model_copy(update={"location": loc})
         by_name[part.name] = moved
         out.append(moved)
@@ -68,7 +72,9 @@ def snaps_touch(
         if part.snap is None:
             continue
         try:
-            targets = _lookup(parts, by_name, part.snap.to)
+            targets = _lookup(
+                parts, by_name, _snap_target(part.name, part.snap.to),
+            )
         except MasonError as exc:
             ok = False
             details.append(str(exc.message))
@@ -139,6 +145,13 @@ def _bounds_named(
     return lo, hi
 
 
+def _snap_target(part_name: str, target: str) -> str:
+    """Prefer the mirrored twin when this part is a mirror copy."""
+    if part_name.endswith("_m"):
+        return f"{target}_m"
+    return target
+
+
 def _lookup(
     parts: list[PropPart],
     by_name: dict[str, PropPart],
@@ -150,6 +163,8 @@ def _lookup(
         part for part in parts
         if part.name.startswith(name + "_")
     ]
+    if not matches and name.endswith("_m"):
+        return _lookup(parts, by_name, name[:-2])
     if not matches:
         raise MasonError(
             f"Snap target '{name}' not found.",
@@ -165,6 +180,7 @@ def _snapped_location(
     target_lo: list[float],
     target_hi: list[float],
     on: str,
+    embed: float = 0.0,
 ) -> tuple[float, float, float]:
     axis, sign = _FACES[on]
     child_lo, child_hi = aabb(part)
@@ -175,4 +191,6 @@ def _snapped_location(
     else:
         # child's max meets target min
         loc[axis] += target_lo[axis] - child_hi[axis]
+    # Push into the target so sloped roofs get a through-joint.
+    loc[axis] -= sign * embed
     return (loc[0], loc[1], loc[2])

@@ -76,7 +76,7 @@ Asset types:
 
 - `static_prop` — Blender parts (`box`, `cylinder`, `plane`, `cone`,
   `torus`, `tapered_box`, `sphere`) with optional `parent`, `snap`
-  (`{to, on}`), `inset`, `array` (linear or `radial`), `mirror`,
+  (`{to, on, embed}`), `inset`, `array` (linear or `radial`), `mirror`,
   `component`, `family`, and `texture` (`{asset, file}`). Components:
   bolt, hinge, handle, caster, bracket, trim, x_brace, rail,
   wire_wall, rivet_strip, cornice. Recipes: crate, shelf, table,
