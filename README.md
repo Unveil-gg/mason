@@ -1,4 +1,19 @@
-# Mason
+<p align="center">
+  <img src="docs/images/mason-logo.png" alt="Mason logo" width="128">
+</p>
+
+<h1 align="center">Mason</h1>
+
+<p align="center">
+  <a href="https://www.python.org/downloads/">
+    <img src="https://img.shields.io/badge/python-3.12+-3776AB?logo=python&logoColor=white" alt="Python 3.12+">
+  </a>
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platforms">
+  <img src="https://img.shields.io/badge/version-0.1.0-blue" alt="Version 0.1.0">
+</p>
+
+---
 
 <p align="center">
   <img src="docs/images/grand_mansion_contact_sheet.png" alt="Grand Mansion demo preview — front, side, top, and three-quarter views with demo lighting" width="640">
