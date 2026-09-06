@@ -74,6 +74,23 @@ def setup_renderer(resolution, samples, preferred, transparent=False):
     return "cycles"
 
 
+def boost_shadow_quality():
+    """EEVEE's area-light shadows are raytraced with 1 ray/sample by
+    default; at the low TAA sample counts styles use for fast builds,
+    that noise gets denoised away to nothing and shadows vanish.
+    Demo-lighting renders can afford to pay for a few more rays and
+    samples so the cast shadow actually shows up."""
+    eevee = getattr(bpy.context.scene, "eevee", None)
+    if eevee is None:
+        return
+    if hasattr(eevee, "shadow_ray_count"):
+        eevee.shadow_ray_count = 3
+    if hasattr(eevee, "shadow_step_count"):
+        eevee.shadow_step_count = 8
+    if hasattr(eevee, "taa_render_samples"):
+        eevee.taa_render_samples = max(eevee.taa_render_samples, 32)
+
+
 def setup_studio_lights(
     center, distance, preset="neutral_studio", demo=False,
 ):
@@ -81,10 +98,10 @@ def setup_studio_lights(
     warmer/higher-contrast rig for one-off demo screenshots."""
     scale = 1.6 if preset == "high_key" else 1.0
 
-    def add_light(name, energy, loc, color=(1.0, 1.0, 1.0)):
+    def add_light(name, energy, loc, color=(1.0, 1.0, 1.0), size=None):
         light = bpy.data.lights.new(name=name, type="AREA")
         light.energy = energy * scale
-        light.size = max(distance * 0.4, 0.5)
+        light.size = size if size is not None else max(distance * 0.4, 0.5)
         light.color = color
         obj = bpy.data.objects.new(name, light)
         obj.location = loc
@@ -92,20 +109,38 @@ def setup_studio_lights(
         return obj
 
     if demo:
+        # Preview cameras (front/side/three_quarter) all sit in the
+        # +X/-Y (southeast) arc around the asset. A key light on that
+        # same side is a flattering front-lit look, but its shadow
+        # falls straight back, away from every camera, so it never
+        # reads in the render. Putting the key on the opposite
+        # (-X/+Y) side instead throws its shadow toward the cameras,
+        # and a small light size keeps the shadow's edge crisp
+        # instead of a huge soft area light washing it out.
+        #
+        # Area-light energy is total emitted power, so it must scale
+        # with distance^2 (inverse-square) to keep irradiance, and
+        # thus the key/world contrast that actually makes a shadow
+        # visible, roughly constant across small props and big
+        # builds alike. A flat wattage looked fine on small assets
+        # and invisible on a mansion-scale build.
+        d2 = distance * distance
         add_light(
-            "key", 56.0,
-            center + Vector((distance, -distance, distance * 1.1)),
+            "key", 40.0 * d2,
+            center + Vector((-distance, distance, distance * 1.2)),
             color=(1.0, 0.93, 0.82),
+            size=max(distance * 0.08, 0.2),
         )
         add_light(
-            "fill", 9.0,
-            center + Vector((-distance, -distance * 0.4, distance * 0.6)),
+            "fill", 6.0 * d2,
+            center + Vector((distance * 0.7, -distance * 0.7, distance * 0.5)),
             color=(0.85, 0.9, 1.0),
         )
         add_light(
-            "rim", 30.0,
-            center + Vector((-distance * 0.3, distance, distance * 0.9)),
+            "rim", 9.0 * d2,
+            center + Vector((distance * 0.2, distance, distance * 0.7)),
             color=(0.8, 0.88, 1.0),
+            size=max(distance * 0.2, 0.4),
         )
         return
 
@@ -222,6 +257,8 @@ def render_previews(
     it does not change the stored spec or style, only this render."""
     clear_non_mesh()
     used = setup_renderer(resolution, samples, engine, transparent=False)
+    if demo_lighting and used == "eevee":
+        boost_shadow_quality()
     mins, maxs = scene_bounds()
     center = (mins + maxs) * 0.5
     size = maxs - mins
@@ -230,7 +267,12 @@ def render_previews(
     clip_end = dist * 8.0
     preset = CONFIG.get("lighting_preset") or "neutral_studio"
     if demo_lighting:
-        set_world((0.5, 0.55, 0.62), 0.5)
+        # Much lower than neutral on purpose: the world background is
+        # an unoccluded ambient dome, so even a modest strength was
+        # out-illuminating the key light and erasing its cast shadow
+        # entirely (uniform ambient wins over a single area light
+        # unless it's kept this dim).
+        set_world((0.45, 0.5, 0.58), 0.05)
     else:
         set_world((0.62, 0.62, 0.65), 0.35)
     setup_studio_plate(center, mins, radius)

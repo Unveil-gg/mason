@@ -1,5 +1,7 @@
 # Mason
 
+![Grand Mansion demo preview — front, side, top, and three-quarter views with demo lighting](docs/images/grand_mansion_contact_sheet.png)
+
 Mason is a local developer CLI that orchestrates **already installed**
 creative tools. It does not bundle Blender, Krita, Aseprite, or
 ImageMagick. Coding agents (Cursor, Claude Code, Codex, and others)
