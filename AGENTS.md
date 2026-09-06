@@ -14,26 +14,45 @@ If this turn generated or edited code, end with a suggested commit message (1–
 
 # Mason Agent Workflow
 
-Before generating assets:
+Separate **creator** and **critic** even if you are one model.
+The creator authors direction, plan, and geometry. The critic scores
+previews in a fresh pass and looks for reasons not to ship.
 
 1. Run `mason doctor --json`.
 2. Confirm the required capabilities are available.
-3. Read the project's Mason style profile.
-4. Create or modify an AssetSpec YAML.
-5. Run `mason build <spec> --json`.
-6. Check validation results.
-7. Open and inspect generated preview images.
-8. If the asset does not visually satisfy the request, modify the spec
-   and rebuild.
-9. Continue until technical validation passes and the visual result
-   is acceptable.
-10. Treat asset.yaml and build.py as reproducible source artifacts.
-11. If the asset needs to land in another project (e.g. a Godot repo),
-    run `mason export <id> --to <dir>` (or set `install_dir` in
-    `mason.yaml` / `export.install_to` in the spec, then just
-    `mason export <id>`). Only finished outputs (glb/png) are copied,
-    never `.blend`/`.kra`/`.aseprite`/previews. Sprite sheets also
-    export `frames.json` (animation rects + durations) next to the PNG.
+3. Read the project's Mason style profile (`styles/*.yaml`).
+4. Understand the request. If `references` exist, inspect them and
+   write `art_analysis` (shape language, proportions, materials).
+5. Write `art_direction`: subject, usage, silhouette goal, primary /
+   secondary / tertiary forms, material families, detail density.
+6. Write `construction_plan` as intent (not compiled into meshes).
+7. Create or modify the AssetSpec (`geometry.parts`, `recipe`, or
+   `component`).
+8. Run `mason build <spec> --json`.
+9. Check technical validation. Do not ignore failures.
+10. Inspect **silhouettes first**
+    (`silhouette_front/side/three_quarter.png`). If the shape is not
+    immediately recognizable, revise geometry before materials.
+11. Inspect beauty views (`front`, `side`, `top`, `three_quarter`)
+    and `detail.png`.
+12. Act as a production art director. Ask:
+    - Is the silhouette immediately recognizable?
+    - Are proportions intentional, not default cubes?
+    - Does it look like primitive geometry assembled by a programmer?
+    - Are secondary forms present? Tertiary details appropriate?
+    - Are edges unnaturally perfect? Materials readable?
+    - Does detail density match viewing distance?
+    - Would this sit next to professional indie-game props?
+13. Record the critique: `mason evaluate <id> <evaluation.json>`.
+    Identify specific reasons not to ship. No praise-only reviews.
+14. If `ship` is false, modify spec/plan/source and rebuild.
+    Compare `iterations/NNN` via `mason history <id> --json`.
+15. Repeat until validation passes, silhouette is strong, evaluation
+    `ship` is true, and the asset matches style at intended distance.
+16. Treat `asset.yaml`, `art_direction.yaml`, `construction_plan.yaml`,
+    and `build.py` as reproducible source.
+17. Export with `mason export <id> --to <dir>` when needed. Only
+    finished glb/png (and sprite `frames.json`) are copied.
 
 Important rules:
 
@@ -41,33 +60,29 @@ Important rules:
   invoke them.
 - Prefer editing specs/generator source and rebuilding.
 - Do not assume a successful tool exit means the asset looks correct.
-- Always inspect previews.
+- Always inspect previews. Silhouette before beauty.
 - Do not ignore validation failures.
 - Use `--json` when operating autonomously.
 - When a style palette matters for rasters, follow generation with
   an `image_process` quantize step.
+- ConstructionPlan is intent. Generation stays `parts` / `recipe` /
+  `component`.
 
 Asset types:
 
-- `static_prop` — Blender parts (`box`, `cylinder`, `plane`) with
-  optional `parent`, `inset`, `array`, and `texture` (another asset's
-  PNG, e.g. `{asset: plank_texture, file: output/asset.png}`). Build
-  the texture asset (usually `layered_raster`) before the part that
-  references it. `box`/`cylinder` get a cube-projected tiling UV
-  (wood, stone, fabric); a textured `plane` is a decal and gets a
-  stretched UV so one label/sign/billboard image shows whole and
-  undistorted. Recipes (crate/shelf/table) expand into parts.
-- `layered_raster` — Krita layers: fill, text, or imported image,
-  plus optional `role`. Source is `.kra`.
+- `static_prop` — Blender parts (`box`, `cylinder`, `plane`, `cone`,
+  `torus`, `tapered_box`, `sphere`) with optional `parent`, `inset`,
+  `array` (linear or `radial`), `mirror`, `component`, `family`, and
+  `texture` (`{asset, file}`). Recipes: crate, shelf, table, hydrant.
+  Textured planes are decals (stretch UV). `decals:` also expand to
+  planes. Build texture assets before the prop that references them.
+- `layered_raster` — Krita layers: fill, text (`font`, `align`), or
+  imported image. Source is `.kra`.
 - `sprite_sheet` — Aseprite animations of timed frames. Prefer
-  `pixels` + `keys` (one char = one palette color, `.`/`_`/` ` empty)
-  over large `fill` rects so sprites read as pixel art. Source is
-  `.aseprite`; outputs are the packed PNG and `frames.json`.
+  `pixels` + `keys`. Source is `.aseprite`; outputs PNG + `frames.json`.
 - `image_process` — ImageMagick resize/crop/trim/composite/quantize/convert
 
-3D previews: front, side, top, three_quarter, plus `contact_sheet.png`.
-Raster previews: previews/full.png. Sprite-sheet previews are a 4×
-nearest-neighbor scale of the packed PNG so NES-size pixels are
-readable; the output PNG stays native size.
-Compare previews to the spec, then edit the spec or generated script
-and `mason rebuild <id> --json`.
+3D previews: beauty `front`/`side`/`top`/`three_quarter`, silhouettes,
+`detail.png`, plus `contact_sheet.png`. Raster: `previews/full.png`.
+Sprite-sheet previews are a 4× nearest-neighbor scale of the packed
+PNG. Compare previews to the spec, then `mason rebuild <id> --json`.

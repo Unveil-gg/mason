@@ -19,11 +19,22 @@ class StyleGeometry(BaseModel):
     bevel_segments: int = 2
 
 
+class MaterialFamily(BaseModel):
+    """Reusable PBR-ish settings for a named material family."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    roughness: float = Field(default=0.75, ge=0, le=1)
+    metallic: float = Field(default=0.0, ge=0, le=1)
+    variation: float = Field(default=0.0, ge=0, le=1)
+
+
 class StyleMaterials(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     roughness: float = 0.75
     metallic: float = 0.0
+    families: dict[str, MaterialFamily] = Field(default_factory=dict)
 
 
 class RenderResolution(BaseModel):
@@ -46,7 +57,13 @@ class StyleRender(BaseModel):
 class StyleLighting(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    preset: str = "neutral_studio"
+    preset: Literal["neutral_studio", "high_key"] = "neutral_studio"
+
+
+class QualityGuidance(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    detail_density: Literal["low", "medium", "high"] = "medium"
 
 
 class StyleTextures(BaseModel):
@@ -73,6 +90,7 @@ class StyleProfile(BaseModel):
     render: StyleRender = Field(default_factory=StyleRender)
     lighting: StyleLighting = Field(default_factory=StyleLighting)
     textures: StyleTextures = Field(default_factory=StyleTextures)
+    quality: dict[str, QualityGuidance] = Field(default_factory=dict)
 
     def color(self, key: str) -> str:
         """Return a palette hex color or raise if missing."""
@@ -154,6 +172,9 @@ palette:
   label_green: "#2E7D4F"
   charcoal: "#3A3632"
   smoke: "#5C5548"
+  hydrant_red: "#C23B2E"
+  brass: "#C4A15A"
+  steel: "#8A9196"
 
 geometry:
   bevel_width: 0.02
@@ -162,6 +183,31 @@ geometry:
 materials:
   roughness: 0.75
   metallic: 0.0
+  families:
+    painted_metal:
+      roughness: 0.45
+      metallic: 0.15
+      variation: 0.08
+    bare_metal:
+      roughness: 0.35
+      metallic: 0.75
+      variation: 0.04
+    varnished_wood:
+      roughness: 0.35
+      metallic: 0.0
+      variation: 0.06
+    rubber:
+      roughness: 0.9
+      metallic: 0.0
+      variation: 0.02
+    plastic:
+      roughness: 0.4
+      metallic: 0.0
+      variation: 0.03
+    cardboard:
+      roughness: 0.85
+      metallic: 0.0
+      variation: 0.05
 
 render:
   resolution:

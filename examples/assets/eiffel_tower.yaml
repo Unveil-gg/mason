@@ -2,12 +2,12 @@ type: static_prop
 id: eiffel_tower
 name: Eiffel Tower
 
-# Tapered lattice from stacked stories: 4 legs per stage, decks,
-# and a spire. Primitive stand-in, not a measured replica.
+# Taller thinner lattice. Decks are thin plates with rails.
+# X-braces on all four faces at each story.
 dimensions:
-  width: 1.28
-  depth: 1.28
-  height: 3.16
+  width: 1.40
+  depth: 1.40
+  height: 3.62
 
 style: iron
 
@@ -16,202 +16,306 @@ geometry:
   parts:
     - name: leg_sw
       shape: box
-      size: [0.14, 0.14, 1.1]
-      location: [-0.48, -0.48, 0.55]
-      rotation: [-0.18, 0.18, 0.0]
+      size: [0.08, 0.08, 1.24]
+      location: [-0.54, -0.54, 0.62]
+      rotation: [-0.20, 0.20, 0.0]
       material: iron
+      family: bare_metal
     - name: leg_se
       shape: box
-      size: [0.14, 0.14, 1.1]
-      location: [0.48, -0.48, 0.55]
-      rotation: [-0.18, -0.18, 0.0]
+      size: [0.08, 0.08, 1.24]
+      location: [0.54, -0.54, 0.62]
+      rotation: [-0.20, -0.20, 0.0]
       material: iron
+      family: bare_metal
     - name: leg_nw
       shape: box
-      size: [0.14, 0.14, 1.1]
-      location: [-0.48, 0.48, 0.55]
-      rotation: [0.18, 0.18, 0.0]
+      size: [0.08, 0.08, 1.24]
+      location: [-0.54, 0.54, 0.62]
+      rotation: [0.20, 0.20, 0.0]
       material: iron
+      family: bare_metal
     - name: leg_ne
       shape: box
-      size: [0.14, 0.14, 1.1]
-      location: [0.48, 0.48, 0.55]
-      rotation: [0.18, -0.18, 0.0]
+      size: [0.08, 0.08, 1.24]
+      location: [0.54, 0.54, 0.62]
+      rotation: [0.20, -0.20, 0.0]
       material: iron
+      family: bare_metal
     - name: brace_s1
       shape: box
-      size: [1.12, 0.04, 0.04]
-      location: [0.0, -0.48, 0.6]
-      rotation: [0.0, 0.5, 0.0]
+      size: [1.18, 0.03, 0.03]
+      location: [0.0, -0.54, 0.64]
+      rotation: [0.0, 0.48, 0.0]
       material: iron_dark
+      family: bare_metal
+      mirror: y
     - name: brace_s2
       shape: box
-      size: [1.12, 0.04, 0.04]
-      location: [0.0, -0.48, 0.6]
-      rotation: [0.0, -0.5, 0.0]
+      size: [1.18, 0.03, 0.03]
+      location: [0.0, -0.54, 0.64]
+      rotation: [0.0, -0.48, 0.0]
       material: iron_dark
-    - name: brace_n1
-      shape: box
-      size: [1.12, 0.04, 0.04]
-      location: [0.0, 0.48, 0.6]
-      rotation: [0.0, 0.5, 0.0]
-      material: iron_dark
-    - name: brace_n2
-      shape: box
-      size: [1.12, 0.04, 0.04]
-      location: [0.0, 0.48, 0.6]
-      rotation: [0.0, -0.5, 0.0]
-      material: iron_dark
+      family: bare_metal
+      mirror: y
     - name: brace_w1
       shape: box
-      size: [0.04, 1.12, 0.04]
-      location: [-0.48, 0.0, 0.6]
-      rotation: [0.5, 0.0, 0.0]
+      size: [0.03, 1.18, 0.03]
+      location: [-0.54, 0.0, 0.64]
+      rotation: [0.48, 0.0, 0.0]
       material: iron_dark
+      family: bare_metal
+      mirror: x
     - name: brace_w2
       shape: box
-      size: [0.04, 1.12, 0.04]
-      location: [-0.48, 0.0, 0.6]
-      rotation: [-0.5, 0.0, 0.0]
+      size: [0.03, 1.18, 0.03]
+      location: [-0.54, 0.0, 0.64]
+      rotation: [-0.48, 0.0, 0.0]
       material: iron_dark
-    - name: brace_e1
-      shape: box
-      size: [0.04, 1.12, 0.04]
-      location: [0.48, 0.0, 0.6]
-      rotation: [0.5, 0.0, 0.0]
-      material: iron_dark
-    - name: brace_e2
-      shape: box
-      size: [0.04, 1.12, 0.04]
-      location: [0.48, 0.0, 0.6]
-      rotation: [-0.5, 0.0, 0.0]
-      material: iron_dark
+      family: bare_metal
+      mirror: x
     - name: base_beam_s
       shape: box
-      size: [1.1, 0.07, 0.07]
-      location: [0.0, -0.48, 0.2]
+      size: [1.12, 0.05, 0.05]
+      location: [0.0, -0.54, 0.16]
       material: iron_dark
-    - name: base_beam_n
-      shape: box
-      size: [1.1, 0.07, 0.07]
-      location: [0.0, 0.48, 0.2]
-      material: iron_dark
+      family: bare_metal
+      mirror: y
     - name: base_beam_w
       shape: box
-      size: [0.07, 1.1, 0.07]
-      location: [-0.48, 0.0, 0.2]
+      size: [0.05, 1.12, 0.05]
+      location: [-0.54, 0.0, 0.16]
       material: iron_dark
-    - name: base_beam_e
-      shape: box
-      size: [0.07, 1.1, 0.07]
-      location: [0.48, 0.0, 0.2]
-      material: iron_dark
+      family: bare_metal
+      mirror: x
     - name: arch_beam_s
       shape: box
-      size: [1.1, 0.07, 0.07]
-      location: [0.0, -0.48, 1.0]
+      size: [1.12, 0.05, 0.05]
+      location: [0.0, -0.54, 1.14]
       material: iron_dark
-    - name: arch_beam_n
-      shape: box
-      size: [1.1, 0.07, 0.07]
-      location: [0.0, 0.48, 1.0]
-      material: iron_dark
+      family: bare_metal
+      mirror: y
     - name: arch_beam_w
       shape: box
-      size: [0.07, 1.1, 0.07]
-      location: [-0.48, 0.0, 1.0]
+      size: [0.05, 1.12, 0.05]
+      location: [-0.54, 0.0, 1.14]
       material: iron_dark
-    - name: arch_beam_e
-      shape: box
-      size: [0.07, 1.1, 0.07]
-      location: [0.48, 0.0, 1.0]
-      material: iron_dark
+      family: bare_metal
+      mirror: x
     - name: deck_1
       shape: box
-      size: [1.2, 1.2, 0.06]
-      location: [0.0, 0.0, 1.13]
+      size: [0.92, 0.92, 0.028]
+      location: [0.0, 0.0, 1.28]
       material: iron_light
+      family: bare_metal
+    - name: rail_1_s
+      shape: box
+      size: [1.04, 0.03, 0.04]
+      location: [0.0, -0.50, 1.32]
+      material: iron
+      family: bare_metal
+      mirror: y
+    - name: rail_1_w
+      shape: box
+      size: [0.03, 1.04, 0.04]
+      location: [-0.50, 0.0, 1.32]
+      material: iron
+      family: bare_metal
+      mirror: x
     - name: mid_sw
       shape: box
-      size: [0.1, 0.1, 0.8]
-      location: [-0.28, -0.28, 1.56]
-      rotation: [-0.16, 0.16, 0.0]
+      size: [0.065, 0.065, 0.90]
+      location: [-0.26, -0.26, 1.75]
+      rotation: [-0.15, 0.15, 0.0]
       material: iron
+      family: bare_metal
     - name: mid_se
       shape: box
-      size: [0.1, 0.1, 0.8]
-      location: [0.28, -0.28, 1.56]
-      rotation: [-0.16, -0.16, 0.0]
+      size: [0.065, 0.065, 0.90]
+      location: [0.26, -0.26, 1.75]
+      rotation: [-0.15, -0.15, 0.0]
       material: iron
+      family: bare_metal
     - name: mid_nw
       shape: box
-      size: [0.1, 0.1, 0.8]
-      location: [-0.28, 0.28, 1.56]
-      rotation: [0.16, 0.16, 0.0]
+      size: [0.065, 0.065, 0.90]
+      location: [-0.26, 0.26, 1.75]
+      rotation: [0.15, 0.15, 0.0]
       material: iron
+      family: bare_metal
     - name: mid_ne
       shape: box
-      size: [0.1, 0.1, 0.8]
-      location: [0.28, 0.28, 1.56]
-      rotation: [0.16, -0.16, 0.0]
+      size: [0.065, 0.065, 0.90]
+      location: [0.26, 0.26, 1.75]
+      rotation: [0.15, -0.15, 0.0]
       material: iron
+      family: bare_metal
     - name: mid_beam_s
       shape: box
-      size: [0.66, 0.05, 0.05]
-      location: [0.0, -0.28, 1.56]
+      size: [0.58, 0.035, 0.035]
+      location: [0.0, -0.26, 1.75]
       material: iron_dark
-    - name: mid_beam_n
+      family: bare_metal
+      mirror: y
+    - name: mid_beam_w
       shape: box
-      size: [0.66, 0.05, 0.05]
-      location: [0.0, 0.28, 1.56]
+      size: [0.035, 0.58, 0.035]
+      location: [-0.26, 0.0, 1.75]
       material: iron_dark
+      family: bare_metal
+      mirror: x
+    - name: mid_brace_s1
+      shape: box
+      size: [0.60, 0.03, 0.03]
+      location: [0.0, -0.26, 1.75]
+      rotation: [0.0, 0.42, 0.0]
+      material: iron_dark
+      family: bare_metal
+      mirror: y
+    - name: mid_brace_s2
+      shape: box
+      size: [0.60, 0.03, 0.03]
+      location: [0.0, -0.26, 1.75]
+      rotation: [0.0, -0.42, 0.0]
+      material: iron_dark
+      family: bare_metal
+      mirror: y
+    - name: mid_brace_w1
+      shape: box
+      size: [0.03, 0.60, 0.03]
+      location: [-0.26, 0.0, 1.75]
+      rotation: [0.42, 0.0, 0.0]
+      material: iron_dark
+      family: bare_metal
+      mirror: x
+    - name: mid_brace_w2
+      shape: box
+      size: [0.03, 0.60, 0.03]
+      location: [-0.26, 0.0, 1.75]
+      rotation: [-0.42, 0.0, 0.0]
+      material: iron_dark
+      family: bare_metal
+      mirror: x
     - name: deck_2
       shape: box
-      size: [0.7, 0.7, 0.05]
-      location: [0.0, 0.0, 1.99]
+      size: [0.52, 0.52, 0.022]
+      location: [0.0, 0.0, 2.22]
       material: iron_light
+      family: bare_metal
+    - name: rail_2_s
+      shape: box
+      size: [0.58, 0.025, 0.03]
+      location: [0.0, -0.28, 2.25]
+      material: iron
+      family: bare_metal
+      mirror: y
+    - name: rail_2_w
+      shape: box
+      size: [0.025, 0.58, 0.03]
+      location: [-0.28, 0.0, 2.25]
+      material: iron
+      family: bare_metal
+      mirror: x
     - name: top_sw
       shape: box
-      size: [0.07, 0.07, 0.58]
-      location: [-0.12, -0.12, 2.3]
-      rotation: [-0.14, 0.14, 0.0]
+      size: [0.045, 0.045, 0.70]
+      location: [-0.11, -0.11, 2.58]
+      rotation: [-0.12, 0.12, 0.0]
       material: iron
+      family: bare_metal
     - name: top_se
       shape: box
-      size: [0.07, 0.07, 0.58]
-      location: [0.12, -0.12, 2.3]
-      rotation: [-0.14, -0.14, 0.0]
+      size: [0.045, 0.045, 0.70]
+      location: [0.11, -0.11, 2.58]
+      rotation: [-0.12, -0.12, 0.0]
       material: iron
+      family: bare_metal
     - name: top_nw
       shape: box
-      size: [0.07, 0.07, 0.58]
-      location: [-0.12, 0.12, 2.3]
-      rotation: [0.14, 0.14, 0.0]
+      size: [0.045, 0.045, 0.70]
+      location: [-0.11, 0.11, 2.58]
+      rotation: [0.12, 0.12, 0.0]
       material: iron
+      family: bare_metal
     - name: top_ne
       shape: box
-      size: [0.07, 0.07, 0.58]
-      location: [0.12, 0.12, 2.3]
-      rotation: [0.14, -0.14, 0.0]
+      size: [0.045, 0.045, 0.70]
+      location: [0.11, 0.11, 2.58]
+      rotation: [0.12, -0.12, 0.0]
       material: iron
+      family: bare_metal
+    - name: top_brace_s1
+      shape: box
+      size: [0.26, 0.022, 0.022]
+      location: [0.0, -0.11, 2.58]
+      rotation: [0.0, 0.38, 0.0]
+      material: iron_dark
+      family: bare_metal
+      mirror: y
+    - name: top_brace_s2
+      shape: box
+      size: [0.26, 0.022, 0.022]
+      location: [0.0, -0.11, 2.58]
+      rotation: [0.0, -0.38, 0.0]
+      material: iron_dark
+      family: bare_metal
+      mirror: y
     - name: deck_3
       shape: box
-      size: [0.34, 0.34, 0.04]
-      location: [0.0, 0.0, 2.61]
+      size: [0.24, 0.24, 0.018]
+      location: [0.0, 0.0, 2.94]
       material: iron_light
+      family: bare_metal
     - name: spire
       shape: box
-      size: [0.1, 0.1, 0.28]
-      location: [0.0, 0.0, 2.78]
+      size: [0.06, 0.06, 0.34]
+      location: [0.0, 0.0, 3.14]
       material: iron
+      family: bare_metal
     - name: antenna
       shape: cylinder
-      size: [0.03, 0.03, 0.22]
-      location: [0.0, 0.0, 3.05]
+      size: [0.018, 0.018, 0.28]
+      location: [0.0, 0.0, 3.46]
       material: iron_light
+      family: bare_metal
 
 materials:
   primary: iron
+
+art_direction:
+  subject: stylized Eiffel Tower landmark
+  style:
+    realism: 0.3
+    stylization: 0.7
+    shape_language: [tapered, lattice, iron]
+  usage:
+    importance: focal_prop
+    viewing_distance: medium
+  silhouette: >
+    Tall slim taper, open lattice, thin deck rails, needle
+    spire. Not a squat industrial radio mast.
+  forms:
+    primary: [splayed thin legs, decks, spire]
+    secondary: [X-braces all faces, arch beams, rails]
+    tertiary: [antenna]
+  materials:
+    - {family: bare_metal, palette: iron}
+  detail_density: medium
+
+construction_plan:
+  primary_forms:
+    - {type: box, purpose: thin splayed legs, count: 12}
+    - {type: box, purpose: thin deck plates, count: 3}
+  secondary_forms:
+    - {type: box, purpose: X-braces every face}
+    - {type: box, purpose: deck rails}
+  tertiary_details:
+    - {type: cylinder, purpose: antenna}
+  materials: [bare_metal]
+  notes:
+    - thin the legs and decks from the first pass
+    - brace mid and top on all four faces
+    - do not chase a measured replica
 
 export:
   format: glb

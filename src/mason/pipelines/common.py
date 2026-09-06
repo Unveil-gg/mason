@@ -66,8 +66,11 @@ def finish_result(
         source_spec=source_spec,
         style=spec.style,
     )
+    job.write_art_sidecars(spec)
     job.write_validation(report)
     job.write_result(result)
+    iteration = job.bump_iteration()
+    job.snapshot_iteration(iteration)
     return result
 
 

@@ -19,17 +19,35 @@ def hex_to_rgb(value):
     return tuple(srgb_to_linear(c) for c in raw)
 
 
-def create_material(name, hex_color, roughness, metallic):
+def create_material(name, hex_color, roughness, metallic, variation=0.0, wear=0.0):
     """Create a Principled BSDF material. Returns the material."""
     mat = bpy.data.materials.new(name=name)
     mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
     bsdf = next(
-        n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED"
+        n for n in nodes if n.type == "BSDF_PRINCIPLED"
     )
     rgb = hex_to_rgb(hex_color)
     color_in = bsdf.inputs.get("Base Color") or bsdf.inputs.get("Color")
-    color_in.default_value = (rgb[0], rgb[1], rgb[2], 1.0)
-    bsdf.inputs["Roughness"].default_value = float(roughness)
+    base = (rgb[0], rgb[1], rgb[2], 1.0)
+    vary = max(float(variation), float(wear) * 0.25)
+    if vary > 0.001:
+        noise = nodes.new("ShaderNodeTexNoise")
+        noise.inputs["Scale"].default_value = 6.0 + float(wear) * 8.0
+        mix = nodes.new("ShaderNodeMixRGB")
+        mix.blend_type = "MIX"
+        mix.inputs["Fac"].default_value = min(vary, 0.45)
+        mix.inputs["Color1"].default_value = base
+        mix.inputs["Color2"].default_value = (
+            rgb[0] * 0.65, rgb[1] * 0.65, rgb[2] * 0.65, 1.0,
+        )
+        links.new(noise.outputs["Fac"], mix.inputs["Fac"])
+        links.new(mix.outputs["Color"], color_in)
+    else:
+        color_in.default_value = base
+    rough = min(1.0, float(roughness) + float(wear) * 0.2)
+    bsdf.inputs["Roughness"].default_value = rough
     bsdf.inputs["Metallic"].default_value = float(metallic)
     return mat
 

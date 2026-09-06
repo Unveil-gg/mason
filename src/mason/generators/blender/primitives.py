@@ -14,12 +14,20 @@ def create_box(name, size, location, rotation=(0.0, 0.0, 0.0)):
     return obj
 
 
+def shade_smooth(obj):
+    """Mark faces smooth so cylinders and spheres do not facet."""
+    mesh = obj.data
+    for poly in mesh.polygons:
+        poly.use_smooth = True
+
+
 def create_cylinder(name, size, location, rotation=(0.0, 0.0, 0.0)):
     """Add a cylinder; size is (diameter_x, diameter_y, height)."""
     bpy.ops.mesh.primitive_cylinder_add(
         radius=0.5,
         depth=1.0,
         location=location,
+        vertices=24,
     )
     obj = bpy.context.active_object
     obj.name = name
@@ -28,6 +36,7 @@ def create_cylinder(name, size, location, rotation=(0.0, 0.0, 0.0)):
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     obj.location = location
     obj.rotation_euler = rotation
+    shade_smooth(obj)
     return obj
 
 
@@ -44,6 +53,74 @@ def create_plane(name, size, location, rotation=(0.0, 0.0, 0.0)):
     return obj
 
 
+def create_cone(name, size, location, rotation=(0.0, 0.0, 0.0)):
+    """Add a cone; size is (diameter_x, diameter_y, height)."""
+    bpy.ops.mesh.primitive_cone_add(
+        radius1=0.5,
+        radius2=0.0,
+        depth=1.0,
+        location=location,
+    )
+    obj = bpy.context.active_object
+    obj.name = name
+    obj.rotation_euler = rotation
+    obj.dimensions = size
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    obj.location = location
+    obj.rotation_euler = rotation
+    shade_smooth(obj)
+    return obj
+
+
+def create_torus(name, size, location, rotation=(0.0, 0.0, 0.0)):
+    """Add a torus; size is the world AABB (major/minor via dims)."""
+    bpy.ops.mesh.primitive_torus_add(
+        major_radius=0.35,
+        minor_radius=0.1,
+        location=location,
+    )
+    obj = bpy.context.active_object
+    obj.name = name
+    obj.rotation_euler = rotation
+    obj.dimensions = size
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    obj.location = location
+    obj.rotation_euler = rotation
+    shade_smooth(obj)
+    return obj
+
+
+def create_sphere(name, size, location, rotation=(0.0, 0.0, 0.0)):
+    """Add a UV sphere; size is (diameter_x, diameter_y, diameter_z)."""
+    bpy.ops.mesh.primitive_uv_sphere_add(
+        radius=0.5, location=location, segments=24, ring_count=12,
+    )
+    obj = bpy.context.active_object
+    obj.name = name
+    obj.rotation_euler = rotation
+    obj.dimensions = size
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    obj.location = location
+    obj.rotation_euler = rotation
+    shade_smooth(obj)
+    return obj
+
+
+def create_tapered_box(name, size, location, rotation=(0.0, 0.0, 0.0), taper=(0.72, 0.72)):
+    """Box whose +Z face is scaled by taper (sx, sy)."""
+    obj = create_box(name, size, location, rotation)
+    mesh = obj.data
+    zs = [v.co.z for v in mesh.vertices]
+    mid = (max(zs) + min(zs)) * 0.5
+    sx, sy = float(taper[0]), float(taper[1])
+    for vert in mesh.vertices:
+        if vert.co.z > mid:
+            vert.co.x *= sx
+            vert.co.y *= sy
+    mesh.update()
+    return obj
+
+
 def create_primitive(part):
     """Dispatch a part dict to the matching constructor."""
     shape = part.get("shape") or "box"
@@ -57,6 +134,17 @@ def create_primitive(part):
         return create_cylinder(*args)
     if shape == "plane":
         return create_plane(*args)
+    if shape == "cone":
+        return create_cone(*args)
+    if shape == "torus":
+        return create_torus(*args)
+    if shape == "sphere":
+        return create_sphere(*args)
+    if shape == "tapered_box":
+        return create_tapered_box(
+            *args,
+            tuple(part.get("taper") or (0.72, 0.72)),
+        )
     return create_box(*args)
 
 

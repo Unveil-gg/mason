@@ -11,25 +11,33 @@ from mason.errors import MasonError
 MASON_WORKFLOW = """
 # Mason Agent Workflow
 
-Before generating assets:
+Separate creator and critic even if you are one model.
 
 1. Run `mason doctor --json`.
 2. Confirm the required capabilities are available.
 3. Read the project's Mason style profile.
-4. Create or modify an AssetSpec YAML.
-5. Run `mason build <spec> --json`.
-6. Check validation results.
-7. Open and inspect generated preview images.
-8. If the asset does not visually satisfy the request, modify the spec and rebuild.
-9. Continue until technical validation passes and the visual result is acceptable.
-10. Treat asset.yaml and build.py as reproducible source artifacts.
+4. If references exist, inspect them and write `art_analysis`.
+5. Write `art_direction` (forms, usage, silhouette, materials).
+6. Write `construction_plan` as intent, not executable geometry.
+7. Create or modify the AssetSpec YAML.
+8. Run `mason build <spec> --json`.
+9. Check technical validation. Do not ignore failures.
+10. Inspect silhouette previews first. Fix shape before materials.
+11. Inspect beauty and detail previews.
+12. Critically evaluate: silhouette, secondary/tertiary forms,
+    materials, hierarchy, style, game readability.
+13. Record the critique with `mason evaluate <id> <evaluation.json>`.
+14. If it should not ship, revise and rebuild. Use `mason history`.
+15. Repeat until validation passes and evaluation `ship` is true.
+16. Treat asset.yaml, art_direction.yaml, construction_plan.yaml,
+    and build.py as reproducible source.
 
 Important rules:
 
 - Do not manually operate Blender, Krita, or Aseprite when Mason can invoke them.
 - Prefer editing specs/generator source and rebuilding.
 - Do not assume a successful tool exit means the asset looks correct.
-- Always inspect previews.
+- Always inspect previews. Silhouette before beauty.
 - Do not ignore validation failures.
 - Use `--json` when operating autonomously.
 - When a style palette matters for rasters, follow generation with

@@ -35,6 +35,42 @@ def test_blender_crate_build(project: Path, crate_yaml: Path, monkeypatch) -> No
     assert preview.is_file()
     data = __import__("json").loads(result.stdout)
     assert data["validation"]["passed"] is True
+    job = project / ".mason" / "jobs" / "simple_crate" / "previews"
+    assert (job / "silhouette_front.png").is_file()
+    assert (job / "detail.png").is_file()
+
+
+@pytest.mark.integration
+def test_blender_hydrant_previews(
+    project: Path, monkeypatch,
+) -> None:
+    tools = _tools()
+    if not tools["blender"].available:
+        pytest.skip("Blender not installed")
+    spec = {
+        "type": "static_prop",
+        "id": "fire_hydrant",
+        "name": "Fire Hydrant",
+        "dimensions": {"width": 0.37, "depth": 0.32, "height": 0.62},
+        "style": "default",
+        "geometry": {"recipe": "hydrant"},
+        "materials": {"primary": "hydrant_red"},
+        "export": {"format": "glb", "save_blend": True},
+    }
+    path = project / "hydrant.yaml"
+    path.write_text(yaml.safe_dump(spec), encoding="utf-8")
+    monkeypatch.chdir(project)
+    result = runner.invoke(app, ["build", str(path), "--json"])
+    assert result.exit_code == 0, result.stdout + result.stderr
+    previews = project / ".mason" / "jobs" / "fire_hydrant" / "previews"
+    for name in (
+        "front.png",
+        "three_quarter.png",
+        "silhouette_front.png",
+        "silhouette_three_quarter.png",
+        "detail.png",
+    ):
+        assert (previews / name).is_file()
 
 
 @pytest.mark.integration

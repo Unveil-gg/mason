@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "ship": true,
+  "scores": {
+    "silhouette": 7,
+    "proportions": 7,
+    "secondary_forms": 7,
+    "tertiary_detail": 5,
+    "materials": 6,
+    "visual_hierarchy": 7,
+    "style_consistency": 7,
+    "game_readability": 7
+  },
+  "issues": [
+    {
+      "category": "proportions",
+      "severity": "medium",
+      "description": "Still reads as a radio pylon: legs are straight slants, not the Eiffel arch.",
+      "suggested_change": "Bow the base legs or add a second lower X so the waist pinches."
+    },
+    {
+      "category": "secondary_forms",
+      "severity": "low",
+      "description": "Deck plates still read as solid lids on a lattice.",
+      "suggested_change": "Keep rails and shrink the plate so sky shows through."
+    }
+  ]
+}

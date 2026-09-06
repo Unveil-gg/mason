@@ -10,7 +10,7 @@ from PIL import Image
 from mason.core.assets import StaticPropSpec
 from mason.core.jobs import AssetJob
 from mason.core.results import ValidationCheck, ValidationReport
-from mason.tools.blender.preview import PREVIEW_VIEWS
+from mason.tools.blender.preview import ALL_PREVIEW_FILES
 
 
 def _check(name: str, passed: bool, detail: str | None = None) -> ValidationCheck:
@@ -35,7 +35,7 @@ def validate_static_prop(
             _check("blend_exists", blend.is_file() and blend.stat().st_size > 0),
         )
 
-    for view in PREVIEW_VIEWS:
+    for view in ALL_PREVIEW_FILES:
         path = job.previews / f"{view}.png"
         ok = False
         detail = "missing"

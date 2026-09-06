@@ -13,6 +13,9 @@ palette:
   label_green: "#2E7D4F"
   charcoal: "#3A3632"
   smoke: "#5C5548"
+  hydrant_red: "#C23B2E"
+  brass: "#C4A15A"
+  steel: "#8A9196"
 
 geometry:
   bevel_width: 0.02
@@ -21,6 +24,31 @@ geometry:
 materials:
   roughness: 0.75
   metallic: 0.0
+  families:
+    painted_metal:
+      roughness: 0.45
+      metallic: 0.15
+      variation: 0.08
+    bare_metal:
+      roughness: 0.35
+      metallic: 0.75
+      variation: 0.04
+    varnished_wood:
+      roughness: 0.35
+      metallic: 0.0
+      variation: 0.06
+    rubber:
+      roughness: 0.9
+      metallic: 0.0
+      variation: 0.02
+    plastic:
+      roughness: 0.4
+      metallic: 0.0
+      variation: 0.03
+    cardboard:
+      roughness: 0.85
+      metallic: 0.0
+      variation: 0.05
 
 render:
   resolution:

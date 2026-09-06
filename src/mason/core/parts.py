@@ -28,35 +28,71 @@ class ImageSource(BaseModel):
         raise ValueError("source needs path or asset+file")
 
 
+class RadialArray(BaseModel):
+    """Copies around an axis. Location is the ring center."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    radius: float = Field(gt=0)
+    axis: Literal["x", "y", "z"] = "z"
+    start_angle: float = 0.0
+
+
 class PartArray(BaseModel):
-    """Linear copies of a part along an offset."""
+    """Linear copies, or a radial ring when `radial` is set."""
 
     model_config = ConfigDict(extra="forbid")
 
     count: int = Field(ge=2)
-    offset: tuple[float, float, float]
+    offset: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    radial: RadialArray | None = None
 
 
-class PropPart(BaseModel):
-    """One primitive in a static prop (box, cylinder, or plane)."""
+class DecalSpec(BaseModel):
+    """A textured plane applied to a 3D prop."""
 
     model_config = ConfigDict(extra="forbid")
 
     name: str
-    shape: Literal["box", "cylinder", "plane"] = "box"
+    image: ImageSource
+    location: tuple[float, float, float]
+    rotation: tuple[float, float, float] = (1.5708, 0.0, 0.0)
+    size: tuple[float, float]
+    parent: str | None = None
+    material: str = "primary"
+
+
+class PropPart(BaseModel):
+    """One primitive or component instance in a static prop."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    shape: Literal[
+        "box", "cylinder", "plane", "cone", "torus",
+        "tapered_box", "sphere",
+    ] = "box"
     size: tuple[float, float, float]
     location: tuple[float, float, float]
     rotation: tuple[float, float, float] = (0.0, 0.0, 0.0)
     material: str = "primary"
+    family: str | None = None
+    wear: float = Field(default=0.0, ge=0, le=1)
+    taper: tuple[float, float] | None = None
     texture: ImageSource | None = None
     bevel: bool | None = None
     parent: str | None = None
     inset: float = Field(default=0.0, ge=0)
     array: PartArray | None = None
+    mirror: Literal["x", "y", "z"] | None = None
+    component: Literal[
+        "bolt", "hinge", "handle", "caster", "bracket", "trim",
+    ] | None = None
+    component_params: dict[str, float] = Field(default_factory=dict)
 
 
 class RecipeParams(BaseModel):
-    """Optional parameters for crate/shelf/table expanders."""
+    """Optional parameters for recipe expanders."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -65,6 +101,10 @@ class RecipeParams(BaseModel):
     side_panels: bool = True
     back_panel: bool = False
     leg_thickness: float = Field(default=0.06, gt=0)
+    body_radius: float = Field(default=0.11, gt=0)
+    body_height: float = Field(default=0.42, gt=0)
+    cap_count: int = Field(default=2, ge=1, le=3)
+    bolt_count: int = Field(default=6, ge=3)
 
 
 class GeometrySpec(BaseModel):
@@ -73,7 +113,7 @@ class GeometrySpec(BaseModel):
     bevel: bool = True
     bevel_width: float | None = None
     bevel_segments: int | None = None
-    recipe: Literal["crate", "shelf", "table"] | None = None
+    recipe: Literal["crate", "shelf", "table", "hydrant"] | None = None
     recipe_params: RecipeParams = Field(default_factory=RecipeParams)
     parts: list[PropPart] = Field(default_factory=list)
 

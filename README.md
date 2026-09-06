@@ -158,6 +158,8 @@ Try it: `mason build examples/assets/plank_texture.yaml`, then
 `mason build examples/assets/textured_crate.yaml` (tiled material), or
 `mason build examples/assets/shipping_label.yaml` then
 `mason build examples/assets/crate_with_label.yaml` (decal face).
+For the quality-loop example: `mason build examples/assets/fire_hydrant.yaml`,
+then inspect silhouettes before beauty views.
 
 ## Commands
 
@@ -168,8 +170,10 @@ Try it: `mason build examples/assets/plank_texture.yaml`, then
 | `mason build <spec.yaml>` | Generate, run the tool, preview, validate |
 | `mason rebuild <asset-id>` | Rebuild from the stored job / original spec |
 | `mason preview <asset-id>` | Re-render previews only |
-| `mason inspect <asset-id>` | Job state, paths, metrics |
+| `mason inspect <asset-id>` | Job state, art direction, previews, metrics |
 | `mason validate <asset-id>` | Re-read stored validation |
+| `mason evaluate <id> <json>` | Store a critic visual evaluation |
+| `mason history <asset-id>` | Iteration snapshots and evaluations |
 | `mason export <asset-id>` | Copy finished outputs into another project |
 | `mason list` | Jobs in this project |
 | `mason tools scan` | Rediscover and store new tool paths |

@@ -30,22 +30,42 @@ layers:
     role: fill
     fill: gold
     rect: {x: 20, y: 75, width: 600, height: 3}
-  - name: corner_tl
+  - name: corner_tl_h
     role: fill
     fill: gold
-    rect: {x: 16, y: 16, width: 10, height: 10}
-  - name: corner_tr
+    rect: {x: 16, y: 16, width: 18, height: 4}
+  - name: corner_tl_v
     role: fill
     fill: gold
-    rect: {x: 614, y: 16, width: 10, height: 10}
-  - name: corner_bl
+    rect: {x: 16, y: 16, width: 4, height: 18}
+  - name: corner_tr_h
     role: fill
     fill: gold
-    rect: {x: 16, y: 70, width: 10, height: 10}
-  - name: corner_br
+    rect: {x: 606, y: 16, width: 18, height: 4}
+  - name: corner_tr_v
     role: fill
     fill: gold
-    rect: {x: 614, y: 70, width: 10, height: 10}
+    rect: {x: 620, y: 16, width: 4, height: 18}
+  - name: corner_bl_h
+    role: fill
+    fill: gold
+    rect: {x: 16, y: 76, width: 18, height: 4}
+  - name: corner_bl_v
+    role: fill
+    fill: gold
+    rect: {x: 16, y: 62, width: 4, height: 18}
+  - name: corner_br_h
+    role: fill
+    fill: gold
+    rect: {x: 606, y: 76, width: 18, height: 4}
+  - name: corner_br_v
+    role: fill
+    fill: gold
+    rect: {x: 620, y: 62, width: 4, height: 18}
+  - name: gem_bezel
+    role: fill
+    fill: gold
+    rect: {x: 32, y: 32, width: 30, height: 30}
   - name: gem
     role: fill
     fill: gem
@@ -63,7 +83,25 @@ layers:
     text: RESUME
     fill: ink
     font_size: 28
+    align: left
+    font: Times New Roman
     rect: {x: 90, y: 24, width: 420, height: 48}
+
+art_direction:
+  subject: medieval RPG pause-menu row
+  style:
+    realism: 0.2
+    stylization: 0.8
+    shape_language: [ornamental, framed, parchment]
+  usage:
+    importance: focal_prop
+    viewing_distance: close
+  silhouette: long horizontal bar with gem pip on the left
+  forms:
+    primary: [wood frame, parchment field]
+    secondary: [gold rules, gem, divider]
+    tertiary: [L-corners, gem bezel, label]
+  detail_density: medium
 
 export:
   kra: true

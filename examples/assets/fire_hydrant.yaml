@@ -1,0 +1,69 @@
+type: static_prop
+id: fire_hydrant
+name: Fire Hydrant
+
+# Stylized street hydrant. Construction plan is intent; recipe
+# expands into barrel, dome, outlets, flange, and bolts.
+dimensions:
+  width: 0.37
+  depth: 0.32
+  height: 0.62
+
+style: default
+materials:
+  primary: hydrant_red
+
+geometry:
+  bevel: true
+  recipe: hydrant
+  recipe_params:
+    body_radius: 0.11
+    body_height: 0.40
+    cap_count: 2
+    bolt_count: 6
+
+art_direction:
+  subject: stylized fire hydrant
+  style:
+    realism: 0.35
+    stylization: 0.65
+    shape_language: [chunky, cylindrical, readable]
+  usage:
+    importance: standard_prop
+    viewing_distance: medium
+  silhouette: >
+    Immediate hydrant read: squat barrel, domed cap, two side
+    outlets and a front pumper, pent-nut on top.
+  forms:
+    primary: [barrel, dome, base, side_caps]
+    secondary: [flange, bolts, stem, pumper]
+    tertiary: [paint wear, brass hardware]
+  materials:
+    - family: painted_metal
+      palette: hydrant_red
+    - family: bare_metal
+      palette: brass
+  detail_density: medium
+  constraints:
+    - exaggerate outlets slightly for silhouette
+    - keep triangle count game-friendly
+
+construction_plan:
+  primary_forms:
+    - {type: cylinder, purpose: barrel}
+    - {type: sphere, purpose: dome}
+    - {type: cylinder, purpose: base}
+  secondary_forms:
+    - {type: torus, purpose: flange}
+    - {type: cylinder, purpose: outlets, count: 3}
+    - {type: bolt, purpose: flange ring, count: 6}
+  tertiary_details:
+    - {type: wear, purpose: painted barrel, notes: subtle}
+  materials: [painted_metal, bare_metal]
+  notes:
+    - dome sits into the barrel, not as a separate hat
+    - brass caps and nut contrast the red body
+
+export:
+  format: glb
+  save_blend: true

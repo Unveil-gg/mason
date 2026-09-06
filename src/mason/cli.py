@@ -23,10 +23,12 @@ from mason.core.config import (
     save_machine_config,
     set_dotted,
 )
+from mason.core.inspect import inspect_payload
 from mason.core.jobs import list_jobs, require_job
 from mason.core.workspace import find_project_root, init_project
 from mason.errors import MasonError
 from mason.pipelines.dispatch import run_build, run_rebuild
+from mason.pipelines.evaluate import history_payload, run_evaluate
 from mason.pipelines.export import run_export
 from mason.tools.registry import detect_all, doctor_payload, scan_and_store
 
@@ -181,23 +183,8 @@ def inspect(
     def _run():
         root = find_project_root()
         job = require_job(root, asset_id)
-        spec = job.load_spec()
+        payload = inspect_payload(job)
         result = job.load_result()
-        report = job.load_validation()
-        payload = {
-            "asset_id": spec.id,
-            "name": spec.name,
-            "type": spec.type,
-            "style": spec.style,
-            "source_spec": job.load_meta().source_spec if job.load_meta() else None,
-            "tool": result.tool if result else None,
-            "tool_version": result.tool_version if result else None,
-            "outputs": result.outputs if result else {},
-            "previews": result.previews if result else {},
-            "validation": report.model_dump() if report else None,
-            "built_at": result.built_at if result else None,
-            "spec": spec.model_dump(mode="json"),
-        }
         _emit(json_mode, payload, lambda: print_inspect(job, result))
 
     _guard(json_mode, _run)
@@ -228,6 +215,48 @@ def validate(
         )
         if not report.passed:
             raise typer.Exit(code=1)
+
+    _guard(json_mode, _run)
+
+
+@app.command()
+def evaluate(
+    asset_id: Annotated[str, typer.Argument()],
+    evaluation: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
+    json_mode: JsonFlag = False,
+) -> None:
+    """Store an external visual evaluation for the current iteration."""
+
+    def _run():
+        record = run_evaluate(asset_id, evaluation)
+        _emit(
+            json_mode,
+            record.model_dump(mode="json"),
+            lambda: typer.echo(
+                f"iteration {record.iteration}: "
+                f"{'ship' if record.ship else 'hold'}",
+            ),
+        )
+
+    _guard(json_mode, _run)
+
+
+@app.command()
+def history(
+    asset_id: Annotated[str, typer.Argument()],
+    json_mode: JsonFlag = False,
+) -> None:
+    """List iteration snapshots and critic evaluations."""
+
+    def _run():
+        payload = history_payload(asset_id)
+        _emit(
+            json_mode,
+            payload,
+            lambda: typer.echo(
+                f"{len(payload['iterations'])} iteration(s)",
+            ),
+        )
 
     _guard(json_mode, _run)
 

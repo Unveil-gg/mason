@@ -29,6 +29,8 @@ def build_krita_script(
             "fill": fill,
             "text": layer.text,
             "font_size": layer.font_size,
+            "font": layer.font,
+            "align": layer.align,
             "image": None,
         }
         if layer.image and project_root is not None:
@@ -89,15 +91,20 @@ def fill_layer(layer, color, x, y, w, h):
     layer.setPixelData(pixel * (w * h), x, y, w, h)
 
 
-def paint_text(layer, text, color, x, y, w, h, font_size):
-    """Draw centered text with Qt (Krita's bundled GUI toolkit)."""
+def paint_text(layer, text, color, x, y, w, h, font_size, font_name, align_name):
+    """Draw text with Qt (Krita's bundled GUI toolkit)."""
     img = QImage(w, h, QImage.Format_ARGB32)
     img.fill(0)
     painter = QPainter(img)
     r, g, b = hex_rgb(color)
     painter.setPen(QColor(r, g, b, 255))
-    painter.setFont(QFont("DejaVu Sans", int(font_size)))
-    align = Qt.AlignmentFlag.AlignCenter if hasattr(Qt, "AlignmentFlag") else Qt.AlignCenter
+    painter.setFont(QFont(font_name or "DejaVu Sans", int(font_size)))
+    flags = Qt.AlignmentFlag if hasattr(Qt, "AlignmentFlag") else Qt
+    align = flags.AlignCenter
+    if align_name == "left":
+        align = flags.AlignLeft | flags.AlignVCenter
+    elif align_name == "right":
+        align = flags.AlignRight | flags.AlignVCenter
     painter.drawText(QRect(0, 0, w, h), align, text)
     painter.end()
     bits = img.bits()
@@ -167,6 +174,8 @@ def main():
                     layer.get("fill") or "#000000",
                     x, y, lw, lh,
                     layer.get("font_size") or 48,
+                    layer.get("font") or "DejaVu Sans",
+                    layer.get("align") or "center",
                 )
         meta.append({
             "name": layer["name"],

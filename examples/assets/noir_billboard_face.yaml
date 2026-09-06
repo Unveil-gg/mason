@@ -51,6 +51,7 @@ layers:
     text: MIDNIGHT ALIBI
     fill: cream
     font_size: 48
+    align: left
     rect: {x: 330, y: 36, width: 610, height: 72}
   - name: divider
     role: fill
@@ -61,13 +62,27 @@ layers:
     text: SHE KNEW TOO MUCH
     fill: cream
     font_size: 26
+    align: left
     rect: {x: 330, y: 140, width: 610, height: 40}
   - name: credit
     role: text
     text: A NOIR PICTURE
     fill: cream
     font_size: 16
+    align: left
     rect: {x: 330, y: 220, width: 610, height: 28}
+
+art_direction:
+  subject: wide noir highway poster
+  usage:
+    importance: standard_prop
+    viewing_distance: far
+  silhouette: wide 3.4:1 rectangle, detective left, title right
+  forms:
+    primary: [poster field, detective mass, title block]
+    secondary: [hat brim, coat, divider]
+    tertiary: [credit line]
+  detail_density: low
 
 export:
   kra: true

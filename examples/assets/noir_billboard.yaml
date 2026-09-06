@@ -19,41 +19,49 @@ geometry:
       size: [0.12, 0.12, 2.2]
       location: [-1.5, 0.0, 1.1]
       material: wood_dark
+      family: varnished_wood
     - name: right_post
       shape: cylinder
       size: [0.12, 0.12, 2.2]
       location: [1.5, 0.0, 1.1]
       material: wood_dark
+      family: varnished_wood
     - name: crossbeam
       shape: box
       size: [3.2, 0.1, 0.1]
       location: [0.0, 0.0, 2.2]
       material: wood_dark
+      family: varnished_wood
     - name: catwalk
       shape: box
       size: [4.1, 0.28, 0.05]
       location: [0.0, 0.06, 2.24]
       material: wood_light
+      family: varnished_wood
     - name: frame_bottom
       shape: box
       size: [4.2, 0.08, 0.08]
       location: [0.0, -0.08, 2.32]
       material: wood_dark
+      family: varnished_wood
     - name: frame_top
       shape: box
       size: [4.2, 0.08, 0.08]
       location: [0.0, -0.08, 3.08]
       material: wood_dark
+      family: varnished_wood
     - name: frame_left
       shape: box
       size: [0.08, 0.08, 0.84]
       location: [-2.06, -0.08, 2.7]
       material: wood_dark
+      family: varnished_wood
     - name: frame_right
       shape: box
       size: [0.08, 0.08, 0.84]
       location: [2.06, -0.08, 2.7]
       material: wood_dark
+      family: varnished_wood
     - name: board
       shape: plane
       size: [4.0, 1.167, 0.0]
@@ -65,6 +73,41 @@ geometry:
 
 materials:
   primary: wood_dark
+
+depends_on: [noir_billboard_face]
+
+art_direction:
+  subject: highway movie billboard
+  style:
+    realism: 0.35
+    stylization: 0.65
+    shape_language: [wide, rectangular, roadside]
+  usage:
+    importance: focal_prop
+    viewing_distance: far
+  silhouette: >
+    Wide landscape rectangle on two posts, not a square poster.
+  forms:
+    primary: [board, posts]
+    secondary: [frame, catwalk, crossbeam]
+    tertiary: [poster art]
+  materials:
+    - {family: varnished_wood, palette: wood_dark}
+  detail_density: medium
+
+construction_plan:
+  primary_forms:
+    - {type: plane, purpose: wide face}
+    - {type: cylinder, purpose: posts, count: 2}
+  secondary_forms:
+    - {type: box, purpose: wood frame}
+    - {type: box, purpose: catwalk}
+  tertiary_details:
+    - {type: decal, purpose: noir poster}
+  materials: [varnished_wood]
+  notes:
+    - face must stay ~3.4:1
+    - build noir_billboard_face first
 
 export:
   format: glb

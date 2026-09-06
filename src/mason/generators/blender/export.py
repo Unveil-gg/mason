@@ -30,7 +30,7 @@ def scene_bounds():
     maxs = Vector((-1e9, -1e9, -1e9))
     count = 0
     for obj in bpy.data.objects:
-        if obj.type != "MESH":
+        if obj.type != "MESH" or obj.name.startswith("_mason_"):
             continue
         count += 1
         for corner in obj.bound_box:
@@ -48,7 +48,10 @@ def scene_bounds():
 
 def write_metadata(path):
     """Write mesh stats JSON next to outputs."""
-    meshes = [o for o in bpy.data.objects if o.type == "MESH"]
+    meshes = [
+        o for o in bpy.data.objects
+        if o.type == "MESH" and not o.name.startswith("_mason_")
+    ]
     triangles = 0
     for obj in meshes:
         mesh = obj.data

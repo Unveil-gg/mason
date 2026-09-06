@@ -8,6 +8,7 @@ from pathlib import Path
 import yaml
 from pydantic import BaseModel, ConfigDict
 
+from mason.core.art import VisualEvaluation
 from mason.core.assets import AssetSpec, dump_asset_spec, load_asset_spec
 from mason.core.results import BuildResult, ValidationReport
 from mason.core.styles import StyleProfile
@@ -21,6 +22,7 @@ class JobMeta(BaseModel):
     source_spec: str | None = None
     created_at: str = ""
     updated_at: str = ""
+    iteration: int = 0
 
 
 class AssetJob:
@@ -32,6 +34,8 @@ class AssetJob:
         self.dir = root / ".mason" / "jobs" / asset_id
         self.output = self.dir / "output"
         self.previews = self.dir / "previews"
+        self.iterations = self.dir / "iterations"
+        self.evaluations = self.dir / "evaluations"
 
     @property
     def asset_yaml(self) -> Path:
@@ -69,6 +73,18 @@ class AssetJob:
     def meta_yaml(self) -> Path:
         return self.dir / "job.yaml"
 
+    @property
+    def art_direction_yaml(self) -> Path:
+        return self.dir / "art_direction.yaml"
+
+    @property
+    def construction_plan_yaml(self) -> Path:
+        return self.dir / "construction_plan.yaml"
+
+    @property
+    def art_analysis_yaml(self) -> Path:
+        return self.dir / "art_analysis.yaml"
+
     def exists(self) -> bool:
         return self.dir.is_dir() and self.asset_yaml.is_file()
 
@@ -89,20 +105,36 @@ class AssetJob:
             encoding="utf-8",
         )
 
-    def write_meta(self, source_spec: str | None) -> None:
+    def write_meta(
+        self,
+        source_spec: str | None,
+        *,
+        iteration: int | None = None,
+    ) -> None:
         now = datetime.now(timezone.utc).isoformat()
         existing = self.load_meta()
         created = existing.created_at if existing else now
+        if iteration is None:
+            iteration = existing.iteration if existing else 0
         meta = JobMeta(
             asset_id=self.asset_id,
             source_spec=source_spec,
             created_at=created,
             updated_at=now,
+            iteration=iteration,
         )
         self.meta_yaml.write_text(
             yaml.safe_dump(meta.model_dump(), sort_keys=False),
             encoding="utf-8",
         )
+
+    def bump_iteration(self) -> int:
+        """Increment the stored iteration and return the new value."""
+        existing = self.load_meta()
+        nxt = (existing.iteration if existing else 0) + 1
+        source = existing.source_spec if existing else None
+        self.write_meta(source, iteration=nxt)
+        return nxt
 
     def load_meta(self) -> JobMeta | None:
         if not self.meta_yaml.is_file():
@@ -135,6 +167,85 @@ class AssetJob:
         return BuildResult.model_validate_json(
             self.result_json.read_text(encoding="utf-8"),
         )
+
+    def write_art_sidecars(self, spec: AssetSpec) -> None:
+        """Persist art-loop YAML next to asset.yaml when present."""
+        mapping = (
+            (spec.art_direction, self.art_direction_yaml),
+            (spec.construction_plan, self.construction_plan_yaml),
+            (spec.art_analysis, self.art_analysis_yaml),
+        )
+        for value, dest in mapping:
+            if value is None:
+                continue
+            dest.write_text(
+                yaml.safe_dump(
+                    value.model_dump(mode="json"),
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+
+    def evaluation_path(self, iteration: int) -> Path:
+        return self.evaluations / f"iteration_{iteration:03d}.json"
+
+    def write_evaluation(self, evaluation: VisualEvaluation) -> Path:
+        """Store a critic evaluation for the given iteration."""
+        self.evaluations.mkdir(parents=True, exist_ok=True)
+        path = self.evaluation_path(int(evaluation.iteration or 1))
+        path.write_text(
+            evaluation.model_dump_json(indent=2),
+            encoding="utf-8",
+        )
+        return path
+
+    def load_evaluation(self, iteration: int) -> VisualEvaluation | None:
+        path = self.evaluation_path(iteration)
+        if not path.is_file():
+            return None
+        return VisualEvaluation.model_validate_json(
+            path.read_text(encoding="utf-8"),
+        )
+
+    def list_evaluations(self) -> list[tuple[int, Path]]:
+        if not self.evaluations.is_dir():
+            return []
+        found: list[tuple[int, Path]] = []
+        for path in sorted(self.evaluations.glob("iteration_*.json")):
+            stem = path.stem.replace("iteration_", "", 1)
+            if stem.isdigit():
+                found.append((int(stem), path))
+        return found
+
+    def snapshot_iteration(self, iteration: int) -> Path:
+        """Copy previews, spec, and validation into iterations/NNN."""
+        dest = self.iterations / f"{iteration:03d}"
+        dest.mkdir(parents=True, exist_ok=True)
+        preview_dest = dest / "previews"
+        preview_dest.mkdir(parents=True, exist_ok=True)
+        if self.previews.is_dir():
+            for src in self.previews.iterdir():
+                if src.is_file():
+                    (preview_dest / src.name).write_bytes(src.read_bytes())
+        for src in (
+            self.asset_yaml,
+            self.validation_json,
+            self.art_direction_yaml,
+            self.construction_plan_yaml,
+            self.art_analysis_yaml,
+        ):
+            if src.is_file():
+                (dest / src.name).write_bytes(src.read_bytes())
+        return dest
+
+    def list_iterations(self) -> list[int]:
+        if not self.iterations.is_dir():
+            return []
+        nums: list[int] = []
+        for child in self.iterations.iterdir():
+            if child.is_dir() and child.name.isdigit():
+                nums.append(int(child.name))
+        return sorted(nums)
 
     def rel(self, path: Path) -> str:
         """Project-relative POSIX path if possible."""

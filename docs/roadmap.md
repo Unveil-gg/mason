@@ -132,7 +132,13 @@ Done: `examples/assets/barbarian.yaml` is the one `sprite_sheet` spec
 (idle / walk / attack). The nine Krita frame files and the
 ImageMagick composite job were deleted.
 
-### 2f. Still on hold: material variants / booleans / kits
+### 2f. Quality loop (shipped)
+
+ArtDirection, ConstructionPlan, silhouette/beauty/detail previews,
+`mason evaluate` / `mason history`, material families, components,
+and a `hydrant` recipe are in. ConstructionPlan is intent only.
+
+### 2g. Still on hold: material variants / booleans / kits
 
 - **Material variants** — one `AssetSpec` fans out into several jobs
   with palette overrides (e.g. a crate in `wood_dark` and

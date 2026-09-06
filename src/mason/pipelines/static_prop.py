@@ -12,13 +12,14 @@ from mason.core.results import BuildResult
 from mason.core.styles import StyleProfile
 from mason.core.workspace import find_project_root
 from mason.errors import MasonError
+from mason.generators.blender.components import expand_components
 from mason.generators.blender.part_ops import expand_part_ops
 from mason.generators.blender.recipes import expand_recipe
 from mason.generators.blender.script_builder import build_blender_script
 from mason.pipelines.contact_sheet import write_contact_sheet
 from mason.pipelines.common import finish_result, tool_failed
 from mason.tools.blender.commands import headless_python, preview_from_blend
-from mason.tools.blender.preview import PREVIEW_VIEWS
+from mason.tools.blender.preview import ALL_PREVIEW_FILES
 from mason.tools.blender.validation import validate_static_prop
 from mason.tools.registry import require_tool
 
@@ -26,14 +27,55 @@ from mason.tools.registry import require_tool
 def resolved_parts(spec: StaticPropSpec):
     """Return parts, using a recipe expander when needed."""
     if spec.geometry.parts:
-        return expand_part_ops(list(spec.geometry.parts))
-    assert spec.geometry.recipe is not None
-    return expand_part_ops(expand_recipe(
-        spec.geometry.recipe,
-        spec.dimensions,
-        spec.geometry.recipe_params,
-        spec.materials.primary,
-    ))
+        parts = list(spec.geometry.parts)
+    else:
+        assert spec.geometry.recipe is not None
+        parts = expand_recipe(
+            spec.geometry.recipe,
+            spec.dimensions,
+            spec.geometry.recipe_params,
+            spec.materials.primary,
+        )
+    parts = parts + _decal_parts(spec)
+    return expand_components(expand_part_ops(parts))
+
+
+def _decal_parts(spec: StaticPropSpec) -> list[PropPart]:
+    """Expand spec.decals into textured planes."""
+    planes: list[PropPart] = []
+    for decal in spec.decals:
+        width, height = decal.size
+        planes.append(PropPart(
+            name=decal.name,
+            shape="plane",
+            size=(width, height, 0.0),
+            location=decal.location,
+            rotation=decal.rotation,
+            parent=decal.parent,
+            material=decal.material,
+            texture=decal.image,
+            bevel=False,
+        ))
+    return planes
+
+
+def assert_known_families(
+    parts: list[PropPart],
+    style: StyleProfile,
+) -> None:
+    """Raise if a part names a family the style does not define."""
+    known = set(style.materials.families)
+    for part in parts:
+        if part.family and part.family not in known:
+            raise MasonError(
+                f"Unknown material family '{part.family}'.",
+                code="unknown_family",
+                hint="Use a family from the style profile.",
+                context={
+                    "family": part.family,
+                    "available": sorted(known),
+                },
+            )
 
 
 def resolve_part_textures(
@@ -96,6 +138,7 @@ def build_static_prop(
     """Generate script, run Blender, validate, write result.json."""
     info = require_tool("blender")
     parts = resolved_parts(spec)
+    assert_known_families(parts, style)
     spec.geometry.parts = parts
     job.prepare()
     job.write_spec(spec)
@@ -153,7 +196,7 @@ def build_static_prop(
         outputs["blend"] = job.rel(blend)
     previews = {
         view: job.rel(job.previews / f"{view}.png")
-        for view in PREVIEW_VIEWS
+        for view in ALL_PREVIEW_FILES
         if (job.previews / f"{view}.png").is_file()
     }
     sheet = job.previews / "contact_sheet.png"

@@ -51,6 +51,11 @@ def build_blender_script(
         ],
         "samples": style.render.samples,
         "engine": style.render.engine,
+        "lighting_preset": style.lighting.preset,
+        "families": {
+            key: fam.model_dump(mode="json")
+            for key, fam in style.materials.families.items()
+        },
         "palette": palette,
         "part_textures": part_textures or {},
         "tile_size": style.textures.tile_size,
@@ -96,26 +101,52 @@ def reset_scene():
         bpy.data.lights.remove(light)
 
 
+def family_settings(part):
+    """Resolve roughness/metallic/variation for one part."""
+    families = CONFIG.get("families") or {}
+    name = part.get("family")
+    if name and name in families:
+        return families[name]
+    return {
+        "roughness": CONFIG["roughness"],
+        "metallic": CONFIG["metallic"],
+        "variation": 0.0,
+    }
+
+
 def build_geometry():
     """Create parts, materials, bevels, and UVs."""
     mats = {}
-    for key, hex_color in CONFIG["palette"].items():
-        mats[key] = create_material(
-            key,
-            hex_color,
-            CONFIG["roughness"],
-            CONFIG["metallic"],
-        )
+
+    def solid_material(part, key):
+        settings = family_settings(part)
+        wear = float(part.get("wear") or 0.0)
+        cache = (key, part.get("family"), wear)
+        if cache not in mats:
+            hex_color = CONFIG["palette"].get(key) or CONFIG["palette"].get(
+                "primary",
+            )
+            mats[cache] = create_material(
+                f"{key}_{len(mats)}",
+                hex_color,
+                settings["roughness"],
+                settings["metallic"],
+                settings.get("variation") or 0.0,
+                wear,
+            )
+        return mats[cache]
+
     tex_mats = {}
 
-    def texture_material(image_path):
+    def texture_material(image_path, part):
         """Cache one material per distinct texture path."""
+        settings = family_settings(part)
         if image_path not in tex_mats:
             tex_mats[image_path] = create_textured_material(
                 f"tex_{len(tex_mats)}",
                 image_path,
-                CONFIG["roughness"],
-                CONFIG["metallic"],
+                settings["roughness"],
+                settings["metallic"],
                 CONFIG["wrap"],
             )
         return tex_mats[image_path]
@@ -127,11 +158,11 @@ def build_geometry():
         is_plane = (part.get("shape") or "box") == "plane"
         tex_path = CONFIG["part_textures"].get(part["name"])
         if tex_path:
-            assign_material(obj, texture_material(tex_path))
+            assign_material(obj, texture_material(tex_path, part))
         else:
             key = part.get("material") or "primary"
-            if key in mats:
-                assign_material(obj, mats[key])
+            if key in CONFIG["palette"] or "primary" in CONFIG["palette"]:
+                assign_material(obj, solid_material(part, key))
         use_bevel = part.get("bevel")
         if use_bevel is None:
             use_bevel = CONFIG["bevel"]

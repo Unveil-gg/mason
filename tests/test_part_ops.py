@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from mason.core.assets import parse_asset_spec
-from mason.core.parts import PartArray, PropPart
+from mason.core.parts import PartArray, PropPart, RadialArray
 from mason.generators.blender.part_ops import expand_part_ops
 from mason.pipelines.static_prop import resolved_parts
 
@@ -53,3 +53,34 @@ def test_resolved_parts_expands_array() -> None:
     })
     parts = resolved_parts(spec)
     assert len(parts) == 2
+
+
+def test_radial_array_names() -> None:
+    parts = expand_part_ops([
+        PropPart(
+            name="bolt",
+            size=(0.02, 0.02, 0.02),
+            location=(0.0, 0.0, 0.1),
+            array=PartArray(
+                count=4,
+                radial=RadialArray(radius=0.1, axis="z"),
+            ),
+        ),
+    ])
+    assert [p.name for p in parts] == [
+        "bolt", "bolt_2", "bolt_3", "bolt_4",
+    ]
+    assert abs(parts[0].location[0]) > 0.05
+
+
+def test_mirror_x() -> None:
+    parts = expand_part_ops([
+        PropPart(
+            name="ear",
+            size=(0.1, 0.1, 0.1),
+            location=(0.4, 0.0, 0.2),
+            mirror="x",
+        ),
+    ])
+    assert [p.name for p in parts] == ["ear", "ear_m"]
+    assert parts[1].location[0] == -0.4

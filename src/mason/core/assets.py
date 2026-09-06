@@ -14,7 +14,9 @@ from pydantic import (
     model_validator,
 )
 
+from mason.core.art import ArtFields
 from mason.core.parts import (  # noqa: F401
+    DecalSpec,
     Dimensions3D,
     GeometrySpec,
     ImageSource,
@@ -48,7 +50,7 @@ class MaterialsSpec(BaseModel):
     metallic: float | None = None
 
 
-class StaticPropSpec(BaseModel):
+class StaticPropSpec(ArtFields):
     """Procedural 3D prop built from primitive parts."""
 
     model_config = ConfigDict(extra="forbid")
@@ -60,6 +62,7 @@ class StaticPropSpec(BaseModel):
     style: str = "default"
     geometry: GeometrySpec
     materials: MaterialsSpec = Field(default_factory=MaterialsSpec)
+    decals: list[DecalSpec] = Field(default_factory=list)
     export: Export3D = Field(default_factory=Export3D)
     metadata: dict[str, str] = Field(default_factory=dict)
 
@@ -89,6 +92,8 @@ class RasterLayer(BaseModel):
     rect: LayerRect | None = None
     text: str | None = None
     font_size: int = Field(default=48, gt=0)
+    font: str = "DejaVu Sans"
+    align: Literal["left", "center", "right"] = "center"
     image: str | None = None
     pixels: list[str] | None = None
     keys: dict[str, str] = Field(default_factory=dict)
@@ -119,7 +124,7 @@ class RasterExport(BaseModel):
     install_to: str | None = None
 
 
-class LayeredRasterSpec(BaseModel):
+class LayeredRasterSpec(ArtFields):
     """Layered raster document for Krita."""
 
     model_config = ConfigDict(extra="forbid")
@@ -211,7 +216,7 @@ class ImageExport(BaseModel):
     install_to: str | None = None
 
 
-class ImageProcessSpec(BaseModel):
+class ImageProcessSpec(ArtFields):
     """ImageMagick post-process of an existing raster."""
 
     model_config = ConfigDict(extra="forbid")
@@ -250,7 +255,7 @@ class SpriteExport(BaseModel):
     install_to: str | None = None
 
 
-class SpriteSheetSpec(BaseModel):
+class SpriteSheetSpec(ArtFields):
     """Aseprite sprite sheet: named animations of timed frames."""
 
     model_config = ConfigDict(extra="forbid")
@@ -308,10 +313,12 @@ def load_asset_spec(path: Path) -> AssetSpec:
 
 def dump_asset_spec(spec: AssetSpec, path: Path) -> None:
     """Write an asset spec as YAML."""
+    data = spec.model_dump(mode="json", exclude_none=True)
+    if not data.get("depends_on"):
+        data.pop("depends_on", None)
+    if not data.get("decals"):
+        data.pop("decals", None)
     path.write_text(
-        yaml.safe_dump(
-            spec.model_dump(mode="json"),
-            sort_keys=False,
-        ),
+        yaml.safe_dump(data, sort_keys=False),
         encoding="utf-8",
     )

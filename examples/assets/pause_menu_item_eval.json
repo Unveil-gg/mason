@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "ship": true,
+  "scores": {
+    "silhouette": 8,
+    "proportions": 7,
+    "secondary_forms": 7,
+    "tertiary_detail": 6,
+    "materials": 7,
+    "visual_hierarchy": 8,
+    "style_consistency": 8,
+    "game_readability": 8
+  },
+  "issues": [
+    {
+      "category": "tertiary_detail",
+      "severity": "low",
+      "description": "Ornament is still rectangle-built; no filigree or engraved wood.",
+      "suggested_change": "Add a second inner gold rule or a small crest if this becomes a hero UI."
+    }
+  ]
+}
