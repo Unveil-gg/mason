@@ -1,8 +1,7 @@
-<p align="center" style="margin-bottom: 0.5em;">
-  <img src="docs/images/mason-logo.png" alt="Mason logo" width="176" style="display: block; margin: 0 auto;">
-</p>
-
-<h1 align="center" style="margin-top: 0.2em; margin-bottom: 0.75em;">Mason</h1>
+<h1 align="center">
+  <img src="docs/images/mason-logo.png" alt="Mason logo" width="176"><br>
+  Mason
+</h1>
 
 <p align="center">
   <a href="https://www.python.org/downloads/">
