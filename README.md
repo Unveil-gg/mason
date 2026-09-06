@@ -1,12 +1,15 @@
 # Mason
 
-![Grand Mansion demo preview — front, side, top, and three-quarter views with demo lighting](docs/images/grand_mansion_contact_sheet.png)
+<p align="center">
+  <img src="docs/images/grand_mansion_contact_sheet.png" alt="Grand Mansion demo preview — front, side, top, and three-quarter views with demo lighting" width="640">
+</p>
 
 Mason is a local developer CLI that orchestrates **already installed**
-creative tools. It does not bundle Blender, Krita, Aseprite, or
-ImageMagick. Coding agents (Cursor, Claude Code, Codex, and others)
-write structured asset specs; Mason runs the tools headlessly, validates
-outputs, and writes previews the agent can inspect.
+creative tools. It does not bundle [Blender](https://www.blender.org/),
+[Krita](https://krita.org/en/), [Aseprite](https://www.aseprite.org/), or
+[ImageMagick](https://imagemagick.org/). Coding agents (Cursor, Claude Code,
+Codex, and others) write structured asset specs; Mason runs the tools
+headlessly, validates outputs, and writes previews the agent can inspect.
 
 Mason itself has no LLM. The agent is the reasoning layer.
 
