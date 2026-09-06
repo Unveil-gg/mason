@@ -21,7 +21,7 @@ previews in a fresh pass and looks for reasons not to ship.
 1. Run `mason doctor --json`.
 2. Confirm the required capabilities are available.
 3. Run `mason vocab --json` and read the style profile
-   (`styles/*.yaml`).
+   (`mason style <name> --json`, or `styles/*.yaml`).
 4. Understand the request. If `references` exist, run
    `mason ingest <image> --asset <id> --json`, then write
    `art_analysis` (shape language, proportions, materials).
@@ -51,7 +51,7 @@ previews in a fresh pass and looks for reasons not to ship.
     Score the beauty render (`overall_visual_quality`). Treat
     `silhouette` as optional. Identify reasons not to ship.
 15. If `ship` is false, modify spec/plan/source and rebuild.
-    Compare `iterations/NNN` via `mason history <id> --json`.
+    Compare `iterations/NNN` via `mason history <id> --json --summary`.
 16. Repeat until validation passes, the beauty render looks
     production-ready, and evaluation `ship` is true.
 17. Treat `asset.yaml`, `art_direction.yaml`, `construction_plan.yaml`,
@@ -77,7 +77,8 @@ Important rules:
 - Do not assume a successful tool exit means the asset looks correct.
 - Always inspect previews. Beauty three-quarter first.
   Open only `preview_roles.primary` unless clay or silhouette
-  is needed. Skip contact_sheet unless comparing views.
+  is needed. `build --json` and `inspect --json` include
+  `preview_roles`. Skip contact_sheet unless comparing views.
 - `mason stats [id]` reports triangle counts. Use it instead
   of opening the GLB.
 - Do not ignore validation failures.
@@ -105,8 +106,9 @@ Asset types:
   swatch sheet), or `atlas` (`atlas` + `entry`).
 - `layered_raster` — Krita layers: fill, text (`font`, `align`),
   `stamp` (`l_corner`, `gem`, `rule`, `bond`, `dapple`, `vignette`,
-  `figure`), `shape` (`rect` / `ellipse`), `pixels` + `keys`, or
-  imported image. Source is `.kra`.
+  `figure`, `speckle`), `shape` (`rect` / `ellipse`), `opacity`
+  (0–1), `stamp_seed`, `pixels` + `keys`, or imported image. Source
+  is `.kra`.
 - `sprite_sheet` — Aseprite animations of timed frames. Prefer
   `pixels` + `keys`. Source is `.aseprite`; outputs PNG + `frames.json`.
 - `image_process` — ImageMagick resize/crop/trim/composite/quantize/convert

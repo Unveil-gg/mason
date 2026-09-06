@@ -10,3 +10,13 @@ palette:
   ink: "#1A1410"
   gem: "#4A6B4A"
   primary: "#3D2A1C"
+
+quality:
+  background_prop:
+    detail_density: low
+  standard_prop:
+    detail_density: medium
+  focal_prop:
+    detail_density: high
+  hero:
+    detail_density: high

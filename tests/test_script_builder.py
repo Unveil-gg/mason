@@ -179,6 +179,26 @@ def test_krita_script_wires_pixels_and_ellipse(project: Path) -> None:
     assert spec.layers[1].pixels is not None
 
 
+def test_krita_script_wires_opacity(project: Path) -> None:
+    spec = parse_asset_spec({
+        "type": "layered_raster",
+        "id": "fade",
+        "name": "Fade",
+        "dimensions": {"width": 16, "height": 16},
+        "layers": [{
+            "name": "glow",
+            "fill": "ink",
+            "shape": "ellipse",
+            "opacity": 0.25,
+            "rect": {"x": 2, "y": 2, "width": 8, "height": 8},
+        }],
+    })
+    style = load_style(project / "styles" / "default.yaml")
+    script = build_krita_script(spec, style, project / "job", 16, 16)
+    assert '"opacity": 0.25' in script
+    assert "opacity=1.0" in script or "opacity" in script
+
+
 def test_aseprite_script_draws_pixels(project: Path) -> None:
     spec = parse_asset_spec({
         "type": "sprite_sheet",

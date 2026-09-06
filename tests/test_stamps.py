@@ -107,6 +107,22 @@ def test_vignette_has_rings() -> None:
     ])
     assert len(layers) == 12
     assert layers[0].name.startswith("edge_r0")
+    assert layers[0].opacity < 1.0
+
+
+def test_speckle_varies_opacity() -> None:
+    layers = expand_stamps([
+        RasterLayer(
+            name="grain",
+            fill="wood",
+            stamp="speckle",
+            stamp_inner="cream",
+            stamp_seed=9,
+            rect=LayerRect(x=0, y=0, width=64, height=64),
+        ),
+    ])
+    assert len(layers) > 20
+    assert any(ly.opacity < 0.5 for ly in layers)
 
 
 def test_figure_has_coat() -> None:

@@ -8,7 +8,7 @@ from mason.core.assets import LayerRect, RasterLayer
 
 STAMPS = (
     "l_corner", "gem", "rule", "bond",
-    "dapple", "vignette", "figure",
+    "dapple", "vignette", "figure", "speckle",
 )
 
 
@@ -33,9 +33,19 @@ def expand_stamps(layers: list[RasterLayer]) -> list[RasterLayer]:
             out.extend(_vignette(layer))
         elif layer.stamp == "figure":
             out.extend(_figure(layer))
+        elif layer.stamp == "speckle":
+            out.extend(_speckle(layer))
         else:
             out.append(layer)
     return out
+
+
+def _seed_base(layer: RasterLayer) -> int:
+    rect = layer.rect
+    assert rect is not None
+    if layer.stamp_seed is not None:
+        return layer.stamp_seed
+    return rect.width * 31 + rect.height
 
 
 def _l_corner(layer: RasterLayer) -> list[RasterLayer]:
@@ -171,31 +181,59 @@ def _dapple(layer: RasterLayer) -> list[RasterLayer]:
     """Overlapping ellipses that read as leaf clusters, not tiles."""
     rect = layer.rect
     assert rect is not None
+    base = _seed_base(layer)
     out: list[RasterLayer] = []
     for i in range(32):
-        seed = (
-            i * 1103515245 + 12345 + rect.width * 31 + rect.height
-        ) & 0x7FFFFFFF
+        seed = (i * 1103515245 + 12345 + base) & 0x7FFFFFFF
         bw = 5 + (seed % 8)
         bh = 4 + ((seed >> 6) % 7)
         if bw >= rect.width or bh >= rect.height:
             continue
         x = rect.x + ((seed >> 3) % max(rect.width - bw, 1))
         y = rect.y + ((seed >> 11) % max(rect.height - bh, 1))
+        dot_opacity = 0.35 + (seed % 45) / 100
         out.append(_fill(
             layer,
             f"{layer.name}_{i}",
             LayerRect(x=x, y=y, width=bw, height=bh),
             shape="ellipse",
+            opacity=dot_opacity,
+        ))
+    return out
+
+
+def _speckle(layer: RasterLayer) -> list[RasterLayer]:
+    """Fine grain: small rects in two tones with varied opacity."""
+    rect = layer.rect
+    assert rect is not None
+    base = _seed_base(layer)
+    inner = layer.stamp_inner or layer.fill
+    out: list[RasterLayer] = []
+    for i in range(56):
+        seed = (i * 1103515245 + 6789 + base) & 0x7FFFFFFF
+        sz = 1 + (seed % 3)
+        if sz >= rect.width or sz >= rect.height:
+            continue
+        x = rect.x + ((seed >> 4) % max(rect.width - sz, 1))
+        y = rect.y + ((seed >> 10) % max(rect.height - sz, 1))
+        tone = inner if seed % 6 == 0 else layer.fill
+        dot_opacity = 0.12 + (seed % 35) / 100
+        out.append(_fill(
+            layer,
+            f"{layer.name}_{i}",
+            LayerRect(x=x, y=y, width=sz, height=sz),
+            fill=tone,
+            opacity=dot_opacity,
         ))
     return out
 
 
 def _vignette(layer: RasterLayer) -> list[RasterLayer]:
-    """Three hollow frames inset from the rect (poster edge)."""
+    """Inset hollow frames with softer outer rings."""
     rect = layer.rect
     assert rect is not None
     t = max(4, min(rect.width, rect.height) // 16)
+    ring_opacity = (0.45, 0.28, 0.14)
     out: list[RasterLayer] = []
     for ring in range(3):
         inset = ring * t
@@ -207,22 +245,27 @@ def _vignette(layer: RasterLayer) -> list[RasterLayer]:
             break
         prefix = f"{layer.name}_r{ring}"
         ring_h = max(h - 2 * t, 1)
+        opacity = ring_opacity[ring] if ring < len(ring_opacity) else 0.1
         out.extend([
             _fill(
                 layer, f"{prefix}_t",
                 LayerRect(x=x, y=y, width=w, height=t),
+                opacity=opacity,
             ),
             _fill(
                 layer, f"{prefix}_b",
                 LayerRect(x=x, y=y + h - t, width=w, height=t),
+                opacity=opacity,
             ),
             _fill(
                 layer, f"{prefix}_l",
                 LayerRect(x=x, y=y + t, width=t, height=ring_h),
+                opacity=opacity,
             ),
             _fill(
                 layer, f"{prefix}_r",
                 LayerRect(x=x + w - t, y=y + t, width=t, height=ring_h),
+                opacity=opacity,
             ),
         ])
     return out
@@ -268,11 +311,14 @@ def _fill(
     rect: LayerRect,
     fill: str | None = None,
     shape: Literal["rect", "ellipse"] = "rect",
+    opacity: float | None = None,
 ) -> RasterLayer:
+    layer_opacity = layer.opacity if opacity is None else opacity
     return RasterLayer(
         name=name,
         role=layer.role or "fill",
         fill=fill or layer.fill,
         rect=rect,
         shape=shape,
+        opacity=layer_opacity,
     )

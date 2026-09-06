@@ -62,3 +62,13 @@ render:
 
 lighting:
   preset: neutral_studio
+
+quality:
+  background_prop:
+    detail_density: low
+  standard_prop:
+    detail_density: medium
+  focal_prop:
+    detail_density: high
+  hero:
+    detail_density: high

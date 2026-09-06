@@ -48,6 +48,9 @@ def _seed_job(project: Path) -> AssetJob:
         report=report,
         source_spec="assets/box.yaml",
     )
+    result = job.load_result()
+    assert result is not None
+    assert result.preview_roles["primary"] == "three_quarter"
     return job
 
 
@@ -114,6 +117,11 @@ def test_evaluate_and_history(project: Path, monkeypatch) -> None:
     assert hist.exit_code == 0
     payload = json.loads(hist.stdout)
     assert payload["iterations"][0]["evaluation_ship"] is False
+    summary = runner.invoke(app, ["history", "box", "--json", "--summary"])
+    assert summary.exit_code == 0
+    slim = json.loads(summary.stdout)
+    assert "previews" not in slim["iterations"][0]
+    assert slim["iterations"][0]["primary_preview"].endswith("front.png")
     inspect = runner.invoke(app, ["inspect", "box", "--json"])
     assert inspect.exit_code == 0
     info = json.loads(inspect.stdout)

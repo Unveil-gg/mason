@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -175,6 +175,23 @@ def resolve_style(
     return load_style(path)
 
 
+def style_payload(profile: StyleProfile) -> dict[str, Any]:
+    """Slim style card for agents (palette keys, families, quality)."""
+    return {
+        "name": profile.name,
+        "palette_keys": sorted(profile.palette),
+        "families": sorted(profile.materials.families),
+        "quality": {
+            key: value.model_dump(mode="json")
+            for key, value in profile.quality.items()
+        },
+        "geometry": profile.geometry.model_dump(mode="json"),
+        "render": profile.render.model_dump(mode="json"),
+        "lighting": profile.lighting.model_dump(mode="json"),
+        "textures": profile.textures.model_dump(mode="json"),
+    }
+
+
 DEFAULT_STYLE_YAML = """name: default
 version: 1
 
@@ -239,6 +256,16 @@ render:
 
 lighting:
   preset: neutral_studio
+
+quality:
+  background_prop:
+    detail_density: low
+  standard_prop:
+    detail_density: medium
+  focal_prop:
+    detail_density: high
+  hero:
+    detail_density: high
 
 textures:
   tile_size: 1.0

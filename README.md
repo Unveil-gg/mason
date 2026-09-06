@@ -252,8 +252,10 @@ spec, style, or `mason build`/`mason rebuild` output. Run
 ## Raster stamps and sprites
 
 Krita `layered_raster` layers: fill, `shape: rect|ellipse`, text,
-image import, `pixels` + `keys`, and stamps (`l_corner`, `gem`,
-`rule`, `bond`, `dapple`, `vignette`, `figure`).
+image import, `pixels` + `keys`, `opacity` (0–1), and stamps
+(`l_corner`, `gem`, `rule`, `bond`, `dapple`, `vignette`, `figure`,
+`speckle`). Use `speckle` + soft ellipses to break up flat UI fills;
+`stamp_seed` keeps grain reproducible.
 
 Aseprite `sprite_sheet` is the animation path. Prefer `pixels` +
 `keys` and a shared style palette so idle / walk / attack stay
@@ -293,6 +295,7 @@ spec or a mesh. Image → analysis notes → you write the spec.
 | `mason validate <asset-id>` | Re-read stored validation |
 | `mason evaluate <id> <json>` | Store a critic visual evaluation |
 | `mason history <asset-id>` | Iteration snapshots and evaluations |
+| `mason style [name]` | Slim style profile (palette, families, quality) |
 | `mason export <asset-id>` | Copy finished outputs into another project |
 | `mason vocab` | Shapes, components, recipes, stamps, families |
 | `mason ingest <image>` | Silhouette + ratio from concept art |

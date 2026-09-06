@@ -33,6 +33,7 @@ def build_krita_script(
             "font": layer.font,
             "align": layer.align,
             "shape": layer.shape,
+            "opacity": layer.opacity,
             "image": None,
             "pixels": None,
             "keys": {},
@@ -93,23 +94,25 @@ def hex_rgb(value):
     return int(text[0:2], 16), int(text[2:4], 16), int(text[4:6], 16)
 
 
-def hex_to_bgra(value):
+def hex_to_bgra(value, opacity=1.0):
     r, g, b = hex_rgb(value)
-    return bytes((b, g, r, 255))
+    alpha = int(max(0.0, min(1.0, float(opacity))) * 255)
+    return bytes((b, g, r, alpha))
 
 
-def fill_layer(layer, color, x, y, w, h):
-    pixel = hex_to_bgra(color)
+def fill_layer(layer, color, x, y, w, h, opacity=1.0):
+    pixel = hex_to_bgra(color, opacity)
     layer.setPixelData(pixel * (w * h), x, y, w, h)
 
 
-def fill_ellipse(layer, color, x, y, w, h):
+def fill_ellipse(layer, color, x, y, w, h, opacity=1.0):
     img = QImage(w, h, QImage.Format_ARGB32)
     img.fill(0)
     painter = QPainter(img)
     r, g, b = hex_rgb(color)
+    alpha = int(max(0.0, min(1.0, float(opacity))) * 255)
     painter.setPen(Qt.NoPen)
-    painter.setBrush(QColor(r, g, b, 255))
+    painter.setBrush(QColor(r, g, b, alpha))
     painter.drawEllipse(0, 0, max(w - 1, 0), max(h - 1, 0))
     painter.end()
     bits = img.bits()
@@ -231,10 +234,15 @@ def main():
                     x, y,
                 )
             elif layer.get("fill") and not layer.get("text"):
+                opacity = layer.get("opacity", 1.0)
                 if layer.get("shape") == "ellipse":
-                    fill_ellipse(node, layer["fill"], x, y, lw, lh)
+                    fill_ellipse(
+                        node, layer["fill"], x, y, lw, lh, opacity,
+                    )
                 else:
-                    fill_layer(node, layer["fill"], x, y, lw, lh)
+                    fill_layer(
+                        node, layer["fill"], x, y, lw, lh, opacity,
+                    )
             if layer.get("text"):
                 paint_text(
                     node,

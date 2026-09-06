@@ -12,9 +12,29 @@ layers:
   - name: background
     role: background
     fill: cream
+  - name: bg_warmth
+    role: fill
+    fill: wood_light
+    shape: ellipse
+    opacity: 0.14
+    rect: {x: 180, y: 420, width: 664, height: 900}
+  - name: bg_grain
+    role: overlay
+    fill: wood_dark
+    stamp: speckle
+    stamp_inner: cream
+    stamp_seed: 7
+    rect: {x: 0, y: 220, width: 1024, height: 1316}
   - name: header_band
     role: fill
     fill: wood_dark
+    rect: {x: 0, y: 0, width: 1024, height: 220}
+  - name: header_grain
+    role: overlay
+    fill: wood_light
+    stamp: speckle
+    stamp_inner: wood_dark
+    stamp_seed: 19
     rect: {x: 0, y: 0, width: 1024, height: 220}
   - name: title
     role: text

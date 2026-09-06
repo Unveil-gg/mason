@@ -39,11 +39,14 @@ def run_evaluate(asset_id: str, evaluation_path: Path) -> VisualEvaluation:
     return evaluation
 
 
-def history_payload(asset_id: str) -> dict:
+def history_payload(asset_id: str, *, summary: bool = False) -> dict:
     """List iteration snapshots and any attached evaluations."""
     root = find_project_root()
     job = require_job(root, asset_id)
     result = job.load_result()
+    primary_key = "full"
+    if result and result.preview_roles.get("primary"):
+        primary_key = result.preview_roles["primary"]
     rows = []
     for number in job.list_iterations():
         evaluation = job.load_evaluation(number)
@@ -52,11 +55,27 @@ def history_payload(asset_id: str) -> dict:
         if snap.is_dir():
             for png in sorted(snap.glob("*.png")):
                 previews[png.stem] = job.rel(png)
-        rows.append({
+        row = {
             "iteration": number,
             "built_at": result.built_at if result else None,
             "evaluation_ship": evaluation.ship if evaluation else None,
             "evaluation_passed": evaluation.passed if evaluation else None,
-            "previews": previews,
-        })
+        }
+        if summary:
+            row["primary_preview"] = _primary_preview(previews, primary_key)
+        else:
+            row["previews"] = previews
+        rows.append(row)
     return {"asset_id": asset_id, "iterations": rows}
+
+
+def _primary_preview(previews: dict[str, str], primary_key: str) -> str | None:
+    """Pick the best preview path for summary history rows."""
+    if primary_key in previews:
+        return previews[primary_key]
+    for key in ("three_quarter", "full", "front"):
+        if key in previews:
+            return previews[key]
+    if previews:
+        return next(iter(previews.values()))
+    return None

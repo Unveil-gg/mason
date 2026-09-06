@@ -12,6 +12,13 @@ layers:
   - name: wood
     role: background
     fill: wood
+  - name: wood_grain
+    role: overlay
+    fill: wood_light
+    stamp: speckle
+    stamp_inner: wood
+    stamp_seed: 11
+    rect: {x: 0, y: 0, width: 640, height: 360}
   - name: gold_outer
     role: fill
     fill: gold_dark
@@ -20,6 +27,19 @@ layers:
     role: fill
     fill: parchment
     rect: {x: 20, y: 20, width: 600, height: 320}
+  - name: field_grain
+    role: overlay
+    fill: gold_dark
+    stamp: speckle
+    stamp_inner: parchment
+    stamp_seed: 24
+    opacity: 0.85
+    rect: {x: 20, y: 20, width: 600, height: 320}
+  - name: field_vignette
+    role: overlay
+    fill: wood
+    stamp: vignette
+    rect: {x: 24, y: 24, width: 592, height: 312}
   - name: rule_top
     role: fill
     fill: gold

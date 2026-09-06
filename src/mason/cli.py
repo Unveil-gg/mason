@@ -24,10 +24,12 @@ from mason.core.config import (
     set_dotted,
 )
 from mason.core.inspect import inspect_payload
+from mason.core.styles import resolve_style, style_payload
 from mason.core.vocab import vocab_payload
 from mason.core.jobs import clean_jobs, list_jobs, require_job
 from mason.core.workspace import find_project_root, init_project
 from mason.errors import MasonError
+from mason.pipelines.common import project_context
 from mason.pipelines.dispatch import run_build, run_rebuild
 from mason.pipelines.evaluate import history_payload, run_evaluate
 from mason.pipelines.stats import run_stats
@@ -216,6 +218,34 @@ def vocab(json_mode: JsonFlag = False) -> None:
     _emit(json_mode, payload, lambda: _print_vocab(payload))
 
 
+@app.command()
+def style(
+    name: Annotated[
+        str,
+        typer.Argument(help="Style profile name (e.g. default, estate)."),
+    ] = "default",
+    json_mode: JsonFlag = False,
+) -> None:
+    """Print a slim style profile for agent authoring."""
+
+    def _run():
+        root, project = project_context()
+        profile = resolve_style(root, name, project.default_style)
+        payload = style_payload(profile)
+        _emit(json_mode, payload, lambda: _print_style(payload))
+
+    _guard(json_mode, _run)
+
+
+def _print_style(payload: dict[str, Any]) -> None:
+    typer.echo(f"style: {payload['name']}")
+    typer.echo(f"palette: {', '.join(payload['palette_keys'])}")
+    if payload.get("families"):
+        typer.echo(f"families: {', '.join(payload['families'])}")
+    if payload.get("quality"):
+        typer.echo(f"quality: {payload['quality']}")
+
+
 def _print_vocab(payload: dict[str, Any]) -> None:
     """Human card: lists plus the short authoring hints."""
     for key in (
@@ -319,11 +349,18 @@ def _print_stats(payload: dict[str, Any]) -> None:
 def history(
     asset_id: Annotated[str, typer.Argument()],
     json_mode: JsonFlag = False,
+    summary: Annotated[
+        bool,
+        typer.Option(
+            "--summary",
+            help="Omit per-view preview lists; include primary only.",
+        ),
+    ] = False,
 ) -> None:
     """List iteration snapshots and critic evaluations."""
 
     def _run():
-        payload = history_payload(asset_id)
+        payload = history_payload(asset_id, summary=summary)
         _emit(
             json_mode,
             payload,

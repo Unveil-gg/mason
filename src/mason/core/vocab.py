@@ -43,9 +43,10 @@ def vocab_payload() -> dict[str, Any]:
         ),
         "raster": (
             "layered_raster: fill, text, image, stamp, "
-            "pixels+keys. shape rect|ellipse. "
+            "pixels+keys. shape rect|ellipse. opacity 0-1. "
             "stamps: l_corner gem rule bond dapple "
-            "vignette figure."
+            "vignette figure speckle. stamp_seed for "
+            "reproducible dapple/speckle."
         ),
         "sprites": (
             "sprite_sheet via Aseprite. One animation per "
@@ -64,11 +65,12 @@ def vocab_payload() -> dict[str, Any]:
             "three times."
         ),
         "inspect": (
-            "preview_roles.primary is three_quarter beauty. "
+            "build/inspect preview_roles.primary: "
+            "three_quarter (3D) or full (2D). "
             "Inspect beauty first, clay for modeling, "
             "silhouette only for readability. "
-            "silhouette_regressed is advisory. "
-            "context is future in-engine preview."
+            "history --summary for iteration diffs. "
+            "mason style <name> --json for slim palette."
         ),
         "snap": (
             "part.snap {to, on: top|bottom|front|back|left|right, "
