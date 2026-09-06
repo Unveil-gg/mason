@@ -35,8 +35,10 @@ def vocab_payload() -> dict[str, Any]:
         "texture": (
             "Prefer materials.strategy palette, then atlas, "
             "then bespoke. part.texture {path|asset+file} is "
-            "albedo. Planes stretch UV (decals). Other shapes "
-            "tile. Style family.albedo applies when the file "
+            "albedo. Planes stretch UV (decals). Other "
+            "textured shapes use world-space UVs. "
+            "family.tile_size overrides style tile_size. "
+            "Style family.albedo applies when the file "
             "exists."
         ),
         "inspect": (
@@ -50,6 +52,10 @@ def vocab_payload() -> dict[str, Any]:
             "part.snap {to, on: top|bottom|front|back|left|right, "
             "embed} meets a named face. embed pushes into the "
             "target so sloped roofs get a through-joint."
+        ),
+        "decimate": (
+            "geometry.decimate is an optional keep-ratio "
+            "(0-1) Blender collapse after cutouts. Off by default."
         ),
         "cutout": (
             "part.cutout {target} subtracts this mesh from the "

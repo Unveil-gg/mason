@@ -76,6 +76,10 @@ Important rules:
 - Prefer editing specs/generator source and rebuilding.
 - Do not assume a successful tool exit means the asset looks correct.
 - Always inspect previews. Beauty three-quarter first.
+  Open only `preview_roles.primary` unless clay or silhouette
+  is needed. Skip contact_sheet unless comparing views.
+- `mason stats [id]` reports triangle counts. Use it instead
+  of opening the GLB.
 - Do not ignore validation failures.
 - Use `--json` when operating autonomously.
 - When a style palette matters for rasters, follow generation with

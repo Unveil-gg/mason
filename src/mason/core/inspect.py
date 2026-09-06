@@ -50,7 +50,11 @@ def inspect_payload(job: AssetJob, *, full: bool = False) -> dict[str, Any]:
         "validation": _slim_validation(report),
         "built_at": result.built_at if result else None,
         "art_direction": (
-            direction.model_dump(mode="json") if direction else None
+            {
+                "subject": direction.subject,
+                "usage": direction.usage.model_dump(mode="json"),
+                "detail_density": direction.detail_density,
+            } if direction else None
         ),
         "depends_on": list(spec.depends_on),
         "iteration": latest_iter,
@@ -88,6 +92,9 @@ def inspect_payload(job: AssetJob, *, full: bool = False) -> dict[str, Any]:
         )
         payload["quality"] = (
             quality.model_dump(mode="json") if quality else None
+        )
+        payload["art_direction"] = (
+            direction.model_dump(mode="json") if direction else None
         )
     return payload
 

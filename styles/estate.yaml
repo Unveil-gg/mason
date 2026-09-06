@@ -49,6 +49,7 @@ materials:
       roughness: 0.78
       metallic: 0.0
       variation: 0.04
+      tile_size: 0.36
       albedo:
         asset: estate_stone_q
         file: output/asset.png
@@ -56,6 +57,7 @@ materials:
       roughness: 0.7
       metallic: 0.0
       variation: 0.03
+      tile_size: 0.30
       albedo:
         asset: estate_shingle_q
         file: output/asset.png
@@ -63,6 +65,7 @@ materials:
       roughness: 0.16
       metallic: 0.08
       variation: 0.02
+      tile_size: 0.45
       albedo:
         asset: estate_water_q
         file: output/asset.png
@@ -70,12 +73,13 @@ materials:
       roughness: 0.9
       metallic: 0.0
       variation: 0.04
+      tile_size: 0.50
       albedo:
         asset: estate_hedge_q
         file: output/asset.png
 
 textures:
-  tile_size: 0.7
+  tile_size: 0.22
   wrap: repeat
 
 render:

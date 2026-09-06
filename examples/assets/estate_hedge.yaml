@@ -3,8 +3,8 @@ id: estate_hedge
 name: Estate Hedge
 
 dimensions:
-  width: 16
-  height: 16
+  width: 64
+  height: 64
 
 style: estate
 
@@ -12,28 +12,18 @@ layers:
   - name: base
     role: background
     fill: hedge
-  - name: speckle
-    role: overlay
-    pixels:
-      - "L..I..L..I..L."
-      - "....L.....I..."
-      - ".I....L....L.."
-      - "..L..I...L...."
-      - "L....L.I....L."
-      - "...I.....L..I."
-      - ".L...L....I..."
-      - "I..L....L....L"
-      - "..I...L...I..."
-      - "L....I..L....."
-      - "...L....I..L.."
-      - ".I...L.....I.."
-      - "L..I....L....L"
-      - "....L.I....L.."
-      - ".L.....L..I..."
-      - "I...L....L...I"
-    keys:
-      L: lawn
-      I: ink
+  - name: dapple
+    role: fill
+    fill: lawn
+    rect: {x: 6, y: 8, width: 20, height: 14}
+  - name: dapple_b
+    role: fill
+    fill: lawn
+    rect: {x: 38, y: 28, width: 18, height: 12}
+  - name: dapple_c
+    role: fill
+    fill: lawn
+    rect: {x: 16, y: 44, width: 22, height: 10}
 
 export:
   kra: true

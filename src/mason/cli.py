@@ -30,6 +30,7 @@ from mason.core.workspace import find_project_root, init_project
 from mason.errors import MasonError
 from mason.pipelines.dispatch import run_build, run_rebuild
 from mason.pipelines.evaluate import history_payload, run_evaluate
+from mason.pipelines.stats import run_stats
 from mason.pipelines.export import run_export
 from mason.tools.registry import detect_all, doctor_payload, scan_and_store
 
@@ -255,6 +256,41 @@ def evaluate(
         )
 
     _guard(json_mode, _run)
+
+
+@app.command()
+def stats(
+    asset_id: Annotated[
+        str | None,
+        typer.Argument(help="One job id, or every job if omitted."),
+    ] = None,
+    json_mode: JsonFlag = False,
+) -> None:
+    """Print triangle, mesh, and material counts from a built job."""
+
+    def _run():
+        payload = run_stats(asset_id)
+        _emit(
+            json_mode,
+            payload,
+            lambda: _print_stats(payload),
+        )
+
+    _guard(json_mode, _run)
+
+
+def _print_stats(payload: dict[str, Any]) -> None:
+    if "assets" in payload:
+        for row in payload["assets"]:
+            typer.echo(
+                f"{row['asset_id']}: {row['triangles']} tris "
+                f"({row['meshes']} meshes)",
+            )
+        return
+    typer.echo(
+        f"{payload['asset_id']}: {payload['triangles']} tris "
+        f"({payload['meshes']} meshes, {payload['materials']} mats)",
+    )
 
 
 @app.command()

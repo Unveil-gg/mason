@@ -141,6 +141,7 @@ class GeometrySpec(BaseModel):
     bevel: bool = True
     bevel_width: float | None = None
     bevel_segments: int | None = None
+    decimate: float | None = Field(default=None, gt=0, le=1)
     recipe: Literal[
         "crate", "shelf", "table", "hydrant", "cart",
         "house", "tree", "pool", "estate",

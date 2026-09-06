@@ -20,24 +20,19 @@ def write_compare_plate(job: AssetJob) -> Path | None:
         return None
     size = _tile_size(current_sil or current_beauty)
     prev_dir = _previous_preview_dir(job)
-    prev_name = (
-        "silhouette_front.png"
-        if (job.previews / "silhouette_front.png").is_file()
-        else "full.png"
-    )
-    prev = None
-    if prev_dir is not None and (prev_dir / prev_name).is_file():
-        prev = prev_dir / prev_name
+    prev_beauty = _first_existing(prev_dir, (
+        "three_quarter.png", "full.png", "silhouette_front.png",
+    ))
     ref = job.previews / "reference_silhouette.png"
+    detail = _first_existing(job.previews, (
+        "detail.png", "full.png",
+    ))
+    corner = ref if ref.is_file() else detail
     tiles = [
         _load_tile(current_sil, size),
         _load_tile(current_beauty, size),
-        _load_tile(prev, size, empty="no previous"),
-        _load_tile(
-            ref if ref.is_file() else None,
-            size,
-            empty="no reference",
-        ),
+        _load_tile(prev_beauty, size, empty="no previous"),
+        _load_tile(corner, size, empty="no detail"),
     ]
     sheet = Image.new("RGB", (size[0] * 2, size[1] * 2), (0, 0, 0))
     for index, tile in enumerate(tiles):
@@ -100,6 +95,19 @@ def _current_silhouette(job: AssetJob) -> Path | None:
     return None
 
 
+def _first_existing(
+    folder: Path | None,
+    names: tuple[str, ...],
+) -> Path | None:
+    if folder is None:
+        return None
+    for name in names:
+        path = folder / name
+        if path.is_file():
+            return path
+    return None
+
+
 def _current_beauty(job: AssetJob) -> Path | None:
     for name in ("three_quarter.png", "full.png"):
         path = job.previews / name
@@ -113,8 +121,8 @@ def _previous_preview_dir(job: AssetJob) -> Path | None:
     current_bytes = current.read_bytes() if current and current.is_file() else None
     for number in reversed(job.list_iterations()):
         folder = job.iterations / f"{number:03d}" / "previews"
-        name = "silhouette_front.png"
-        if current is not None:
+        name = "three_quarter.png"
+        if current is not None and (folder / current.name).is_file():
             name = current.name
         candidate = folder / name
         if not candidate.is_file():

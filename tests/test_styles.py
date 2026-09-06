@@ -26,6 +26,18 @@ def test_load_default_style(tmp_path: Path) -> None:
     assert style.context_preview is None
 
 
+def test_family_tile_size_optional(tmp_path: Path) -> None:
+    path = tmp_path / "tiled.yaml"
+    path.write_text(
+        "name: tiled\npalette:\n  primary: '#111111'\n"
+        "materials:\n  families:\n    masonry:\n"
+        "      tile_size: 0.18\n",
+        encoding="utf-8",
+    )
+    style = load_style(path)
+    assert style.materials.families["masonry"].tile_size == 0.18
+
+
 def test_missing_palette_key(tmp_path: Path) -> None:
     path = tmp_path / "default.yaml"
     path.write_text(DEFAULT_STYLE_YAML, encoding="utf-8")

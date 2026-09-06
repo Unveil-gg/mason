@@ -110,7 +110,7 @@ class RasterLayer(BaseModel):
     image: str | None = None
     pixels: list[str] | None = None
     keys: dict[str, str] = Field(default_factory=dict)
-    stamp: Literal["l_corner", "gem", "rule"] | None = None
+    stamp: Literal["l_corner", "gem", "rule", "bond"] | None = None
     stamp_corner: Literal["tl", "tr", "bl", "br"] = "tl"
     stamp_inner: str | None = None
 

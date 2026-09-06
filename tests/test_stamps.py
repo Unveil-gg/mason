@@ -66,3 +66,18 @@ def test_stamp_spec_parses() -> None:
     })
     assert spec.layers[0].stamp == "l_corner"
     assert spec.layers[0].stamp_corner == "br"
+
+
+def test_bond_staggers_tabs() -> None:
+    layers = expand_stamps([
+        RasterLayer(
+            name="tabs",
+            fill="ink",
+            stamp="bond",
+            rect=LayerRect(x=0, y=0, width=64, height=64),
+        ),
+    ])
+    names = [ly.name for ly in layers]
+    assert any(n.startswith("tabs_h") for n in names)
+    assert any(n.startswith("tabs_v") for n in names)
+    assert len(layers) > 16

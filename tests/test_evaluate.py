@@ -76,6 +76,7 @@ def test_inspect_includes_art_and_iteration(project: Path) -> None:
     assert "spec" not in payload
     full = inspect_payload(job, full=True)
     assert "spec" in full
+    assert full["art_direction"]["silhouette"] == "box"
 
 
 def test_evaluate_and_history(project: Path, monkeypatch) -> None:

@@ -172,6 +172,7 @@ geometry and silhouettes only when readability is in doubt.
 | `mason rebuild <asset-id>` | Rebuild from the stored job / original spec |
 | `mason preview <asset-id>` | Re-render previews only |
 | `mason inspect <asset-id>` | Job state, art direction, previews, metrics |
+| `mason stats [id]` | Triangle / mesh / material counts |
 | `mason validate <asset-id>` | Re-read stored validation |
 | `mason evaluate <id> <json>` | Store a critic visual evaluation |
 | `mason history <asset-id>` | Iteration snapshots and evaluations |
@@ -251,21 +252,16 @@ a zero exit code as “it looks right.”
 
 ## Current limitations (v0.1)
 
-- Raster generation is palette fills, rects, text, image import, and
-  per-pixel maps (`pixels` + `keys` on `sprite_sheet` / raster
-  layers). Not freehand painting.
+- Raster generation is palette fills, rects, text, stamps, image
+  import, and per-pixel maps. Not freehand painting.
 - `mason export` copies files and a manifest only; it does not
-  construct Godot scenes/resources or write `.import` sidecars. A
-  separate engine bridge can read `mason_manifest.json` plus
-  `frames.json` / `bounds`.
+  construct Godot scenes/resources or write `.import` sidecars.
 - No in-process LLM, no bundled creative apps.
 
 ## Roadmap
 
 Design notes: [docs/roadmap.md](docs/roadmap.md).
 
-- Optional Godot SpriteFrames / scene construction / in-engine
-  preview (out of Mason; consume `frames.json` and `bounds`)
-- Richer Krita paint tools beyond fill/text/image layers
-- Material variants, boolean ops, and multi-asset "kits" (still on
-  hold — no concrete asset needs them yet)
+- In-engine / Godot preview (`preview_roles.context`) — hook only
+- Richer Krita paint tools beyond fill/text/stamp/image layers
+- Multi-asset kits (shared atlas families beyond one entry)

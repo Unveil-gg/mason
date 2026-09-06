@@ -165,6 +165,36 @@ def unwrap_cube(obj, tile_size):
     bpy.ops.object.mode_set(mode="OBJECT")
 
 
+def unwrap_world(obj, tile_size):
+    """Axis-aligned world UVs. Roofs share one XY projection so
+    courses stay level; walls use XZ or YZ so bricks stay horizontal."""
+    mesh = obj.data
+    if not mesh.uv_layers:
+        mesh.uv_layers.new(name="UVMap")
+    uv_layer = mesh.uv_layers.active.data
+    tile = max(float(tile_size), 0.001)
+    mw = obj.matrix_world
+    rot = mw.to_3x3()
+    x_axis = Vector((1.0, 0.0, 0.0))
+    y_axis = Vector((0.0, 1.0, 0.0))
+    z_axis = Vector((0.0, 0.0, 1.0))
+    for face in mesh.polygons:
+        normal = (rot @ face.normal).normalized()
+        if abs(normal.z) >= 0.35:
+            u_axis, v_axis = x_axis, y_axis
+        elif abs(normal.y) >= abs(normal.x):
+            u_axis, v_axis = x_axis, z_axis
+        else:
+            u_axis, v_axis = y_axis, z_axis
+        for loop_index in face.loop_indices:
+            vert = mesh.vertices[mesh.loops[loop_index].vertex_index]
+            world = mw @ vert.co
+            uv_layer[loop_index].uv = (
+                world.dot(u_axis) / tile,
+                world.dot(v_axis) / tile,
+            )
+
+
 def unwrap_stretch(obj):
     """Stretch UVs to fill 0..1 on a single-quad plane, so one decal
     image (a label, sign face, poster) shows whole and centered
@@ -195,6 +225,22 @@ def apply_bevel(obj, width, segments):
     mod.limit_method = "ANGLE"
     bpy.context.view_layer.objects.active = obj
     bpy.ops.object.modifier_apply(modifier=mod.name)
+
+
+def apply_decimate(ratio):
+    """Optional collapse. ratio is the keep fraction (1 = off)."""
+    if ratio is None:
+        return
+    keep = float(ratio)
+    if keep >= 1.0:
+        return
+    for obj in list(bpy.data.objects):
+        if obj.type != "MESH" or obj.name.startswith("_mason_"):
+            continue
+        mod = obj.modifiers.new(name="Decimate", type="DECIMATE")
+        mod.ratio = keep
+        bpy.context.view_layer.objects.active = obj
+        bpy.ops.object.modifier_apply(modifier=mod.name)
 
 
 def apply_cutouts(created):

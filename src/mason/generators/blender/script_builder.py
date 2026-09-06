@@ -71,6 +71,7 @@ def build_blender_script(
         "swatch_rects": swatch_rects or {},
         "atlas_image": atlas_image or "",
         "atlas_rect": atlas_rect or [],
+        "decimate": spec.geometry.decimate,
         "parts": [p.model_dump(mode="json") for p in parts],
     }
     return (
@@ -203,29 +204,33 @@ def build_geometry():
         use_bevel = part.get("bevel")
         if use_bevel is None:
             use_bevel = CONFIG["bevel"]
-        if part.get("cutout"):
+        if part.get("cutout") or part.get("family") == "foliage":
             use_bevel = False
         if use_bevel and not is_plane:
             apply_bevel(obj, CONFIG["bevel_width"], CONFIG["bevel_segments"])
+        settings = family_settings(part)
+        tile = settings.get("tile_size") or CONFIG["tile_size"]
         if strategy == "palette":
             key = part.get("material") or "primary"
             rect = (CONFIG.get("swatch_rects") or {}).get(key)
             if rect:
                 unwrap_swatch(obj, rect)
             else:
-                unwrap_cube(obj, CONFIG["tile_size"])
+                unwrap_cube(obj, tile)
         elif strategy == "atlas":
             rect = CONFIG.get("atlas_rect")
             if rect:
                 unwrap_swatch(obj, rect)
             else:
-                unwrap_cube(obj, CONFIG["tile_size"])
+                unwrap_cube(obj, tile)
         elif tex_path and is_plane:
             # A textured plane is a decal (label/sign face): fit the
             # whole image to the one face instead of tiling it.
             unwrap_stretch(obj)
+        elif tex_path:
+            unwrap_world(obj, tile)
         else:
-            unwrap_cube(obj, CONFIG["tile_size"])
+            unwrap_cube(obj, tile)
     for part in CONFIG["parts"]:
         parent_name = part.get("parent")
         child = created.get(part["name"])
@@ -236,6 +241,7 @@ def build_geometry():
             child.matrix_parent_inverse = parent.matrix_world.inverted()
             child.matrix_world = world
     apply_cutouts(created)
+    apply_decimate(CONFIG.get("decimate"))
 
 
 def parse_mode():

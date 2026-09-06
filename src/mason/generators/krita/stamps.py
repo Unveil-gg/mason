@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from mason.core.assets import LayerRect, RasterLayer
 
-STAMPS = ("l_corner", "gem", "rule")
+STAMPS = ("l_corner", "gem", "rule", "bond")
 
 
 def expand_stamps(layers: list[RasterLayer]) -> list[RasterLayer]:
@@ -20,6 +20,8 @@ def expand_stamps(layers: list[RasterLayer]) -> list[RasterLayer]:
             out.extend(_gem(layer))
         elif layer.stamp == "rule":
             out.extend(_rule(layer))
+        elif layer.stamp == "bond":
+            out.extend(_bond(layer))
         else:
             out.append(layer)
     return out
@@ -115,6 +117,43 @@ def _rule(layer: RasterLayer) -> list[RasterLayer]:
         _fill(layer, f"{layer.name}_a", left),
         _fill(layer, f"{layer.name}_b", right),
     ]
+
+
+def _bond(layer: RasterLayer) -> list[RasterLayer]:
+    """Running-bond joints: courses plus staggered tabs."""
+    rect = layer.rect
+    assert rect is not None
+    courses = 8
+    tabs = 8
+    joint = 3
+    ch = max(rect.height // courses, joint + 1)
+    tw = max(rect.width // tabs, joint + 1)
+    out: list[RasterLayer] = []
+    for row in range(1, courses + 1):
+        y = min(rect.y + row * ch - joint, rect.y + rect.height - joint)
+        out.append(_fill(
+            layer,
+            f"{layer.name}_h{row}",
+            LayerRect(x=rect.x, y=y, width=rect.width, height=joint),
+        ))
+    for row in range(courses):
+        shift = (tw // 2) if row % 2 else 0
+        y0 = rect.y + row * ch
+        h = min(ch, rect.y + rect.height - y0)
+        col = 0
+        x = rect.x + shift
+        while x < rect.x + rect.width:
+            out.append(_fill(
+                layer,
+                f"{layer.name}_v{row}_{col}",
+                LayerRect(
+                    x=x, y=y0, width=joint,
+                    height=max(h, 1),
+                ),
+            ))
+            col += 1
+            x += tw
+    return out
 
 
 def _fill(
