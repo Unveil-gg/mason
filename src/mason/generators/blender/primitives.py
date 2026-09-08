@@ -41,11 +41,20 @@ def create_cylinder(name, size, location, rotation=(0.0, 0.0, 0.0)):
 
 
 def create_plane(name, size, location, rotation=(0.0, 0.0, 0.0)):
-    """Add a plane; size is (width, depth, ignored)."""
+    """Add a plane; size is (width, depth, ignored).
+
+    Dimensions are set, and baked via transform_apply, *before* the
+    rotation is applied. Blender's `dimensions` setter reads the
+    object's current world AABB to solve for scale; solving that
+    while already rotated is ambiguous for axis-swapping rotations
+    (e.g. 90 degrees about Y) and silently produces the wrong
+    world-space size. Scaling first, while still axis-aligned, then
+    rotating the already-correctly-sized mesh is unambiguous for any
+    rotation.
+    """
     bpy.ops.mesh.primitive_plane_add(size=1.0, location=location)
     obj = bpy.context.active_object
     obj.name = name
-    obj.rotation_euler = rotation
     obj.dimensions = (size[0], size[1], 0.0)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     obj.location = location

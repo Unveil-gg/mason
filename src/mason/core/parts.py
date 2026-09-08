@@ -49,17 +49,51 @@ class PartArray(BaseModel):
 
 
 class DecalSpec(BaseModel):
-    """A textured plane applied to a 3D prop."""
+    """A textured plane applied to a 3D prop.
+
+    Set `face` to place it on one of the prop's own bounding-box
+    faces: location, rotation, and size are then derived from the
+    spec's top-level `dimensions` (a verified rotation per face, so
+    the plane's world-space footprint always matches that face,
+    never an axis-swapped or oversized guess). `inset` nudges it off
+    the surface to avoid z-fighting. Faces sharing the +axis normal
+    (top, front, right) read the source image unmirrored; back and
+    left mirror horizontally, and bottom mirrors vertically -- an
+    unavoidable consequence of viewing that face from the outside.
+    Omit `face` to place the plane manually with location/rotation/
+    size, as before.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
     name: str
     image: ImageSource
-    location: tuple[float, float, float]
-    rotation: tuple[float, float, float] = (1.5708, 0.0, 0.0)
-    size: tuple[float, float]
+    face: Literal[
+        "top", "bottom", "front", "back", "left", "right",
+    ] | None = None
+    inset: float = Field(default=0.0005, ge=0)
+    location: tuple[float, float, float] | None = None
+    rotation: tuple[float, float, float] | None = None
+    size: tuple[float, float] | None = None
     parent: str | None = None
     material: str = "primary"
+
+    @model_validator(mode="after")
+    def face_or_manual(self) -> DecalSpec:
+        if self.face is not None:
+            if self.location or self.rotation or self.size:
+                raise ValueError(
+                    "decal.face is exclusive with "
+                    "location/rotation/size",
+                )
+            return self
+        if self.location is None or self.size is None:
+            raise ValueError(
+                "decal needs face, or location and size",
+            )
+        if self.rotation is None:
+            self.rotation = (1.5708, 0.0, 0.0)
+        return self
 
 
 class PartSnap(BaseModel):

@@ -25,6 +25,7 @@ from mason.core.config import (
     set_dotted,
 )
 from mason.core.inspect import inspect_payload
+from mason.core.results import BuildResult, slim_validation
 from mason.core.styles import resolve_style, style_payload
 from mason.core.vocab import vocab_payload
 from mason.core.jobs import clean_jobs, list_jobs, require_job
@@ -78,6 +79,25 @@ def _guard(json_mode: bool, fn):
         _fail(json_mode, exc)
 
 
+def _build_payload(result: BuildResult, full: bool) -> dict[str, Any]:
+    """BuildResult.model_dump(), with validation slimmed by default
+    (drops bulky per-item arrays like layer_names). --full restores
+    the complete validation dict, matching `inspect --full`."""
+    data = result.model_dump()
+    if not full:
+        data["validation"] = slim_validation(result.validation)
+    return data
+
+
+FullFlag = Annotated[
+    bool,
+    typer.Option(
+        "--full",
+        help="Include full validation metrics (e.g. per-layer names).",
+    ),
+]
+
+
 @app.command()
 def version() -> None:
     """Print the Mason version."""
@@ -110,12 +130,16 @@ def init(
 def build(
     spec: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
     json_mode: JsonFlag = False,
+    full: FullFlag = False,
 ) -> None:
     """Build an asset from a YAML spec."""
 
     def _run():
         result = run_build(spec)
-        _emit(json_mode, result.model_dump(), lambda: print_build(result))
+        _emit(
+            json_mode, _build_payload(result, full),
+            lambda: print_build(result),
+        )
         if not result.success:
             raise typer.Exit(code=1)
 
@@ -126,12 +150,16 @@ def build(
 def rebuild(
     asset_id: Annotated[str, typer.Argument()],
     json_mode: JsonFlag = False,
+    full: FullFlag = False,
 ) -> None:
     """Rebuild a stored job by asset id."""
 
     def _run():
         result = run_rebuild(asset_id)
-        _emit(json_mode, result.model_dump(), lambda: print_build(result))
+        _emit(
+            json_mode, _build_payload(result, full),
+            lambda: print_build(result),
+        )
         if not result.success:
             raise typer.Exit(code=1)
 
@@ -153,6 +181,7 @@ def preview(
             ),
         ),
     ] = False,
+    full: FullFlag = False,
 ) -> None:
     """Re-render previews for an existing job."""
 
@@ -160,7 +189,10 @@ def preview(
         result = run_rebuild(
             asset_id, mode="preview", demo_lighting=demo_lighting,
         )
-        _emit(json_mode, result.model_dump(), lambda: print_build(result))
+        _emit(
+            json_mode, _build_payload(result, full),
+            lambda: print_build(result),
+        )
         if not result.success:
             raise typer.Exit(code=1)
 

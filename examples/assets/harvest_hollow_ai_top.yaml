@@ -1,0 +1,129 @@
+art_direction:
+  subject: harvest hollow ai top
+  style:
+    realism: 0.35
+    stylization: 0.65
+    shape_language: []
+  usage:
+    importance: standard_prop
+    viewing_distance: medium
+  silhouette: ''
+  forms:
+    primary: []
+    secondary: []
+    tertiary: []
+  materials: []
+  detail_density: medium
+  references:
+  - path: examples/ref/harvest_hollow_ai_hero.png
+    purpose: silhouette
+  - path: examples/ref/harvest_hollow_ai_hero.png
+    purpose: color
+  constraints: []
+art_analysis:
+  shape_language:
+    primary: ''
+    secondary: ''
+    edges: hard
+  proportions:
+    height_width_ratio: 1.0
+    exaggerated_features: []
+  detail_density: medium
+  style:
+    realism: 0.35
+    stylization: 0.65
+    shape_language: []
+  materials: []
+  wear: 0.0
+  palette_distribution:
+    dominant: '#EA8540'
+    secondary: '#6A400E'
+    accent: '#AA5F1B'
+  source_size:
+    width: 1024
+    height: 1024
+  regions:
+  - x: 28
+    y: 10
+    width: 996
+    height: 317
+    hex: '#F7983A'
+  - x: 0
+    y: 0
+    width: 1024
+    height: 243
+    hex: '#DC6F4E'
+  - x: 0
+    y: 686
+    width: 1024
+    height: 338
+    hex: '#3D260B'
+  - x: 84
+    y: 509
+    width: 668
+    height: 417
+    hex: '#653B0D'
+  - x: 0
+    y: 289
+    width: 323
+    height: 259
+    hex: '#3D260B'
+  - x: 445
+    y: 637
+    width: 476
+    height: 307
+    hex: '#653B0D'
+type: layered_raster
+id: harvest_hollow_ai_top
+name: Harvest Hollow Ai Top
+dimensions:
+  width: 1024
+  height: 1024
+style: default
+layers:
+- name: background
+  role: background
+  fill: brass
+  font_size: 48
+  font: DejaVu Sans
+  align: center
+  keys: {}
+  stamp_corner: tl
+  shape: rect
+  opacity: 1.0
+- name: reference
+  role: image
+  rect:
+    x: 0
+    y: 0
+    width: 1024
+    height: 1024
+  image: examples/ref/harvest_hollow_ai_hero.png
+- name: title_band
+  role: fill
+  fill: wood_dark
+  opacity: 0.55
+  rect: {x: 0, y: 0, width: 1024, height: 150}
+- name: title_text
+  role: text
+  text: Harvest Hollow
+  fill: cream
+  font_size: 74
+  align: center
+  rect: {x: 40, y: 30, width: 944, height: 90}
+- name: subtitle_text
+  role: text
+  text: A Game of Fields and Fortune
+  fill: brass
+  font_size: 28
+  align: center
+  rect: {x: 40, y: 112, width: 944, height: 34}
+- name: frame_vignette
+  role: overlay
+  fill: wood_dark
+  stamp: vignette
+  rect: {x: 0, y: 0, width: 1024, height: 1024}
+export:
+  kra: true
+  png: true
+metadata: {}

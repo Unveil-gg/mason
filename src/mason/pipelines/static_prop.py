@@ -14,6 +14,7 @@ from mason.core.surfaces import prepare_surface_maps
 from mason.core.workspace import find_project_root
 from mason.errors import MasonError
 from mason.generators.blender.components import expand_components
+from mason.generators.blender.decal_faces import resolve_face
 from mason.generators.blender.part_ops import expand_part_ops
 from mason.generators.blender.recipes import expand_recipe
 from mason.generators.blender.snap import apply_snaps, snaps_touch
@@ -69,13 +70,24 @@ def _decal_parts(spec: StaticPropSpec) -> list[PropPart]:
     """Expand spec.decals into textured planes."""
     planes: list[PropPart] = []
     for decal in spec.decals:
-        width, height = decal.size
+        if decal.face is not None:
+            location, rotation, size = resolve_face(
+                decal.face, spec.dimensions, decal.inset,
+            )
+        else:
+            assert decal.location is not None
+            assert decal.rotation is not None
+            assert decal.size is not None
+            location, rotation, size = (
+                decal.location, decal.rotation, decal.size,
+            )
+        width, height = size
         planes.append(PropPart(
             name=decal.name,
             shape="plane",
             size=(width, height, 0.0),
-            location=decal.location,
-            rotation=decal.rotation,
+            location=location,
+            rotation=rotation,
             parent=decal.parent,
             material=decal.material,
             texture=decal.image,

@@ -12,7 +12,13 @@ from mason.pipelines.ingest import silhouette_iou
 
 
 def write_compare_plate(job: AssetJob) -> Path | None:
-    """Write previews/compare.png. Returns the path, or None."""
+    """Write previews/compare.png. Returns the path, or None.
+
+    Layout is [current silhouette, current beauty; previous
+    iteration's beauty (frozen, for regression diffing), reference
+    or detail crop]. Each tile is captioned so "previous iteration"
+    is never mistaken for the live model.
+    """
     job.previews.mkdir(parents=True, exist_ok=True)
     current_sil = _current_silhouette(job)
     current_beauty = _current_beauty(job)
@@ -23,16 +29,23 @@ def write_compare_plate(job: AssetJob) -> Path | None:
     prev_beauty = _first_existing(prev_dir, (
         "three_quarter.png", "full.png", "silhouette_front.png",
     ))
+    prev_n = None
+    if prev_dir is not None and prev_dir.parent.name.isdigit():
+        prev_n = int(prev_dir.parent.name)
+    prev_label = f"previous (iter {prev_n:03d})" if prev_n else "previous"
     ref = job.previews / "reference_silhouette.png"
     detail = _first_existing(job.previews, (
         "detail.png", "full.png",
     ))
     corner = ref if ref.is_file() else detail
+    corner_label = "reference" if ref.is_file() else "detail"
     tiles = [
-        _load_tile(current_sil, size),
-        _load_tile(current_beauty, size),
-        _load_tile(prev_beauty, size, empty="no previous"),
-        _load_tile(corner, size, empty="no detail"),
+        _load_tile(current_sil, size, label="current silhouette"),
+        _load_tile(current_beauty, size, label="current"),
+        _load_tile(
+            prev_beauty, size, empty="no previous", label=prev_label,
+        ),
+        _load_tile(corner, size, empty="no detail", label=corner_label),
     ]
     sheet = Image.new("RGB", (size[0] * 2, size[1] * 2), (0, 0, 0))
     for index, tile in enumerate(tiles):
@@ -142,16 +155,28 @@ def _load_tile(
     path: Path | None,
     size: tuple[int, int],
     empty: str = "missing",
+    label: str = "",
 ) -> Image.Image:
     if path is not None and path.is_file():
         img = Image.open(path).convert("RGB")
         if img.size != size:
             img = img.resize(size)
-        return img
-    tile = Image.new("RGB", size, (36, 36, 36))
+    else:
+        img = Image.new("RGB", size, (36, 36, 36))
+        draw = ImageDraw.Draw(img)
+        draw.text((12, max(size[1] // 2 - 6, 8)), empty, fill=(200, 200, 200))
+    if label:
+        _caption(img, label)
+    return img
+
+
+def _caption(tile: Image.Image, label: str) -> None:
+    """Stamp a small top-left caption bar so tiles are self-labeling
+    (e.g. "previous" is never mistaken for "current")."""
+    bar_h = min(14, max(tile.height // 4, 8))
     draw = ImageDraw.Draw(tile)
-    draw.text((12, max(size[1] // 2 - 6, 8)), empty, fill=(200, 200, 200))
-    return tile
+    draw.rectangle((0, 0, tile.width, bar_h), fill=(0, 0, 0))
+    draw.text((3, 1), label, fill=(255, 255, 255))
 
 
 def reference_iou(job: AssetJob) -> float | None:

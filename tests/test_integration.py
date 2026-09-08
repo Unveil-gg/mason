@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -131,6 +132,46 @@ def test_krita_panel(project: Path, monkeypatch) -> None:
     assert result.exit_code == 0, result.stdout + result.stderr
     preview = project / ".mason" / "jobs" / "panel" / "previews" / "full.png"
     assert preview.is_file()
+
+
+@pytest.mark.integration
+def test_krita_build_json_slims_layer_names_by_default(
+    project: Path, monkeypatch,
+) -> None:
+    """A dapple/speckle stamp expands into dozens of grain layers;
+    --json should hide that array unless --full is passed."""
+    tools = _tools()
+    info = tools["krita"]
+    if not info.available or not (info.extras or {}).get("kritarunner"):
+        pytest.skip("Krita/kritarunner not installed")
+    spec = {
+        "type": "layered_raster",
+        "id": "panel_grain",
+        "name": "Panel Grain",
+        "dimensions": {"width": 64, "height": 64},
+        "layers": [
+            {"name": "background", "fill": "cream"},
+            {"name": "grain", "role": "overlay", "fill": "accent",
+             "stamp": "dapple",
+             "rect": {"x": 0, "y": 0, "width": 64, "height": 64}},
+        ],
+    }
+    path = project / "panel_grain.yaml"
+    path.write_text(yaml.safe_dump(spec), encoding="utf-8")
+    monkeypatch.chdir(project)
+
+    slim = runner.invoke(app, ["build", str(path), "--json"])
+    assert slim.exit_code == 0, slim.stdout + slim.stderr
+    slim_data = json.loads(slim.stdout)
+    assert "layer_names" not in slim_data["validation"]
+    assert slim_data["validation"]["passed"] is True
+
+    full = runner.invoke(
+        app, ["rebuild", "panel_grain", "--json", "--full"],
+    )
+    assert full.exit_code == 0, full.stdout + full.stderr
+    full_data = json.loads(full.stdout)
+    assert "layer_names" in full_data["validation"]
 
 
 @pytest.mark.integration

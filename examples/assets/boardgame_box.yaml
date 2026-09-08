@@ -24,25 +24,23 @@ materials:
 
 decals:
   - name: top_art
-    image: {asset: boardgame_box_top, file: output/asset.png}
-    location: [0, 0, 0.0765]
-    rotation: [0, 0, 0]
-    size: [0.3, 0.3]
+    image: {asset: harvest_hollow_ai_top, file: output/asset.png}
+    face: top
   - name: bottom_art
     image: {asset: boardgame_box_bottom, file: output/asset.png}
-    location: [0, 0, -0.0015]
-    rotation: [3.14159, 0, 0]
-    size: [0.3, 0.3]
+    face: bottom
   - name: front_info
     image: {asset: boardgame_box_side_info, file: output/asset.png}
-    location: [0, -0.1515, 0.0375]
-    rotation: [1.5708, 0, 0]
-    size: [0.3, 0.075]
+    face: front
   - name: back_promo
     image: {asset: boardgame_box_side_promo, file: output/asset.png}
-    location: [0, 0.1515, 0.0375]
-    rotation: [-1.5708, 0, 0]
-    size: [0.3, 0.075]
+    face: back
+  - name: right_promo
+    image: {asset: boardgame_box_side_promo, file: output/asset.png}
+    face: right
+  - name: left_promo
+    image: {asset: boardgame_box_side_promo, file: output/asset.png}
+    face: left
 
 art_direction:
   subject: standard square Euro board game box, farming and trade theme

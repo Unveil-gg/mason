@@ -71,12 +71,24 @@ def vocab_payload() -> dict[str, Any]:
             "silhouette only for readability. "
             "silhouette_regressed is advisory, not a ship blocker. "
             "history --summary for iteration diffs. "
-            "mason style <name> --json for slim palette."
+            "mason style <name> --json for slim palette. "
+            "build/rebuild/preview --json validation is slim by "
+            "default (drops bulky arrays like layer_names); pass "
+            "--full for the complete metrics."
         ),
         "snap": (
             "part.snap {to, on: top|bottom|front|back|left|right, "
             "embed} meets a named face. embed pushes into the "
             "target so sloped roofs get a through-joint."
+        ),
+        "decal_face": (
+            "decal.face: top|bottom|front|back|left|right derives "
+            "location/rotation/size from the spec's own dimensions "
+            "(no hand-rotated Euler triples, no axis-swap risk). "
+            "top/front/right read the image unmirrored; back/left "
+            "mirror horizontally, bottom mirrors vertically -- "
+            "unavoidable once viewed from that side. Omit face to "
+            "place a decal manually with location+rotation+size."
         ),
         "decimate": (
             "geometry.decimate is an optional keep-ratio "

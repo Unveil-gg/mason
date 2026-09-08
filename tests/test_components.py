@@ -86,6 +86,96 @@ def test_decal_becomes_textured_plane() -> None:
     assert label.texture is not None
 
 
+def _box_with_decal(face: str) -> list[PropPart]:
+    spec = parse_asset_spec({
+        "type": "static_prop",
+        "id": "box",
+        "name": "Box",
+        "dimensions": {"width": 0.3, "depth": 0.3, "height": 0.075},
+        "geometry": {
+            "parts": [{
+                "name": "body",
+                "size": [0.3, 0.3, 0.075],
+                "location": [0, 0, 0.0375],
+            }],
+        },
+        "decals": [{
+            "name": "label",
+            "image": {"path": "examples/ref/x.png"},
+            "face": face,
+        }],
+    })
+    return resolved_parts(spec)
+
+
+def test_decal_face_top_derives_placement() -> None:
+    label = next(p for p in _box_with_decal("top") if p.name == "label")
+    assert label.rotation == (0.0, 0.0, 0.0)
+    assert label.size[:2] == (0.3, 0.3)
+    assert label.location[2] > 0.075
+
+
+def test_decal_face_right_keeps_full_size_unswapped() -> None:
+    # Regression: a naive rotation-about-Y for the right/left faces
+    # swaps which world axis gets the width vs. height extent
+    # (create_plane's local X/Y map to world Z/Y under a Y rotation).
+    # `face: right` must resolve to (depth, height), not (width,
+    # height), so the plane's world footprint is not oversized.
+    label = next(p for p in _box_with_decal("right") if p.name == "label")
+    assert label.size[:2] == (0.3, 0.075)
+    assert label.location[0] > 0.15
+
+
+def test_decal_face_left_mirrors_x() -> None:
+    right = next(p for p in _box_with_decal("right") if p.name == "label")
+    left = next(p for p in _box_with_decal("left") if p.name == "label")
+    assert left.location[0] == -right.location[0]
+    assert left.rotation[2] == -right.rotation[2]
+
+
+def test_decal_face_exclusive_with_manual_fields() -> None:
+    with pytest.raises(Exception, match="exclusive"):
+        parse_asset_spec({
+            "type": "static_prop",
+            "id": "box",
+            "name": "Box",
+            "dimensions": {"width": 1, "depth": 1, "height": 1},
+            "geometry": {
+                "parts": [{
+                    "name": "body", "size": [1, 1, 1],
+                    "location": [0, 0, 0.5],
+                }],
+            },
+            "decals": [{
+                "name": "label",
+                "image": {"path": "examples/ref/x.png"},
+                "face": "top",
+                "location": [0, 0, 1],
+                "size": [0.4, 0.2],
+            }],
+        })
+
+
+def test_decal_needs_face_or_manual_fields() -> None:
+    with pytest.raises(Exception, match="face"):
+        parse_asset_spec({
+            "type": "static_prop",
+            "id": "box",
+            "name": "Box",
+            "dimensions": {"width": 1, "depth": 1, "height": 1},
+            "geometry": {
+                "parts": [{
+                    "name": "body", "size": [1, 1, 1],
+                    "location": [0, 0, 0.5],
+                }],
+            },
+            "decals": [{
+                "name": "label",
+                "image": {"path": "examples/ref/x.png"},
+            }],
+        })
+
+
 def test_x_brace_two_diagonals() -> None:
     parts = expand_components([
         PropPart(

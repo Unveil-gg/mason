@@ -6,6 +6,14 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+# Metrics cheap enough to always show. Bulky per-item arrays (e.g.
+# a layered_raster's layer_names, a static_prop's object_bounds) are
+# dropped by default -- see slim_validation and mason.core.inspect.
+SLIM_METRICS_KEYS = (
+    "triangles", "materials", "mesh_count", "bounds", "width",
+    "height", "layers",
+)
+
 
 class ExecutionResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -69,6 +77,20 @@ class ExportResult(BaseModel):
     engine: str
     installed: dict[str, str] = Field(default_factory=dict)
     manifest: str | None = None
+
+
+def slim_validation(validation: dict[str, Any]) -> dict[str, Any]:
+    """Filter a BuildResult.validation dict down to failed_checks
+    plus a few cheap metrics, for default (non --full) --json
+    output. Mirrors mason.core.inspect's slimming of ValidationReport."""
+    return {
+        "passed": validation.get("passed"),
+        "failed_checks": validation.get("failed_checks", []),
+        **{
+            key: validation[key]
+            for key in SLIM_METRICS_KEYS if key in validation
+        },
+    }
 
 
 class KitExportResult(BaseModel):

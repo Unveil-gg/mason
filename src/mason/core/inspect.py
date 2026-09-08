@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from mason.core.jobs import AssetJob
+from mason.core.results import SLIM_METRICS_KEYS
 from mason.core.styles import QualityGuidance, StyleProfile, load_style
 from mason.core.preview_roles import preview_roles_for
 from mason.pipelines.compare import reference_iou, silhouette_regressed
@@ -100,16 +101,15 @@ def _slim_validation(report) -> dict[str, Any] | None:
         return None
     metrics = dict(report.metrics)
     metrics.pop("objects", None)
-    keep = (
-        "triangles", "materials", "mesh_count", "bounds",
-        "width", "height", "layers",
-    )
     return {
         "passed": report.passed,
         "failed_checks": [
             c.name for c in report.checks if not c.passed
         ],
-        **{key: metrics[key] for key in keep if key in metrics},
+        **{
+            key: metrics[key]
+            for key in SLIM_METRICS_KEYS if key in metrics
+        },
     }
 
 
