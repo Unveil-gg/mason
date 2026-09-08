@@ -33,6 +33,9 @@ def test_spec_with_art_loop_roundtrip(tmp_path: Path) -> None:
             "forms": {"primary": ["seat", "back", "legs"]},
         },
         "construction_plan": {
+            "techniques": [
+                {"kind": "box", "purpose": "seat", "applies_to": "primary"},
+            ],
             "primary_forms": [
                 {"type": "beveled_box", "purpose": "seat"},
             ],
@@ -42,6 +45,7 @@ def test_spec_with_art_loop_roundtrip(tmp_path: Path) -> None:
     })
     assert spec.art_direction.subject == "wooden chair"
     assert spec.construction_plan.notes == ["taper legs"]
+    assert spec.construction_plan.techniques[0].kind == "box"
     assert spec.depends_on == ["plank_texture"]
     dest = tmp_path / "chair.yaml"
     dump_asset_spec(spec, dest)
@@ -88,6 +92,8 @@ def test_visual_evaluation_scores() -> None:
     assert evaluation.scores.secondary_forms == 4
     assert evaluation.issues[0].severity == "high"
     assert evaluation.scores.overall_visual_quality is None
+    assert evaluation.scores.continuity is None
+    assert evaluation.scores.form_conviction is None
 
 
 def test_visual_evaluation_beauty_scores() -> None:
@@ -108,6 +114,7 @@ def test_visual_evaluation_beauty_scores() -> None:
     })
     assert evaluation.scores.overall_visual_quality == 7
     assert evaluation.scores.silhouette is None
+    assert evaluation.scores.form_conviction is None
 
 
 def test_construction_plan_empty() -> None:

@@ -7,11 +7,11 @@ art_direction:
   usage:
     importance: hero
     viewing_distance: close
-  silhouette: weighted turned base, rising stem, horse head in profile
+  silhouette: weighted turned base, S-curve neck, horse head in profile
   forms:
-    primary: []
-    secondary: []
-    tertiary: []
+    primary: [turned socle, stem, arched neck, horse head]
+    secondary: [muzzle, jaw, ears, mane crest]
+    tertiary: [eyes]
   materials: []
   detail_density: high
   references:
@@ -21,23 +21,27 @@ art_direction:
     purpose: color
   constraints: []
 construction_plan:
+  techniques:
+  - kind: lathe
+    purpose: turned socle and stem
+    applies_to: base
+  - kind: skin
+    purpose: neck, skull, muzzle, jaw, ears
+    applies_to: upper
+  - kind: remesh
+    purpose: continuous carved surface
+    applies_to: head
   primary_forms:
   - type: lathe
     purpose: turned onyx socle
   - type: lathe
     purpose: turned mahogany stem
-  - type: lathe
-    purpose: neck blank
+  - type: skin
+    purpose: organic neck and head volume
   secondary_forms:
-  - type: bend
-    purpose: forward lean on the neck
-  - type: sphere
-    purpose: skull
-  - type: cone
-    purpose: ears
+  - type: remesh
+    purpose: join upper into one carved form
   tertiary_details:
-  - type: tapered_box
-    purpose: jaw and snout
   - type: sphere
     purpose: eyes
   materials:
@@ -45,7 +49,7 @@ construction_plan:
   - plastic
   notes:
   - Face toward -Y so the front preview reads in profile
-  - lathe/bend are general ops; the knight is a stress test
+  - lathe/skin/remesh are general ops; the knight is a stress test
   - plastic stands in for polished mahogany
 art_analysis:
   shape_language:
@@ -81,6 +85,15 @@ geometry:
   bevel: true
   bevel_width: 0.0006
   bevel_segments: 2
+  bodies:
+  - name: head
+    members: [upper]
+    method: remesh
+    remesh:
+      voxel_size: 0.0016
+      adaptivity: 0.0
+    smooth: 1
+    subdivide: 0
   parts:
   - name: socle
     shape: lathe
@@ -108,71 +121,52 @@ geometry:
     - [0.0135, 0.052]
     - [0.012, 0.056]
     - [0.013, 0.058]
-  - name: neck
-    shape: lathe
-    location: [0.0, 0.0, 0.074]
+  - name: upper
+    shape: skin
+    location: [0.0, 0.0, 0.057]
     material: wood_dark
     family: plastic
-    profile:
-    - [0.010, 0.0]
-    - [0.0095, 0.010]
-    - [0.011, 0.018]
-    - [0.0085, 0.026]
-    - [0.007, 0.032]
-    bend:
-      axis: x
-      angle: 0.7
-      origin: base
-  - name: skull
-    shape: sphere
-    size: [0.024, 0.028, 0.022]
-    location: [0.0, -0.016, 0.094]
-    material: wood_dark
-    family: plastic
-    parent: neck
-  - name: jaw
-    shape: tapered_box
-    size: [0.014, 0.024, 0.011]
-    location: [0.0, -0.030, 0.086]
-    rotation: [0.2, 0.0, 0.0]
-    material: wood_dark
-    family: plastic
-    taper: [0.62, 0.78]
-    parent: neck
-  - name: snout
-    shape: tapered_box
-    size: [0.011, 0.020, 0.009]
-    location: [0.0, -0.044, 0.088]
-    rotation: [0.18, 0.0, 0.0]
-    material: wood_dark
-    family: plastic
-    taper: [0.48, 0.68]
-    parent: neck
-  - name: ear
-    shape: cone
-    size: [0.009, 0.006, 0.016]
-    location: [-0.009, -0.008, 0.108]
-    rotation: [0.25, 0.0, 0.5]
-    material: wood_dark
-    family: plastic
-    mirror: x
-    parent: neck
-  - name: mane
-    shape: box
-    size: [0.006, 0.016, 0.018]
-    location: [0.0, 0.002, 0.096]
-    rotation: [0.45, 0.0, 0.0]
-    material: cream
-    family: plastic
-    parent: neck
+    skin:
+      subdivide: 2
+      smooth: true
+      nodes:
+      - {id: neck_base, at: [0.0, 0.0, 0.0], radius: 0.014}
+      - {id: neck, at: [0.0, -0.005, 0.008], radius: 0.011}
+      - {id: neck_arch, at: [0.0, -0.014, 0.016], radius: 0.0105}
+      - {id: withers, at: [0.0, -0.010, 0.024], radius: 0.007}
+      - {id: poll, at: [0.0, -0.016, 0.032], radius: 0.008}
+      - {id: skull, at: [0.0, -0.022, 0.022], radius: 0.011}
+      - {id: cheek_l, at: [-0.007, -0.026, 0.024], radius: 0.006}
+      - {id: cheek_r, at: [0.007, -0.026, 0.024], radius: 0.006}
+      - {id: muzzle, at: [0.0, -0.038, 0.024], radius: 0.006}
+      - {id: nose, at: [0.0, -0.050, 0.020], radius: 0.0045}
+      - {id: jaw, at: [0.0, -0.028, 0.016], radius: 0.007}
+      - {id: chin, at: [0.0, -0.042, 0.015], radius: 0.0045}
+      - {id: ear_l, at: [-0.007, -0.012, 0.044], radius: 0.0038}
+      - {id: ear_r, at: [0.007, -0.012, 0.044], radius: 0.0038}
+      edges:
+      - [neck_base, neck]
+      - [neck, neck_arch]
+      - [neck_arch, withers]
+      - [withers, poll]
+      - [neck_arch, skull]
+      - [skull, muzzle]
+      - [muzzle, nose]
+      - [skull, jaw]
+      - [jaw, chin]
+      - [muzzle, chin]
+      - [skull, cheek_l]
+      - [skull, cheek_r]
+      - [poll, ear_l]
+      - [poll, ear_r]
   - name: eye
     shape: sphere
-    size: [0.0045, 0.0035, 0.0035]
-    location: [-0.008, -0.026, 0.094]
+    size: [0.004, 0.0032, 0.0032]
+    location: [-0.008, -0.028, 0.081]
     material: charcoal
     family: bare_metal
     mirror: x
-    parent: neck
+    parent: upper
 materials:
   strategy: family
   primary: wood_dark

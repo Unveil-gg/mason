@@ -82,11 +82,25 @@ class PlanForm(BaseModel):
     notes: str | None = None
 
 
+class PlanTechnique(BaseModel):
+    """Chosen modeling technique. Intent only, not compiled."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    kind: Literal[
+        "lathe", "box", "curve", "outline", "skin",
+        "modular", "remesh", "refine", "sculpt",
+    ]
+    purpose: str = ""
+    applies_to: str = ""
+
+
 class ConstructionPlan(BaseModel):
     """Intent for primary / secondary / tertiary construction."""
 
     model_config = ConfigDict(extra="forbid")
 
+    techniques: list[PlanTechnique] = Field(default_factory=list)
     primary_forms: list[PlanForm] = Field(default_factory=list)
     secondary_forms: list[PlanForm] = Field(default_factory=list)
     tertiary_details: list[PlanForm] = Field(default_factory=list)
@@ -223,6 +237,8 @@ class EvalScores(BaseModel):
     visual_hierarchy: int = Field(ge=1, le=10)
     style_consistency: int = Field(ge=1, le=10)
     game_readability: int = Field(ge=1, le=10)
+    continuity: int | None = Field(default=None, ge=1, le=10)
+    form_conviction: int | None = Field(default=None, ge=1, le=10)
 
 
 class EvalIssue(BaseModel):

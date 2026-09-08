@@ -10,6 +10,11 @@ from mason.generators.krita.stamps import STAMPS
 SHAPES = (
     "box", "cylinder", "plane", "cone", "torus",
     "tapered_box", "sphere", "lathe",
+    "curve", "skin", "outline",
+)
+TECHNIQUES = (
+    "lathe", "box", "curve", "outline", "skin",
+    "modular", "remesh", "refine", "sculpt",
 )
 RECIPES = (
     "crate", "shelf", "table", "hydrant", "cart",
@@ -27,6 +32,7 @@ def vocab_payload() -> dict[str, Any]:
     """Return the agent vocabulary card."""
     return {
         "shapes": list(SHAPES),
+        "techniques": list(TECHNIQUES),
         "components": sorted(COMPONENTS),
         "recipes": list(RECIPES),
         "layer_roles": list(LAYER_ROLES),
@@ -78,11 +84,58 @@ def vocab_payload() -> dict[str, Any]:
             "Inspect beauty first, clay for modeling, "
             "silhouette only for readability. "
             "silhouette_regressed is advisory, not a ship blocker. "
-            "history --summary for iteration diffs. "
-            "mason style <name> --json for slim palette. "
+            "Recognition is not ship: clay must read as the "
+            "intended form, not primitives stuck together. "
+            "Score continuity and form_conviction for organic "
+            "work. Issue categories: continuity, "
+            "primitive_assembly, intersection, transition, "
+            "defining_features. history --summary for iteration "
+            "diffs. mason style <name> --json for slim palette. "
             "build/rebuild/preview --json validation is slim by "
             "default (drops bulky arrays like layer_names); pass "
             "--full for the complete metrics."
+        ),
+        "modeling": (
+            "Before writing parts, pick hybrid techniques from "
+            "the object's geometry and record them on "
+            "construction_plan.techniques. Rotational symmetry "
+            "-> lathe. Hard-surface boxes -> box. Path (pipe, "
+            "cable, neck) -> curve. 2D blade/ornament -> "
+            "outline. Branching volume (limb, tree, creature) "
+            "-> skin. Overlapping volumes that must become one "
+            "surface -> geometry.bodies remesh. Modular repeats "
+            "-> array/component. Recognition is not ship."
+        ),
+        "curve": (
+            "shape: curve + curve.points [{at, radius, "
+            "handle_left, handle_right}] is a Bezier path "
+            "local to location. bevel_depth, taper (end scale), "
+            "fill full|half|none, bevel_profile [[x, y]]. "
+            "Converted to mesh. helper: true keeps the path "
+            "for part.follow without exporting it."
+        ),
+        "skin": (
+            "shape: skin + skin.nodes [{id, at, radius}] and "
+            "edges [[a, b]] is a sparse skeleton. Skin "
+            "modifier, then optional subdivide/smooth. Node "
+            "ids become vertex groups. Branching necks, "
+            "limbs, handles, trees -- not a subject recipe."
+        ),
+        "outline": (
+            "shape: outline + outline.points [[x, z], ...] "
+            "and depth extrudes a closed XZ silhouette along "
+            "Y (blades, plaques, ornaments). Not lathe profile."
+        ),
+        "follow": (
+            "part.follow {curve, stretch} deforms this mesh "
+            "along a named curve part (hose, ribbon, wrap)."
+        ),
+        "bodies": (
+            "geometry.bodies: [{name, members, method: "
+            "union|remesh, remesh: {voxel_size, adaptivity}, "
+            "smooth, subdivide}] joins overlapping parts into "
+            "one continuous surface and discards members. "
+            "Keep hard-surface or other-material parts out."
         ),
         "lathe": (
             "shape: lathe + profile: [[radius, z], ...] revolves "

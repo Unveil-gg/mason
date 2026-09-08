@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from mason.core.forms import BodySpec, member_to_body
 from mason.core.parts import PropPart
 from mason.errors import MasonError
 
@@ -105,16 +106,21 @@ def parents_touch_bounds(
     parts: list[PropPart],
     object_bounds: dict,
     tol: float = 0.05,
+    bodies: list[BodySpec] | None = None,
 ) -> tuple[bool, str]:
     """Whether each parented part meets its parent AABB. Returns
-    (ok, detail)."""
+    (ok, detail). Consumed body members are skipped."""
     details: list[str] = []
     ok = True
+    body_of = member_to_body([p.name for p in parts], bodies or [])
     for part in parts:
-        if not part.parent or part.cutout:
+        if not part.parent or part.cutout or part.helper:
             continue
+        if part.name in body_of:
+            continue
+        parent_name = body_of.get(part.parent, part.parent)
         child = _bounds_named(object_bounds, part.name)
-        parent = _bounds_named(object_bounds, part.parent)
+        parent = _bounds_named(object_bounds, parent_name)
         if child is None or parent is None:
             ok = False
             details.append(f"{part.name}->{part.parent}")

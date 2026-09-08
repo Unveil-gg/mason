@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from mason.core.forms import BodySpec
 from mason.core.parts import PartCutout, PartSnap, PropPart
 from mason.generators.blender.snap import (
     apply_snaps,
@@ -86,6 +87,21 @@ def test_parents_touch_skips_cutout() -> None:
     ok, detail = parents_touch_bounds(
         [cutter],
         {"wall": {"min": [0, 0, 0], "max": [1, 1, 1]}},
+    )
+    assert ok, detail
+
+
+def test_parents_touch_skips_body_members() -> None:
+    neck = PropPart(
+        name="neck",
+        size=(0.2, 0.2, 0.2),
+        location=(0.0, 0.0, 0.5),
+        parent="stem",
+    )
+    ok, detail = parents_touch_bounds(
+        [neck],
+        {"head": {"min": [0, 0, 0], "max": [1, 1, 1]}},
+        bodies=[BodySpec(name="head", members=["neck"])],
     )
     assert ok, detail
 

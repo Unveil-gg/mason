@@ -106,6 +106,7 @@ def validate_static_prop(
         parent_ok, parent_detail = parents_touch_bounds(
             spec.geometry.parts,
             data["object_bounds"],
+            bodies=spec.geometry.bodies,
         )
     touch_ok = snap_ok and parent_ok
     if not snap_ok:

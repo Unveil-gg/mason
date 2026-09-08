@@ -67,6 +67,11 @@ def test_vocab_json() -> None:
     assert "shopping_cart.yaml" in data["variants"]
     assert "--demo-lighting" in data["demo_lighting"]
     assert "lathe" in data["shapes"]
+    assert "curve" in data["shapes"]
+    assert "skin" in data["shapes"]
+    assert "outline" in data["shapes"]
+    assert "modeling" in data
+    assert "construction_plan.techniques" in data["modeling"]
     assert "profile:" in data["lathe"]
     assert "origin: center|base" in data["bend"]
     assert "--fetch" in data["ingest"]

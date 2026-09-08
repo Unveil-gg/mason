@@ -160,6 +160,16 @@ def create_primitive(part):
             part.get("profile") or [],
             int(part.get("segments") or 24),
         )
+    if shape == "curve":
+        return create_curve(
+            *args,
+            part.get("curve") or {},
+            bool(part.get("helper")),
+        )
+    if shape == "skin":
+        return create_skin(*args, part.get("skin") or {})
+    if shape == "outline":
+        return create_outline(*args, part.get("outline") or {})
     return create_box(*args)
 
 

@@ -6,6 +6,15 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from mason.core.forms import (
+    BodySpec,
+    PartCurve,
+    PartFollow,
+    PartOutline,
+    PartSkin,
+    finalize_form_part,
+)
+
 
 class ImageSource(BaseModel):
     """A reference to a PNG: either a literal project path, or another
@@ -138,6 +147,7 @@ class PropPart(BaseModel):
     shape: Literal[
         "box", "cylinder", "plane", "cone", "torus",
         "tapered_box", "sphere", "lathe",
+        "curve", "skin", "outline",
     ] = "box"
     size: tuple[float, float, float] | None = None
     location: tuple[float, float, float]
@@ -149,6 +159,11 @@ class PropPart(BaseModel):
     profile: list[tuple[float, float]] | None = None
     segments: int = Field(default=24, ge=8, le=64)
     bend: PartBend | None = None
+    curve: PartCurve | None = None
+    skin: PartSkin | None = None
+    outline: PartOutline | None = None
+    follow: PartFollow | None = None
+    helper: bool = False
     texture: ImageSource | None = None
     bevel: bool | None = None
     parent: str | None = None
@@ -165,6 +180,8 @@ class PropPart(BaseModel):
 
     @model_validator(mode="after")
     def size_or_lathe(self) -> PropPart:
+        if finalize_form_part(self):
+            return self
         if self.profile is not None and self.shape != "lathe":
             raise ValueError("profile is only valid on shape: lathe")
         if self.shape == "lathe":
@@ -226,6 +243,7 @@ class GeometrySpec(BaseModel):
     ] | None = None
     recipe_params: RecipeParams = Field(default_factory=RecipeParams)
     parts: list[PropPart] = Field(default_factory=list)
+    bodies: list[BodySpec] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def require_parts_or_recipe(self) -> GeometrySpec:

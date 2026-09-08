@@ -18,7 +18,9 @@ Separate creator and critic even if you are one model.
 3. Run `mason vocab --json` and read the style profile.
 4. If references exist, inspect them and write `art_analysis`.
 5. Write `art_direction` (forms, usage, silhouette, materials).
-6. Write `construction_plan` as intent, not executable geometry.
+6. Choose hybrid techniques (lathe/box/curve/outline/skin/remesh)
+   and record them on construction_plan.techniques. Intent only.
+   Recognition is not ship.
 7. Create or modify the AssetSpec YAML.
 8. Run `mason build <spec> --json`.
 9. Check technical validation. Do not ignore failures.
@@ -28,6 +30,7 @@ Separate creator and critic even if you are one model.
     readability is questionable.
 13. Critically evaluate the beauty render: overall quality,
     materials, secondary forms, style, game readability.
+    For organic work also score continuity and form_conviction.
 14. Record the critique with `mason evaluate <id> <evaluation.json>`.
 15. If it should not ship, revise and rebuild. Use `mason history`.
 16. Repeat until validation passes and evaluation `ship` is true.

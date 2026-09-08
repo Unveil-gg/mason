@@ -32,7 +32,10 @@ previews in a fresh pass and looks for reasons not to ship.
    from there. Ingest does not compile a mesh.
 5. Write `art_direction`: subject, usage, silhouette goal, primary /
    secondary / tertiary forms, material families, detail density.
-6. Write `construction_plan` as intent (not compiled into meshes).
+6. Choose hybrid modeling techniques from the object's geometry
+   (lathe, box, curve, outline, skin, remesh, modular). Record them
+   on `construction_plan.techniques`. ConstructionPlan is intent,
+   not compiled into meshes. Recognition is not ship.
 7. Create or modify the AssetSpec (`geometry.parts`, `recipe`, or
    `component`).
 8. Run `mason build <spec> --json`. Each run writes `run.json`
@@ -48,15 +51,21 @@ previews in a fresh pass and looks for reasons not to ship.
     - Are materials convincing?
     - Are secondary forms present?
     - Is the detail level appropriate?
+    - Is the form convincing, or merely recognizable?
 11. Inspect `clay_three_quarter.png` if geometry needs review
-    (proportions, bevels, intersections, shape language).
+    (proportions, bevels, intersections, continuity, shape
+    language). Required for organic / semi-organic assets.
 12. Inspect `front` / `side` / `top` for structural problems.
 13. Inspect silhouettes only if readability, identity, or
     negative space is questionable. Do not ship or fail
     primarily on silhouette. `silhouette_regressed` is advisory.
 14. Record the critique: `mason evaluate <id> <evaluation.json>`.
     Score the beauty render (`overall_visual_quality`). Treat
-    `silhouette` as optional. Identify reasons not to ship.
+    `silhouette` as optional. For organic work, score
+    `continuity` and `form_conviction`. Recognition alone is
+    not success. Identify reasons not to ship
+    (`primitive_assembly`, `continuity`, `intersection`,
+    `transition`, `defining_features`).
 15. If `ship` is false, modify spec/plan/source and rebuild.
     Compare `iterations/NNN` via `mason history <id> --json --summary`.
 16. Repeat until validation passes, the beauty render looks
@@ -103,19 +112,23 @@ Important rules:
 Asset types:
 
 - `static_prop` — Blender parts (`box`, `cylinder`, `plane`, `cone`,
-  `torus`, `tapered_box`, `sphere`, `lathe`) with optional `parent`,
-  `snap` (`{to, on, embed}`), `inset`, `array` (linear or `radial`),
-  `mirror`, `component`, `family`, `texture` (`{asset, file}`),
-  `profile` (`[[radius, z], ...]` on `lathe`, spun about +Z), and
-  `bend` (`{axis, angle, origin: center|base}`). Components:
-  bolt, hinge, handle, caster, bracket, trim, x_brace, rail,
-  wire_wall, rivet_strip, cornice. Recipes: crate, shelf, table,
-  hydrant, cart, house, tree, pool, estate. `cutout: {target}`
-  subtracts this part from another, then discards the cutter.
-  Textured planes are decals (stretch UV). `decals:` also expand
-  to planes. Family `albedo` is used when that PNG already exists.
-  `materials.strategy`: `family` (default), `palette` (one shared
-  swatch sheet), or `atlas` (`atlas` + `entry`).
+  `torus`, `tapered_box`, `sphere`, `lathe`, `curve`, `skin`,
+  `outline`) with optional `parent`, `snap` (`{to, on, embed}`),
+  `inset`, `array` (linear or `radial`), `mirror`, `component`,
+  `family`, `texture` (`{asset, file}`), `profile` (`[[radius, z],
+  ...]` on `lathe`, spun about +Z), `curve` (Bezier path + bevel),
+  `skin` (node/edge skeleton), `outline` (XZ silhouette + depth),
+  `follow` (`{curve, stretch}`), `helper` (deform path, not
+  exported), and `bend` (`{axis, angle, origin: center|base}`).
+  `geometry.bodies` unions/remeshes named members into one mesh.
+  Components: bolt, hinge, handle, caster, bracket, trim, x_brace,
+  rail, wire_wall, rivet_strip, cornice. Recipes: crate, shelf,
+  table, hydrant, cart, house, tree, pool, estate. `cutout:
+  {target}` subtracts this part from another, then discards the
+  cutter. Textured planes are decals (stretch UV). `decals:` also
+  expand to planes. Family `albedo` is used when that PNG already
+  exists. `materials.strategy`: `family` (default), `palette` (one
+  shared swatch sheet), or `atlas` (`atlas` + `entry`).
 - `layered_raster` — Krita layers: fill, text (`font`, `align`),
   `stamp` (`l_corner`, `gem`, `rule`, `bond`, `dapple`, `vignette`,
   `figure`, `speckle`), `shape` (`rect` / `ellipse`), `opacity`

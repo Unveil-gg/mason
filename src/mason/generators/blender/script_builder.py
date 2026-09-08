@@ -7,11 +7,14 @@ from pathlib import Path
 
 from mason.core.assets import PropPart, StaticPropSpec
 from mason.core.styles import StyleProfile
+from mason.generators.blender.bodies import CREATE_BODIES_SRC
+from mason.generators.blender.curves import CREATE_CURVE_SRC
 from mason.generators.blender.export import EXPORT_SRC
 from mason.generators.blender.lathe import CREATE_LATHE_SRC
 from mason.generators.blender.materials import CREATE_MATERIAL_SRC
 from mason.generators.blender.preview_scene import PREVIEW_SCENE_SRC
 from mason.generators.blender.primitives import CREATE_BOX_SRC
+from mason.generators.blender.skin import CREATE_SKIN_SRC
 
 
 def build_blender_script(
@@ -32,12 +35,7 @@ def build_blender_script(
     atlas_rect: list[float] | None = None,
     demo_lighting: bool = False,
 ) -> str:
-    """Return a self-contained Blender Python script.
-
-    part_textures: maps a part's `name` to a resolved PNG path (see
-    `resolve_part_textures`), for parts to use as an Image Texture
-    base color instead of a flat palette color.
-    """
+    """Return a self-contained Blender Python script."""
     palette = {part.material: style.color(part.material) for part in parts}
     # always include primary
     try:
@@ -75,6 +73,7 @@ def build_blender_script(
         "atlas_image": atlas_image or "",
         "atlas_rect": atlas_rect or [],
         "decimate": spec.geometry.decimate,
+        "bodies": [b.model_dump(mode="json") for b in spec.geometry.bodies],
         "parts": [p.model_dump(mode="json") for p in parts],
     }
     return (
@@ -99,6 +98,9 @@ CONFIG = json.loads(r\'\'\'
 _BODY = (
     CREATE_BOX_SRC
     + CREATE_LATHE_SRC
+    + CREATE_CURVE_SRC
+    + CREATE_SKIN_SRC
+    + CREATE_BODIES_SRC
     + CREATE_MATERIAL_SRC
     + EXPORT_SRC
     + PREVIEW_SCENE_SRC
@@ -115,6 +117,8 @@ def reset_scene():
         bpy.data.cameras.remove(cam)
     for light in list(bpy.data.lights):
         bpy.data.lights.remove(light)
+    for curve in list(bpy.data.curves):
+        bpy.data.curves.remove(curve)
 
 
 def family_settings(part):
@@ -193,11 +197,14 @@ def build_geometry():
         )
 
     created = {}
+    organic = ("sphere", "lathe", "curve", "skin", "outline")
     for part in CONFIG["parts"]:
         obj = create_primitive(part)
-        if part.get("bend"):
+        if part.get("bend") and obj.type == "MESH":
             apply_bend(obj, part["bend"])
-        created[obj.name] = obj
+        created[part["name"]] = obj
+        if obj.type != "MESH":
+            continue
         is_plane = (part.get("shape") or "box") == "plane"
         tex_path = CONFIG["part_textures"].get(part["name"])
         if shared is not None:
@@ -213,7 +220,7 @@ def build_geometry():
             use_bevel = CONFIG["bevel"]
         if part.get("cutout") or part.get("family") == "lawn":
             use_bevel = False
-        if (part.get("shape") or "box") in ("sphere", "lathe"):
+        if (part.get("shape") or "box") in organic:
             use_bevel = False
         if use_bevel and not is_plane:
             apply_bevel(obj, CONFIG["bevel_width"], CONFIG["bevel_segments"])
@@ -233,24 +240,12 @@ def build_geometry():
             else:
                 unwrap_cube(obj, tile)
         elif tex_path and is_plane:
-            # A textured plane is a decal (label/sign face): fit the
-            # whole image to the one face instead of tiling it.
             unwrap_stretch(obj)
         elif tex_path:
             unwrap_world(obj, tile)
         else:
             unwrap_cube(obj, tile)
-    for part in CONFIG["parts"]:
-        parent_name = part.get("parent")
-        child = created.get(part["name"])
-        parent = created.get(parent_name) if parent_name else None
-        if child is not None and parent is not None:
-            world = child.matrix_world.copy()
-            child.parent = parent
-            child.matrix_parent_inverse = parent.matrix_world.inverted()
-            child.matrix_world = world
-    apply_cutouts(created)
-    apply_decimate(CONFIG.get("decimate"))
+    finish_geometry(created)
 
 
 def parse_mode():

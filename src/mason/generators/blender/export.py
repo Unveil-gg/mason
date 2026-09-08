@@ -2,11 +2,17 @@
 
 EXPORT_SRC = r'''
 def export_glb(path):
-    """Export the scene as a GLB file."""
+    """Export visible mesh objects as a GLB. Skip _mason_ helpers."""
+    bpy.ops.object.select_all(action="DESELECT")
+    for obj in bpy.data.objects:
+        if obj.type != "MESH" or obj.name.startswith("_mason_"):
+            continue
+        obj.hide_set(False)
+        obj.select_set(True)
     bpy.ops.export_scene.gltf(
         filepath=path,
         export_format="GLB",
-        use_selection=False,
+        use_selection=True,
     )
 
 
