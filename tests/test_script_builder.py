@@ -47,6 +47,8 @@ def test_blender_script_has_helpers(project: Path) -> None:
     assert "def unwrap_world" in script
     assert "def apply_decimate" in script
     assert "def apply_clay_override" in script
+    assert "0.74, 0.72, 0.68" in script
+    assert "0.08, 0.08, 0.09" in script
     assert "def create_textured_material" in script
     assert 'path + "@"' in script
 

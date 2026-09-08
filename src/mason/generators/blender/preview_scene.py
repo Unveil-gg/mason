@@ -210,16 +210,42 @@ def _render_view(preview_dir, name, center, loc, clip_end):
 
 
 def apply_clay_override():
-    """Neutral gray Principled on every non-studio mesh."""
+    """Neutral clay on every non-studio mesh, plus a darker studio
+    so the form does not disappear into a matching floor/world.
+    Beauty lights stay; they are dimmed so mid-gray clay does not
+    blow out to white on small props."""
+    set_world((0.16, 0.17, 0.19), 0.28)
+    plate = bpy.data.objects.get("_mason_ground")
+    if plate is not None:
+        plate.hide_render = True
+        if plate.data.materials:
+            pmat = plate.data.materials[0]
+            if pmat and pmat.use_nodes:
+                pbsdf = next(
+                    n for n in pmat.node_tree.nodes
+                    if n.type == "BSDF_PRINCIPLED"
+                )
+                pin = (
+                    pbsdf.inputs.get("Base Color")
+                    or pbsdf.inputs.get("Color")
+                )
+                pin.default_value = (0.08, 0.08, 0.09, 1.0)
+    for obj in bpy.data.objects:
+        if obj.type == "LIGHT" and hasattr(obj.data, "energy"):
+            obj.data.energy *= 0.1
     mat = bpy.data.materials.new(name="_mason_clay")
     mat.use_nodes = True
     bsdf = next(
         n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED"
     )
     color_in = bsdf.inputs.get("Base Color") or bsdf.inputs.get("Color")
-    color_in.default_value = (0.55, 0.55, 0.55, 1.0)
-    bsdf.inputs["Roughness"].default_value = 0.7
+    color_in.default_value = (0.74, 0.72, 0.68, 1.0)
+    bsdf.inputs["Roughness"].default_value = 0.95
     bsdf.inputs["Metallic"].default_value = 0.0
+    for spec_name in ("Specular IOR Level", "Specular"):
+        if spec_name in bsdf.inputs:
+            bsdf.inputs[spec_name].default_value = 0.0
+            break
     for obj in bpy.data.objects:
         if obj.type != "MESH" or obj.name.startswith("_mason_"):
             continue

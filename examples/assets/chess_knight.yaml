@@ -1,0 +1,460 @@
+art_direction:
+  subject: Staunton-style chess knight, carved horse head
+  style:
+    realism: 0.35
+    stylization: 0.65
+    shape_language: []
+  usage:
+    importance: hero
+    viewing_distance: close
+  silhouette: weighted onyx base, rising column, horse head in profile
+  forms:
+    primary: []
+    secondary: []
+    tertiary: []
+  materials: []
+  detail_density: high
+  references:
+  - path: examples/ref/staunton_knight.jpg
+    purpose: silhouette
+  - path: examples/ref/staunton_knight.jpg
+    purpose: color
+  constraints: []
+construction_plan:
+  primary_forms:
+  - type: cylinder
+    purpose: onyx socle
+  - type: tapered_box
+    purpose: mahogany column
+  - type: sphere
+    purpose: skull
+  secondary_forms:
+  - type: torus
+    purpose: rings
+  - type: cone
+    purpose: ears
+  - type: tapered_box
+    purpose: jaw and snout
+  tertiary_details:
+  - type: sphere
+    purpose: eyes
+  - type: box
+    purpose: mane
+  materials:
+  - bare_metal
+  - plastic
+  notes:
+  - Face points toward -Y so the front preview reads
+  - plastic stands in for polished mahogany; varnished_wood would stamp the plank
+    albedo at 1m tile
+art_analysis:
+  shape_language:
+    primary: ''
+    secondary: ''
+    edges: soft
+  proportions:
+    height_width_ratio: 1.7669632925472747
+    exaggerated_features: []
+  detail_density: medium
+  style:
+    realism: 0.35
+    stylization: 0.65
+    shape_language: []
+  materials: []
+  wear: 0.0
+  palette_distribution:
+    dominant: '#6A4A2A'
+    secondary: '#E3D2B7'
+    accent: '#9F7C4F'
+  source_size:
+    width: 1798
+    height: 3180
+  regions:
+  - x: 0
+    y: 0
+    width: 1797
+    height: 1757
+    hex: '#543921'
+  - x: 1089
+    y: 1153
+    width: 708
+    height: 1805
+    hex: '#7D5A32'
+  - x: 898
+    y: 0
+    width: 898
+    height: 1248
+    hex: '#251810'
+  - x: 382
+    y: 1129
+    width: 906
+    height: 1836
+    hex: '#D0BA98'
+  - x: 0
+    y: 485
+    width: 986
+    height: 874
+    hex: '#251810'
+  - x: 382
+    y: 1518
+    width: 652
+    height: 1407
+    hex: '#EFE2CC'
+type: static_prop
+id: chess_knight
+name: Knight Chess Piece
+dimensions:
+  width: 0.05
+  depth: 0.07
+  height: 0.1
+style: default
+geometry:
+  bevel: true
+  bevel_width: 0.0008
+  bevel_segments: 2
+  recipe_params:
+    board_thickness: 0.03
+    shelf_count: 4
+    side_panels: true
+    back_panel: false
+    leg_thickness: 0.06
+    body_radius: 0.11
+    body_height: 0.42
+    cap_count: 2
+    bolt_count: 6
+    flare: 0.18
+    basket_height: 0.42
+    handle_rise: 0.16
+    wing_width: 0.64
+    tree_height: 1.0
+    pool_width: 1.78
+    pool_depth: 1.02
+  parts:
+  - name: socle
+    shape: cylinder
+    size:
+    - 0.048
+    - 0.048
+    - 0.01
+    location:
+    - 0.0
+    - 0.0
+    - 0.005
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    material: charcoal
+    family: bare_metal
+    wear: 0.0
+    inset: 0.0
+    component_params: {}
+  - name: socle_lip
+    shape: torus
+    size:
+    - 0.05
+    - 0.05
+    - 0.006
+    location:
+    - 0.0
+    - 0.0
+    - 0.011
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    material: charcoal
+    family: bare_metal
+    wear: 0.0
+    inset: 0.0
+    component_params: {}
+  - name: plinth
+    shape: cylinder
+    size:
+    - 0.04
+    - 0.04
+    - 0.01
+    location:
+    - 0.0
+    - 0.0
+    - 0.018
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    material: wood_dark
+    family: plastic
+    wear: 0.0
+    inset: 0.0
+    component_params: {}
+  - name: waist
+    shape: torus
+    size:
+    - 0.04
+    - 0.04
+    - 0.008
+    location:
+    - 0.0
+    - 0.0
+    - 0.025
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    material: wood_dark
+    family: plastic
+    wear: 0.0
+    inset: 0.0
+    component_params: {}
+  - name: column
+    shape: tapered_box
+    size:
+    - 0.026
+    - 0.026
+    - 0.028
+    location:
+    - 0.0
+    - 0.0
+    - 0.042
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    material: wood_dark
+    family: plastic
+    wear: 0.0
+    taper:
+    - 0.78
+    - 0.78
+    inset: 0.0
+    component_params: {}
+  - name: collar
+    shape: torus
+    size:
+    - 0.03
+    - 0.03
+    - 0.008
+    location:
+    - 0.0
+    - 0.0
+    - 0.058
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    material: charcoal
+    family: bare_metal
+    wear: 0.0
+    inset: 0.0
+    component_params: {}
+  - name: neck
+    shape: cylinder
+    size:
+    - 0.02
+    - 0.022
+    - 0.022
+    location:
+    - 0.0
+    - -0.008
+    - 0.07
+    rotation:
+    - 0.55
+    - 0.0
+    - 0.0
+    material: wood_dark
+    family: plastic
+    wear: 0.0
+    inset: 0.0
+    component_params: {}
+  - name: skull
+    shape: sphere
+    size:
+    - 0.026
+    - 0.03
+    - 0.024
+    location:
+    - 0.0
+    - -0.016
+    - 0.086
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    material: wood_dark
+    family: plastic
+    wear: 0.0
+    inset: 0.0
+    component_params: {}
+  - name: jaw
+    shape: tapered_box
+    size:
+    - 0.016
+    - 0.026
+    - 0.012
+    location:
+    - 0.0
+    - -0.03
+    - 0.078
+    rotation:
+    - 0.25
+    - 0.0
+    - 0.0
+    material: wood_dark
+    family: plastic
+    wear: 0.0
+    taper:
+    - 0.65
+    - 0.8
+    inset: 0.0
+    component_params: {}
+  - name: snout
+    shape: tapered_box
+    size:
+    - 0.012
+    - 0.022
+    - 0.01
+    location:
+    - 0.0
+    - -0.044
+    - 0.08
+    rotation:
+    - 0.2
+    - 0.0
+    - 0.0
+    material: wood_dark
+    family: plastic
+    wear: 0.0
+    taper:
+    - 0.5
+    - 0.7
+    inset: 0.0
+    component_params: {}
+  - name: brow
+    shape: box
+    size:
+    - 0.02
+    - 0.012
+    - 0.008
+    location:
+    - 0.0
+    - -0.02
+    - 0.096
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    material: wood_dark
+    family: plastic
+    wear: 0.0
+    inset: 0.0
+    component_params: {}
+  - name: ear
+    shape: cone
+    size:
+    - 0.01
+    - 0.007
+    - 0.018
+    location:
+    - -0.01
+    - -0.01
+    - 0.104
+    rotation:
+    - 0.2
+    - 0.0
+    - 0.55
+    material: wood_dark
+    family: plastic
+    wear: 0.0
+    inset: 0.0
+    mirror: x
+    component_params: {}
+  - name: mane_crest
+    shape: box
+    size:
+    - 0.008
+    - 0.022
+    - 0.016
+    location:
+    - 0.0
+    - 0.0
+    - 0.09
+    rotation:
+    - 0.55
+    - 0.0
+    - 0.0
+    material: cream
+    family: plastic
+    wear: 0.0
+    inset: 0.0
+    component_params: {}
+  - name: mane_back
+    shape: box
+    size:
+    - 0.007
+    - 0.014
+    - 0.02
+    location:
+    - 0.0
+    - 0.01
+    - 0.078
+    rotation:
+    - 0.35
+    - 0.0
+    - 0.0
+    material: cream
+    family: plastic
+    wear: 0.0
+    inset: 0.0
+    component_params: {}
+  - name: eye
+    shape: sphere
+    size:
+    - 0.005
+    - 0.004
+    - 0.004
+    location:
+    - -0.009
+    - -0.026
+    - 0.088
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    material: charcoal
+    family: bare_metal
+    wear: 0.0
+    inset: 0.0
+    mirror: x
+    component_params: {}
+  - name: nostril
+    shape: cylinder
+    size:
+    - 0.0035
+    - 0.0025
+    - 0.003
+    location:
+    - -0.0035
+    - -0.052
+    - 0.078
+    rotation:
+    - 1.15
+    - 0.0
+    - 0.0
+    material: charcoal
+    family: bare_metal
+    wear: 0.0
+    inset: 0.0
+    mirror: x
+    component_params: {}
+materials:
+  strategy: family
+  primary: wood_dark
+  palette_overrides:
+    wood_dark: '#24100C'
+    charcoal: '#0B0A0C'
+    cream: '#3D2218'
+variants: []
+export:
+  format: glb
+  save_blend: true
+metadata: {}

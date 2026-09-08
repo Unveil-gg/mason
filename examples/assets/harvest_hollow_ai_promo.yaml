@@ -1,49 +1,17 @@
-type: layered_raster
+# Cover-crop the 16:9 generate to the box-side 4:1. A Krita file
+# layer keeps native aspect and letterboxes; ImageMagick cover
+# fills the face. No title overlay -- the lid already carries type.
+type: image_process
 id: harvest_hollow_ai_promo
 name: Harvest Hollow Promo Side
 
-dimensions:
-  width: 1024
-  height: 256
-
 style: harvest
 
-layers:
-  - name: background
-    role: background
-    fill: brass
-  - name: reference
-    role: image
-    image: examples/ref/harvest_hollow_ai_promo.png
-    rect: {x: 0, y: 0, width: 1024, height: 256}
-  - name: title_band
-    role: fill
-    fill: wood_dark
-    opacity: 0.55
-    rect: {x: 200, y: 88, width: 624, height: 80}
-  - name: title_text
-    role: text
-    text: Harvest Hollow
-    fill: cream
-    font_size: 44
-    align: center
-    rect: {x: 220, y: 96, width: 584, height: 64}
-  - name: frame_vignette
-    role: overlay
-    fill: wood_dark
-    stamp: vignette
-    rect: {x: 0, y: 0, width: 1024, height: 256}
+source:
+  path: examples/ref/harvest_hollow_ai_promo.png
 
-art_direction:
-  subject: board game box side wrap, valley promo with title chrome
-  usage:
-    importance: standard_prop
-    viewing_distance: close
-  detail_density: medium
-  references:
-    - path: examples/ref/harvest_hollow_ai_promo.png
-      purpose: color
-
-export:
-  kra: true
-  png: true
+operations:
+  - op: resize
+    width: 1024
+    height: 256
+    fit: cover
