@@ -35,8 +35,10 @@ Separate creator and critic even if you are one model.
 12. Inspect beauty three_quarter.png after the silhouette holds.
 13. Inspect clay_three_quarter.png if geometry needs review.
 14. Evaluate vs current_best (view_scores + silhouette_metrics
-    + compare verdict). Reject if a critical view or IoU
-    dropped. Newest is not best. Revert restores the GLB.
+    + compare verdict). Reject if identity, a critical view,
+    or IoU dropped, or represents_object is false.
+    Continuity cannot beat a worse silhouette. Newest is
+    not best. Revert restores the GLB.
     Restart a failing region; or try best-of-N.
     Do not advance stage while critical issues remain.
 15. Move named landmarks, record actions_taken, rebuild.

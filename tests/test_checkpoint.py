@@ -18,6 +18,7 @@ from mason.pipelines.checkpoint import (
     apply_checkpoint,
     critical_view_regressed,
     default_critical_views,
+    identity_regressed,
     restore_checkpoint,
 )
 from mason.pipelines.common import finish_result
@@ -45,16 +46,26 @@ def _eval(
     silhouette: int = 5,
     views: list[dict] | None = None,
     compare: dict | None = None,
+    target_identity: int | None = None,
+    primary_silhouette: int | None = None,
+    represents_object: bool | None = None,
 ) -> VisualEvaluation:
+    scores = _scores(silhouette=silhouette)
+    if target_identity is not None:
+        scores["target_identity"] = target_identity
+    if primary_silhouette is not None:
+        scores["primary_silhouette"] = primary_silhouette
     payload = {
         "passed": False,
         "ship": False,
-        "scores": _scores(silhouette=silhouette),
+        "scores": scores,
         "iteration": iteration,
         "view_scores": views or [],
     }
     if compare is not None:
         payload["compare"] = compare
+    if represents_object is not None:
+        payload["represents_object"] = represents_object
     return VisualEvaluation.model_validate(payload)
 
 
@@ -150,6 +161,43 @@ def test_critical_drop_overrides_accept(project: Path) -> None:
     assert "silhouette_side" in status["regressed_views"]
     assert "front is clearer" in status["reason"]
     assert job.load_meta().current_best == 1
+
+
+def test_identity_drop_rejects(project: Path) -> None:
+    job = _seed(project)
+    job.write_evaluation(_eval(1, target_identity=7, primary_silhouette=7))
+    job.set_current_best(1)
+    status = apply_checkpoint(job, _eval(
+        2,
+        target_identity=4,
+        primary_silhouette=7,
+        compare={"verdict": "try_again", "improves": ["watertight"]},
+    ))
+    assert status["accepted"] is False
+    assert status["verdict"] == "reject"
+    assert "target_identity" in status["regressed_views"]
+    assert job.load_meta().current_best == 1
+
+
+def test_not_the_object_rejects(project: Path) -> None:
+    job = _seed(project)
+    job.write_evaluation(_eval(1, target_identity=6))
+    job.set_current_best(1)
+    status = apply_checkpoint(job, _eval(
+        2,
+        target_identity=6,
+        represents_object=False,
+        compare={"verdict": "try_again", "improves": ["smooth join"]},
+    ))
+    assert status["verdict"] == "reject"
+    assert "does not represent the object" in status["reason"]
+    assert job.load_meta().current_best == 1
+
+
+def test_identity_regressed_helper() -> None:
+    best = _eval(1, target_identity=6, primary_silhouette=6)
+    worse = _eval(2, target_identity=4, primary_silhouette=6)
+    assert identity_regressed(worse, best) == ["target_identity"]
 
 
 def test_not_better_is_rejected(project: Path) -> None:

@@ -138,18 +138,20 @@ def vocab_payload() -> dict[str, Any]:
             "textures, and tiny details."
         ),
         "critique": (
-            "evaluate mode beauty|silhouette. Set "
-            "represents_object and represents_style "
-            "separately. Score view_scores [{view, score}] "
-            "and compare {best_iteration, improves, worsens, "
-            "verdict: accept|reject|try_again, reason}. "
+            "evaluate mode beauty|silhouette. "
+            "represents_object is false if it does not read "
+            "as the subject (horse/Staunton, not a blob). "
+            "that forces reject. Identity outranks "
+            "continuity: do not list a watertight join as "
+            "improves unless target_identity also rose. "
+            "A drop in target_identity or "
+            "primary_silhouette rejects. try_again only "
+            "when identity still holds and one landmark "
+            "is being moved. Score view_scores and compare "
+            "{verdict: accept|reject|try_again}. "
             "A better front cannot hide a worse critical "
-            "view. discrepancies: [{rank: critical|"
-            "major|minor, category, description, "
-            "geometric_intent, suggested_action, landmark}]. "
-            "actions_taken records what the next build "
-            "changed. acceptance_reason on ship. Intent "
-            "first, Blender op second."
+            "view. discrepancies rank critical|major|minor "
+            "and bind to a landmark part."
         ),
         "iteration": (
             "current_best is the only promoted snapshot. "
@@ -167,14 +169,12 @@ def vocab_payload() -> dict[str, Any]:
             "can be rebuilt with a different technique."
         ),
         "modeling": (
-            "Before writing parts, pick techniques and record "
-            "them on construction_plan.techniques. Block out "
-            "with primitives (box, sphere, cylinder, lathe). "
-            "snap seats them. geometry.bodies remesh "
-            "(optional inflate) blends overlaps. skin is "
-            "optional: skeleton for pipes/limbs, blob for node "
-            "spheres. Do not replace a primitive blockout with "
-            "a skin graph. Recognition is not ship."
+            "Before writing parts, record techniques on "
+            "construction_plan.techniques. Keep named "
+            "primitive masses (skull, jaw, snout) until the "
+            "silhouette holds. Remesh/inflate is polish on a "
+            "subset, never a full-head regenerate. snap seats "
+            "parts. skin is optional. Recognition is not ship."
         ),
         "curve": (
             "shape: curve + curve.points [{at, radius, "

@@ -13,6 +13,7 @@ from mason.pipelines.silhouette import iou_regressed, load_metrics
 
 CRITICAL_DROP = 2
 IMPROVE_DELTA = 1
+IDENTITY_KEYS = ("target_identity", "primary_silhouette")
 _SIDECARS = (
     "asset.yaml",
     "art_direction.yaml",
@@ -59,6 +60,22 @@ def critical_views_for(plan: GeometricPlan | None) -> list[ViewWeight]:
 def view_score_map(evaluation: VisualEvaluation) -> dict[str, int]:
     """Map view name to score."""
     return {row.view: row.score for row in evaluation.view_scores}
+
+
+def identity_regressed(
+    candidate: VisualEvaluation,
+    best: VisualEvaluation,
+) -> list[str]:
+    """Identity scores that fell versus current_best."""
+    dropped: list[str] = []
+    for key in IDENTITY_KEYS:
+        cand = getattr(candidate.scores, key)
+        prior = getattr(best.scores, key)
+        if cand is None or prior is None:
+            continue
+        if cand < prior:
+            dropped.append(key)
+    return dropped
 
 
 def critical_view_regressed(
@@ -137,9 +154,14 @@ def apply_checkpoint(
     dropped = []
     if best_eval is not None:
         dropped = critical_view_regressed(evaluation, best_eval, views)
+        dropped.extend(identity_regressed(evaluation, best_eval))
     compare = evaluation.compare
     verdict = compare.verdict if compare else None
     reason = compare.reason if compare else ""
+    if evaluation.represents_object is False:
+        verdict = "reject"
+        why = "does not represent the object"
+        reason = f"{why}. {reason}" if reason else why
     iou_dropped = []
     if best_n and best_n != candidate:
         iou_dropped = iou_regressed(

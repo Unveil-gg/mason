@@ -77,7 +77,9 @@ previews in a fresh pass and looks for reasons not to ship.
     `stage` while any critical discrepancy remains.
     Newest is never automatically best: accept only if the
     candidate is meaningfully better and no critical view
-    dropped (scores or silhouette IoU). Otherwise `mason revert`
+    or identity score dropped. `represents_object: false`
+    is a reject. Continuity cannot beat a worse silhouette.
+    Otherwise `mason revert`
     (restores spec, previews, and the GLB) and try another edit.
     If one region keeps failing, `mason restart --keep ...
     --rebuild ...` and try a different technique. For hard

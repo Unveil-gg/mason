@@ -7,11 +7,11 @@ art_direction:
   usage:
     importance: hero
     viewing_distance: close
-  silhouette: weighted turned base, backward-arched neck, compact carved head
+  silhouette: stacked base, leaning neck, distinct skull/jaw/snout/mane
   forms:
-    primary: [turned socle, stem, arched neck, horse head]
-    secondary: [muzzle, jaw, ears, mane crest]
-    tertiary: [eyes]
+    primary: [socle, column, neck, skull]
+    secondary: [jaw, snout, mane, ears]
+    tertiary: [eyes, nostrils]
   materials: []
   detail_density: high
   references:
@@ -20,243 +20,94 @@ art_direction:
     view: side
   - path: examples/ref/staunton_knight.jpg
     purpose: color
-  - path: examples/ref/staunton_knight.jpg
-    purpose: detail
-  constraints: []
 geometric_plan:
   primary_read: sculptural side profile, not a literal horse
   recognition: silhouette
   must_survive_small:
-  - turned weighted base
-  - backward-arched neck
-  - compact downward muzzle
-  - two small rear ears
+  - stacked weighted base
+  - leaning neck
+  - distinct skull vs jaw vs snout
+  - mane slab and two ears
   masses:
-  - name: socle
-    role: primary
-    notes: rotationally symmetric foot
-  - name: stem
-    role: primary
-    connects_to: [socle, neck]
-    notes: turned column
-  - name: neck
-    role: primary
-    connects_to: [stem, skull]
-    notes: thick S-curve, arches back then into the head
-  - name: skull
-    role: primary
-    connects_to: [neck, muzzle]
-    notes: rear mass and brow, not a long snout
+  - {name: socle, role: primary, notes: stacked foot}
+  - {name: neck, role: primary, connects_to: [column, skull]}
+  - {name: skull, role: primary, connects_to: [neck, jaw]}
+  - {name: jaw, role: primary, connects_to: [skull, snout]}
+  - {name: snout, role: secondary, connects_to: [jaw]}
+  - {name: mane_crest, role: secondary, connects_to: [skull]}
   silhouette: >
-    Side view is the identity view. Neck rises and bows toward +Y
-    (away from the face), then the head hooks compactly toward -Y
-    and slightly down. Deep C-notch under the jaw. Distinguish
-    from a cute/literal horse by the short muzzle and heavy rear
-    skull/mane.
-  silhouette_vs_similar: >
-    Not a toy horse on a stick. Not a long horizontal head.
-    Ears are two small points at the poll, not one fused crest.
-  proportions: >
-    Side bbox is nearly square because the muzzle projects.
-    Base ~1/5 of height. Neck thicker than the muzzle.
+    Side view is the identity view. Named blocks must stay
+    readable: skull ball, jaw shelf, snout taper, mane slab.
+    Do not remesh them into one mass.
+  silhouette_vs_similar: Not a snowman. Not a long tube on a stick.
+  proportions: Base about 1/5 height. Snout shorter than the skull.
   symmetry: bilateral
   negative_space: C-notch under the jaw; gap behind the ears
-  abstraction: stylized sculptural carving, not anatomical realism
-  stage: silhouette
+  abstraction: carved blockout, then local polish
+  stage: secondary
   landmarks:
-  - {id: neck_base, role: neck base, part: upper, node: neck_base}
-  - {id: core, role: neck fill, part: upper, node: core}
-  - {id: chest, role: chest bulge, part: upper, node: chest}
-  - {id: throat, role: throat C-notch, part: upper, node: throat}
-  - {id: neck_apex, role: rear neck apex, part: upper, node: neck_arch}
-  - {id: withers, role: rear skull/mane mass, part: upper, node: withers}
-  - {id: poll, role: poll, part: upper, node: poll, uv: [0.496, 0.0]}
-  - {id: muzzle, role: muzzle root, part: upper, node: muzzle}
-  - {id: nose, role: nose tip, part: upper, node: nose}
-  - {id: jaw, role: lower jaw, part: upper, node: jaw}
-  - {id: ear_l, role: left ear, part: upper, node: ear_l, uv: [0.370, 0.088]}
-  - {id: ear_r, role: right ear, part: upper, node: ear_r}
+  - {id: skull, role: skull, part: skull}
+  - {id: jaw, role: lower jaw, part: jaw}
+  - {id: snout, role: muzzle, part: snout}
+  - {id: neck, role: leaning neck, part: neck}
+  - {id: mane, role: mane crest, part: mane_crest}
+  - {id: ear, role: left ear, part: ear}
   critical_views:
   - {view: silhouette_side, weight: 3}
   - {view: side, weight: 2}
-  - {view: silhouette_front, weight: 1}
-  - {view: front, weight: 0.5}
   - {view: three_quarter, weight: 1}
   notes:
-  - Face -Y. +Y is the rear of the neck.
-  - Side silhouette outranks the front view.
-  - Bind critiques to these nodes; do not regenerate the whole head.
-  - "Silhouette-first: no eyes or materials until the side profile holds."
+  - Face -Y. Keep these parts named; move one landmark per edit.
+  - Remesh or inflate only after the side profile holds.
+  - Polish is bevel and extra local parts (cheek, jaw muscle).
 construction_plan:
   techniques:
-  - kind: lathe
-    purpose: turned socle and stem
-    applies_to: base
-  - kind: skin
-    purpose: neck, skull, muzzle, jaw, ears
-    applies_to: upper
-  - kind: remesh
-    purpose: continuous carved surface
-    applies_to: head
+  - {kind: box, purpose: named skull jaw snout mane, applies_to: bust}
+  - {kind: remesh, purpose: later local polish only, applies_to: none}
   primary_forms:
-  - type: lathe
-    purpose: turned onyx socle
-  - type: lathe
-    purpose: turned mahogany stem
-  - type: skin
-    purpose: organic neck and head volume
+  - {type: cylinder, purpose: stacked base}
+  - {type: tapered_box, purpose: column}
+  - {type: sphere, purpose: skull}
   secondary_forms:
-  - type: remesh
-    purpose: join upper into one carved form
-  tertiary_details: []
-  materials:
-  - bare_metal
-  - plastic
-  keep_parts: [socle, stem]
-  rebuild_parts: [upper]
+  - {type: tapered_box, purpose: jaw and snout}
+  - {type: box, purpose: mane}
+  - {type: cone, purpose: ears}
+  tertiary_details:
+  - {type: sphere, purpose: eyes}
+  keep_parts: [socle, column, neck, skull, jaw, snout, mane_crest, ear]
+  rebuild_parts: []
   notes:
-  - Face toward -Y so the front preview reads in profile
-  - lathe/skin/remesh are general ops; the knight is a stress test
-  - Keep the turned base; rebuild the head from the side profile
-reference_analysis:
-  defining_silhouette: >
-    Side S-curve, deep throat C-notch, blunt muzzle, flared base
-  primary_masses: [socle, stem, neck, skull, muzzle]
-  proportions: side bbox nearly square; mane peak above base center
-  style: carved Staunton, geometric notches, not fur
-  abstraction: clean boolean-like masses
-  views:
-  - view: side
-    path: examples/ref/staunton_knight_side.png
-    purpose: silhouette
-    height_width_ratio: 1.04
-    landmarks:
-    - {id: top, uv: [0.496, 0.0], role: highest}
-    - {id: bottom, uv: [0.510, 1.0], role: lowest}
-    - {id: left, uv: [0.0, 0.995], role: leftmost}
-    - {id: right, uv: [1.0, 0.989], role: rightmost}
-    - {id: forward, uv: [0.370, 0.088], role: leftmost in upper half}
-    - {id: rear_high, uv: [0.943, 0.105], role: rightmost in upper half}
-    negative_space: C-pocket under the jaw
-    curves: back is one convex arc; throat is a deep concave
-art_analysis:
-  shape_language:
-    primary: ''
-    secondary: ''
-    edges: soft
-  proportions:
-    height_width_ratio: 1.04
-    exaggerated_features: []
-  detail_density: medium
-  style:
-    realism: 0.35
-    stylization: 0.65
-    shape_language: []
-  materials: []
-  wear: 0.0
-  palette_distribution:
-    dominant: '#6A4A2A'
-    secondary: '#E3D2B7'
-    accent: '#9F7C4F'
-  source_size:
-    width: 1376
-    height: 768
+  - Iteration 005 blockout is the ancestor
+  - Do not replace named parts with a skin or sphere cloud
 type: static_prop
 id: chess_knight
 name: Knight Chess Piece
 dimensions:
   width: 0.05
-  depth: 0.08
+  depth: 0.07
   height: 0.1
 style: default
 geometry:
   bevel: true
-  bevel_width: 0.0006
+  bevel_width: 0.0008
   bevel_segments: 2
-  bodies:
-  - name: head
-    members: [upper]
-    method: remesh
-    remesh:
-      voxel_size: 0.0014
-      adaptivity: 0.0
-    smooth: 0
-    subdivide: 0
   parts:
-  - name: socle
-    shape: lathe
-    location: [0.0, 0.0, 0.011]
-    material: charcoal
-    family: bare_metal
-    profile:
-    - [0.023, 0.0]
-    - [0.023, 0.007]
-    - [0.021, 0.009]
-    - [0.016, 0.012]
-    - [0.0155, 0.016]
-    - [0.018, 0.020]
-    - [0.014, 0.022]
-  - name: stem
-    shape: lathe
-    location: [0.0, 0.0, 0.040]
-    material: wood_dark
-    family: plastic
-    profile:
-    - [0.013, 0.022]
-    - [0.011, 0.028]
-    - [0.010, 0.038]
-    - [0.011, 0.046]
-    - [0.0135, 0.052]
-    - [0.012, 0.056]
-    - [0.013, 0.058]
-  - name: upper
-    shape: skin
-    location: [0.0, 0.0, 0.054]
-    material: wood_dark
-    family: plastic
-    skin:
-      subdivide: 2
-      smooth: false
-      nodes:
-      - {id: neck_base, at: [0.0, 0.0, 0.0], radius: 0.017}
-      - {id: core, at: [0.0, -0.002, 0.012], radius: 0.012}
-      - {id: chest, at: [0.0, -0.026, 0.005], radius: 0.013}
-      - {id: neck, at: [0.0, 0.010, 0.012], radius: 0.011}
-      - {id: throat, at: [0.0, -0.008, 0.016], radius: 0.005}
-      - {id: neck_arch, at: [0.0, 0.018, 0.020], radius: 0.010}
-      - {id: jaw, at: [0.0, -0.024, 0.022], radius: 0.008}
-      - {id: withers, at: [0.0, 0.016, 0.028], radius: 0.008}
-      - {id: chin, at: [0.0, -0.034, 0.018], radius: 0.0045}
-      - {id: skull, at: [0.0, -0.016, 0.030], radius: 0.010}
-      - {id: brow, at: [0.0, -0.022, 0.034], radius: 0.005}
-      - {id: muzzle, at: [0.0, -0.038, 0.028], radius: 0.007}
-      - {id: poll, at: [0.0, 0.006, 0.038], radius: 0.007}
-      - {id: nose, at: [0.0, -0.048, 0.024], radius: 0.005}
-      - {id: cheek_l, at: [-0.006, -0.018, 0.028], radius: 0.005}
-      - {id: cheek_r, at: [0.006, -0.018, 0.028], radius: 0.005}
-      - {id: ear_l, at: [-0.005, 0.008, 0.042], radius: 0.0022}
-      - {id: ear_r, at: [0.005, 0.008, 0.042], radius: 0.0022}
-      edges:
-      - [neck_base, core]
-      - [neck_base, chest]
-      - [neck_base, neck]
-      - [core, neck]
-      - [core, throat]
-      - [core, skull]
-      - [neck, neck_arch]
-      - [neck_arch, withers]
-      - [withers, poll]
-      - [neck_arch, skull]
-      - [skull, brow]
-      - [skull, jaw]
-      - [skull, muzzle]
-      - [muzzle, nose]
-      - [jaw, chin]
-      - [muzzle, chin]
-      - [skull, cheek_l]
-      - [skull, cheek_r]
-      - [poll, ear_l]
-      - [poll, ear_r]
+  - {name: socle, shape: cylinder, size: [0.048, 0.048, 0.01], location: [0, 0, 0.005], material: charcoal, family: bare_metal}
+  - {name: socle_lip, shape: torus, size: [0.05, 0.05, 0.006], location: [0, 0, 0.011], material: charcoal, family: bare_metal}
+  - {name: plinth, shape: cylinder, size: [0.04, 0.04, 0.01], location: [0, 0, 0.018], material: wood_dark, family: plastic}
+  - {name: waist, shape: torus, size: [0.04, 0.04, 0.008], location: [0, 0, 0.025], material: wood_dark, family: plastic}
+  - {name: column, shape: tapered_box, size: [0.026, 0.026, 0.028], location: [0, 0, 0.042], taper: [0.78, 0.78], material: wood_dark, family: plastic}
+  - {name: collar, shape: torus, size: [0.03, 0.03, 0.008], location: [0, 0, 0.058], material: charcoal, family: bare_metal}
+  - {name: neck, shape: cylinder, size: [0.02, 0.022, 0.022], location: [0, -0.008, 0.07], rotation: [0.55, 0, 0], material: wood_dark, family: plastic}
+  - {name: skull, shape: sphere, size: [0.026, 0.03, 0.024], location: [0, -0.016, 0.086], material: wood_dark, family: plastic}
+  - {name: jaw, shape: tapered_box, size: [0.016, 0.026, 0.012], location: [0, -0.03, 0.078], rotation: [0.25, 0, 0], taper: [0.65, 0.8], material: wood_dark, family: plastic}
+  - {name: snout, shape: tapered_box, size: [0.012, 0.022, 0.01], location: [0, -0.044, 0.08], rotation: [0.2, 0, 0], taper: [0.5, 0.7], material: wood_dark, family: plastic}
+  - {name: brow, shape: box, size: [0.02, 0.012, 0.008], location: [0, -0.02, 0.096], material: wood_dark, family: plastic}
+  - {name: ear, shape: cone, size: [0.01, 0.007, 0.018], location: [-0.01, -0.01, 0.104], rotation: [0.2, 0, 0.55], material: wood_dark, family: plastic, mirror: x}
+  - {name: mane_crest, shape: box, size: [0.008, 0.022, 0.016], location: [0, 0, 0.09], rotation: [0.55, 0, 0], material: cream, family: plastic}
+  - {name: mane_back, shape: box, size: [0.007, 0.014, 0.02], location: [0, 0.01, 0.078], rotation: [0.35, 0, 0], material: cream, family: plastic}
+  - {name: eye, shape: sphere, size: [0.005, 0.004, 0.004], location: [-0.009, -0.026, 0.088], material: charcoal, family: bare_metal, mirror: x}
+  - {name: nostril, shape: cylinder, size: [0.0035, 0.0025, 0.003], location: [-0.0035, -0.052, 0.078], rotation: [1.15, 0, 0], material: charcoal, family: bare_metal, mirror: x}
 materials:
   strategy: family
   primary: wood_dark

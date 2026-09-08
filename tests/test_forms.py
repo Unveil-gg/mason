@@ -214,14 +214,18 @@ def test_knight_example_parses() -> None:
     spec = parse_asset_spec(
         yaml.safe_load(path.read_text(encoding="utf-8")),
     )
-    upper = next(p for p in spec.geometry.parts if p.name == "upper")
-    assert upper.shape == "skin"
-    assert spec.geometry.bodies[0].method == "remesh"
+    names = [p.name for p in spec.geometry.parts]
+    assert "skull" in names
+    assert "jaw" in names
+    assert next(p for p in spec.geometry.parts if p.name == "skull").shape == (
+        "sphere"
+    )
+    assert spec.geometry.bodies == []
     kinds = [t.kind for t in spec.construction_plan.techniques]
-    assert kinds == ["lathe", "skin", "remesh"]
+    assert kinds[0] == "box"
     assert spec.geometric_plan is not None
     assert spec.geometric_plan.recognition == "silhouette"
-    assert spec.geometric_plan.landmarks[0].node == "neck_base"
+    assert spec.geometric_plan.landmarks[0].part == "skull"
     assert spec.geometric_plan.critical_views[0].view == (
         "silhouette_side"
     )
