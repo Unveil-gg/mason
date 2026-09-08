@@ -1,0 +1,169 @@
+type: layered_raster
+id: boardgame_box_bottom
+name: Harvest Hollow Box Bottom
+
+dimensions:
+  width: 1024
+  height: 1024
+
+style: default
+
+layers:
+  - name: background
+    role: background
+    fill: cream
+  - name: grain
+    role: overlay
+    fill: wood_light
+    stamp: speckle
+    stamp_inner: cream
+    stamp_seed: 3
+    rect: {x: 0, y: 0, width: 1024, height: 1024}
+  - name: header_band
+    role: fill
+    fill: wood_dark
+    rect: {x: 0, y: 0, width: 1024, height: 100}
+  - name: header_text
+    role: text
+    text: Contents and Credits
+    fill: cream
+    font_size: 44
+    align: center
+    rect: {x: 20, y: 20, width: 984, height: 60}
+  - name: line_1
+    role: fill
+    fill: ink
+    opacity: 0.55
+    stamp: rule
+    rect: {x: 60, y: 140, width: 900, height: 18}
+  - name: line_2
+    role: fill
+    fill: ink
+    opacity: 0.55
+    stamp: rule
+    rect: {x: 60, y: 176, width: 860, height: 18}
+  - name: line_3
+    role: fill
+    fill: ink
+    opacity: 0.55
+    stamp: rule
+    rect: {x: 60, y: 212, width: 900, height: 18}
+  - name: line_4
+    role: fill
+    fill: ink
+    opacity: 0.55
+    stamp: rule
+    rect: {x: 60, y: 248, width: 780, height: 18}
+  - name: line_5
+    role: fill
+    fill: ink
+    opacity: 0.55
+    stamp: rule
+    rect: {x: 60, y: 284, width: 640, height: 18}
+  - name: components_header
+    role: text
+    text: Components
+    fill: wood_dark
+    font_size: 34
+    align: left
+    rect: {x: 60, y: 350, width: 400, height: 44}
+  - name: comp_icon_1
+    role: fill
+    fill: ink
+    stamp: figure
+    rect: {x: 70, y: 420, width: 70, height: 140}
+  - name: comp_icon_2
+    role: fill
+    fill: ink
+    stamp: figure
+    rect: {x: 170, y: 420, width: 70, height: 140}
+  - name: comp_icon_3
+    role: fill
+    fill: ink
+    stamp: figure
+    rect: {x: 270, y: 420, width: 70, height: 140}
+  - name: line_6
+    role: fill
+    fill: ink
+    opacity: 0.5
+    stamp: rule
+    rect: {x: 60, y: 610, width: 900, height: 16}
+  - name: line_7
+    role: fill
+    fill: ink
+    opacity: 0.5
+    stamp: rule
+    rect: {x: 60, y: 644, width: 860, height: 16}
+  - name: line_8
+    role: fill
+    fill: ink
+    opacity: 0.5
+    stamp: rule
+    rect: {x: 60, y: 678, width: 900, height: 16}
+  - name: line_9
+    role: fill
+    fill: ink
+    opacity: 0.5
+    stamp: rule
+    rect: {x: 60, y: 712, width: 700, height: 16}
+  - name: line_10
+    role: fill
+    fill: ink
+    opacity: 0.5
+    stamp: rule
+    rect: {x: 60, y: 746, width: 560, height: 16}
+  - name: legal_text
+    role: text
+    text: Contents may vary. Ages 10 and up. For tabletop use only.
+    fill: smoke
+    font_size: 22
+    align: center
+    rect: {x: 40, y: 900, width: 944, height: 40}
+  - name: barcode_1
+    role: overlay
+    fill: ink
+    rect: {x: 800, y: 940, width: 6, height: 60}
+  - name: barcode_2
+    role: overlay
+    fill: ink
+    rect: {x: 812, y: 940, width: 10, height: 60}
+  - name: barcode_3
+    role: overlay
+    fill: ink
+    rect: {x: 828, y: 940, width: 4, height: 60}
+  - name: barcode_4
+    role: overlay
+    fill: ink
+    rect: {x: 838, y: 940, width: 8, height: 60}
+  - name: barcode_5
+    role: overlay
+    fill: ink
+    rect: {x: 852, y: 940, width: 4, height: 60}
+  - name: barcode_6
+    role: overlay
+    fill: ink
+    rect: {x: 862, y: 940, width: 10, height: 60}
+  - name: barcode_7
+    role: overlay
+    fill: ink
+    rect: {x: 878, y: 940, width: 6, height: 60}
+  - name: barcode_8
+    role: overlay
+    fill: ink
+    rect: {x: 890, y: 940, width: 8, height: 60}
+  - name: frame_vignette
+    role: overlay
+    fill: ink
+    stamp: vignette
+    rect: {x: 0, y: 0, width: 1024, height: 1024}
+
+art_direction:
+  subject: board game box bottom panel, credits and lorem-ipsum text
+  usage:
+    importance: standard_prop
+    viewing_distance: close
+  detail_density: medium
+
+export:
+  kra: true
+  png: true

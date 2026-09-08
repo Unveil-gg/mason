@@ -1,0 +1,72 @@
+type: layered_raster
+id: boardgame_box_side_promo
+name: Harvest Hollow Box Side (Promo Art)
+
+dimensions:
+  width: 1024
+  height: 256
+
+style: default
+
+layers:
+  - name: sky
+    role: background
+    fill: wood_light
+  - name: sky_dusk
+    role: fill
+    fill: accent
+    shape: ellipse
+    opacity: 0.28
+    rect: {x: 0, y: 0, width: 1024, height: 160}
+  - name: fields
+    role: fill
+    fill: label_green
+    rect: {x: 0, y: 150, width: 1024, height: 106}
+  - name: fields_row
+    role: fill
+    fill: wood_dark
+    rect: {x: 0, y: 150, width: 1024, height: 14}
+  - name: fields_grain
+    role: overlay
+    fill: wood_dark
+    stamp: dapple
+    stamp_inner: label_green
+    stamp_seed: 17
+    rect: {x: 0, y: 150, width: 1024, height: 106}
+  - name: silo_top
+    role: fill
+    fill: charcoal
+    shape: ellipse
+    rect: {x: 114, y: 56, width: 46, height: 32}
+  - name: silo_body
+    role: fill
+    fill: charcoal
+    rect: {x: 120, y: 70, width: 34, height: 100}
+  - name: brand_band
+    role: fill
+    fill: wood_dark
+    opacity: 0.55
+    rect: {x: 280, y: 90, width: 640, height: 70}
+  - name: brand_text
+    role: text
+    text: Harvest Hollow
+    fill: cream
+    font_size: 44
+    align: center
+    rect: {x: 300, y: 96, width: 600, height: 60}
+  - name: frame_vignette
+    role: overlay
+    fill: ink
+    stamp: vignette
+    rect: {x: 0, y: 0, width: 1024, height: 256}
+
+art_direction:
+  subject: board game box side panel, promo art branding strip
+  usage:
+    importance: standard_prop
+    viewing_distance: close
+  detail_density: medium
+
+export:
+  kra: true
+  png: true
