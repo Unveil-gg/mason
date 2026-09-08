@@ -9,6 +9,7 @@ from mason.core.assets import LayerRect, RasterLayer
 STAMPS = (
     "l_corner", "gem", "rule", "bond",
     "dapple", "vignette", "figure", "speckle",
+    "courses", "pavers",
 )
 
 
@@ -35,6 +36,10 @@ def expand_stamps(layers: list[RasterLayer]) -> list[RasterLayer]:
             out.extend(_figure(layer))
         elif layer.stamp == "speckle":
             out.extend(_speckle(layer))
+        elif layer.stamp == "courses":
+            out.extend(_courses(layer))
+        elif layer.stamp == "pavers":
+            out.extend(_pavers(layer))
         else:
             out.append(layer)
     return out
@@ -303,6 +308,50 @@ def _figure(layer: RasterLayer) -> list[RasterLayer]:
         box("coat", 0.28, 0.38, 0.44, 0.34),
         box("flare", 0.24, 0.70, 0.52, 0.26),
     ]
+
+
+def _courses(layer: RasterLayer) -> list[RasterLayer]:
+    """Horizontal clapboard gaps. No vertical mortar."""
+    rect = layer.rect
+    assert rect is not None
+    boards = 10
+    joint = 2
+    ch = max(rect.height // boards, joint + 1)
+    out: list[RasterLayer] = []
+    for row in range(1, boards + 1):
+        y = min(rect.y + row * ch - joint, rect.y + rect.height - joint)
+        out.append(_fill(
+            layer,
+            f"{layer.name}_c{row}",
+            LayerRect(x=rect.x, y=y, width=rect.width, height=joint),
+        ))
+    return out
+
+
+def _pavers(layer: RasterLayer) -> list[RasterLayer]:
+    """Large sidewalk-slab grid. Not brick bond."""
+    rect = layer.rect
+    assert rect is not None
+    rows, cols = 4, 4
+    joint = 4
+    ch = max(rect.height // rows, joint + 1)
+    cw = max(rect.width // cols, joint + 1)
+    out: list[RasterLayer] = []
+    for row in range(1, rows + 1):
+        y = min(rect.y + row * ch - joint, rect.y + rect.height - joint)
+        out.append(_fill(
+            layer,
+            f"{layer.name}_h{row}",
+            LayerRect(x=rect.x, y=y, width=rect.width, height=joint),
+        ))
+    for col in range(1, cols + 1):
+        x = min(rect.x + col * cw - joint, rect.x + rect.width - joint)
+        out.append(_fill(
+            layer,
+            f"{layer.name}_v{col}",
+            LayerRect(x=x, y=rect.y, width=joint, height=rect.height),
+        ))
+    return out
 
 
 def _fill(

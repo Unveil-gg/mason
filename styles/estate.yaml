@@ -12,6 +12,11 @@ palette:
   hedge: "#2A5530"
   water: "#2E6F9A"
   path: "#C2B089"
+  path_dark: "#8A7A5C"
+  brownstone: "#6B3A28"
+  brownstone_mortar: "#3A2418"
+  clapboard: "#E8C4B0"
+  clapboard_gap: "#9A7060"
   wood: "#4A2E1C"
   brass: "#C4A15A"
   ink: "#1A1410"
@@ -53,6 +58,14 @@ materials:
       albedo:
         asset: estate_stone_q
         file: output/asset.png
+    brownstone:
+      roughness: 0.8
+      metallic: 0.0
+      variation: 0.05
+      tile_size: 0.32
+      albedo:
+        asset: estate_brownstone_q
+        file: output/asset.png
     roofing:
       roughness: 0.7
       metallic: 0.0
@@ -68,6 +81,22 @@ materials:
       tile_size: 0.45
       albedo:
         asset: estate_water_q
+        file: output/asset.png
+    pavement:
+      roughness: 0.88
+      metallic: 0.0
+      variation: 0.06
+      tile_size: 0.50
+      albedo:
+        asset: estate_pavement_q
+        file: output/asset.png
+    clapboard:
+      roughness: 0.58
+      metallic: 0.0
+      variation: 0.04
+      tile_size: 0.28
+      albedo:
+        asset: estate_siding_q
         file: output/asset.png
     lawn:
       roughness: 0.94

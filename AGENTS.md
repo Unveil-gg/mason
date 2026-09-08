@@ -157,7 +157,8 @@ Asset types:
   shared swatch sheet), or `atlas` (`atlas` + `entry`).
 - `layered_raster` — Krita layers: fill, text (`font`, `align`),
   `stamp` (`l_corner`, `gem`, `rule`, `bond`, `dapple`, `vignette`,
-  `figure`, `speckle`), `shape` (`rect` / `ellipse`), `opacity`
+  `figure`, `speckle`, `courses`, `pavers`), `shape` (`rect` /
+  `ellipse`), `opacity`
   (0–1), `stamp_seed`, `pixels` + `keys`, imported image, or
   `expression` (`formula`, `mode`, `to`, `seed`). Text shrinks to
   fit its rect. Source is `.kra`.

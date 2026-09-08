@@ -1,0 +1,18 @@
+type: image_process
+id: estate_siding_q
+name: Estate Siding Quantized
+
+style: estate
+depends_on: [estate_siding]
+
+source:
+  asset: estate_siding
+  file: output/asset.png
+
+operations:
+  - op: quantize
+    palette: style
+    dither: true
+
+export:
+  format: png

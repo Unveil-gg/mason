@@ -24,7 +24,8 @@ LAYER_ROLES = ("background", "fill", "text", "image", "overlay")
 FAMILIES = (
     "painted_metal", "bare_metal", "varnished_wood",
     "rubber", "plastic", "cardboard",
-    "masonry", "roofing", "foliage", "lawn", "water",
+    "masonry", "brownstone", "roofing", "foliage", "lawn",
+    "water", "pavement", "clapboard",
 )
 
 
@@ -45,13 +46,21 @@ def vocab_payload() -> dict[str, Any]:
             "textured shapes use world-space UVs. "
             "family.tile_size overrides style tile_size. "
             "Style family.albedo applies when the file "
-            "exists. family.noise_scale tunes solid grain."
+            "exists. family.noise_scale tunes solid grain. "
+            "Do not put masonry albedo on sidewalks or "
+            "stoops; pavement is ground, brownstone/masonry "
+            "are brick walls, clapboard is siding. Ornate "
+            "subjects need openings on side and back, not "
+            "only the beauty camera. Build family albedo "
+            "tiles before the 3D job or solids win."
         ),
         "raster": (
             "layered_raster: fill, text, image, stamp, "
             "pixels+keys, expression. shape rect|ellipse. "
             "opacity 0-1. stamps: l_corner gem rule bond "
-            "dapple vignette figure speckle. stamp_seed for "
+            "dapple vignette figure speckle courses pavers. "
+            "courses=clapboard, pavers=sidewalk slabs. "
+            "stamp_seed for "
             "reproducible dapple/speckle. expression: "
             "{formula, mode: alpha|color, to, seed} over "
             "x y u v w h; Mason bakes a PNG (no raw Krita "
@@ -77,6 +86,13 @@ def vocab_payload() -> dict[str, Any]:
             "beauty. Novel assets use parts + style + stamps. "
             "Add a recipe only after the same cluster appears "
             "three times."
+        ),
+        "taste": (
+            "Ground is pavement or lawn, never a wall albedo. "
+            "NYC walls are brownstone; stoop and cornice are "
+            "cast stone (plastic). Queen Anne walls are "
+            "clapboard with openings on left, right, and back. "
+            "Do not paint every part with one family."
         ),
         "inspect": (
             "build/inspect preview_roles.primary: "

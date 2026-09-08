@@ -1,0 +1,348 @@
+art_direction:
+  subject: Queen Anne house on a small lot
+  style:
+    realism: 0.4
+    stylization: 0.6
+    shape_language: [asymmetric, turret, cross_gable]
+  usage:
+    importance: focal_prop
+    viewing_distance: medium
+  silhouette: >
+    L-plan house, corner turret with a conical hat, crossing
+    gables, deep wrap porch as a room, lawn and path.
+  forms:
+    primary: [L body, turret, cross gables]
+    secondary: [porch room, hat, lot]
+    tertiary: [cut windows, chimney, tree]
+  detail_density: medium
+  constraints:
+  - "Big masses, not sticker trim. Porch is a volume."
+  references:
+  - path: examples/ref/queen_anne_victorian.png
+    purpose: silhouette
+    view: three_quarter
+  - path: .mason/jobs/victorian_townhouse/refs/Queen_Anne_House_Los_Angeles.jpg
+    purpose: style
+    view: three_quarter
+geometric_plan:
+  primary_read: Queen Anne on a lot, not a peach box
+  recognition: silhouette
+  must_survive_small:
+  - corner turret and conical hat
+  - crossing gables
+  - deep wrap porch
+  masses:
+  - {name: lawn, role: primary, connects_to: [path, body]}
+  - {name: body, role: primary, connects_to: [wing, turret, roof]}
+  - {name: wing, role: primary, connects_to: [body, turret, gable]}
+  - {name: turret, role: primary, connects_to: [wing, hat]}
+  - {name: porch, role: secondary, connects_to: [body, turret]}
+  silhouette: >
+    Three-quarter: turret right-front, front gable left,
+    side gable behind, porch under a real roof. Lawn reads.
+  silhouette_vs_similar: Not an NYC stoop slab. Not a mansion.
+  proportions: Turret taller than the L. Porch ~half the depth of the body.
+  symmetry: asymmetric
+  negative_space: porch room under its roof
+  abstraction: named masses, no remesh
+  stage: secondary
+  landmarks:
+  - {id: turret, role: corner tower, part: turret}
+  - {id: hat, role: conical cap, part: hat}
+  - {id: gable, role: front gable, part: roof}
+  - {id: porch, role: porch room, part: porch}
+  critical_views:
+  - {view: three_quarter, weight: 3}
+  - {view: front, weight: 2}
+  - {view: side, weight: 2}
+  notes:
+  - Face -Y. Lot under the house. No NYC areaway.
+construction_plan:
+  techniques:
+  - {kind: box, purpose: L plan porch lot, applies_to: mass}
+  - {kind: modular, purpose: turret cone cross gable, applies_to: mass}
+  primary_forms:
+  - {type: box, purpose: lawn body wing porch}
+  - {type: cylinder, purpose: corner turret}
+  secondary_forms:
+  - {type: tapered_box, purpose: crossing gables}
+  - {type: cone, purpose: turret hat}
+  - {type: cornice, purpose: eave}
+  notes:
+  - Composition first. Dark cutouts, no cream plates.
+type: static_prop
+id: victorian_townhouse
+name: Victorian Townhouse
+dimensions:
+  width: 3.13
+  depth: 3.33
+  height: 3.11
+style: estate
+depends_on:
+  - estate_siding_q
+  - estate_shingle_q
+  - estate_brownstone_q
+  - estate_pavement_q
+geometry:
+  bevel: true
+  bevel_width: 0.008
+  bevel_segments: 2
+  parts:
+  - name: lawn
+    size: [3.10, 3.20, 0.06]
+    location: [0.05, 0.05, 0.03]
+    material: lawn
+    family: lawn
+  - name: path
+    size: [0.48, 1.05, 0.04]
+    location: [-0.25, -1.15, 0.08]
+    material: path
+    family: pavement
+    snap: {to: lawn, "on": top}
+  - name: hedge
+    size: [2.40, 0.22, 0.42]
+    location: [0.10, 1.35, 0.28]
+    material: hedge
+    family: foliage
+    snap: {to: lawn, "on": top}
+  - name: tree_trunk
+    shape: cylinder
+    size: [0.10, 0.10, 0.32]
+    location: [-1.25, -0.85, 0.24]
+    material: wood
+    family: varnished_wood
+    snap: {to: lawn, "on": top}
+  - name: tree_crown
+    shape: sphere
+    size: [0.55, 0.55, 0.52]
+    location: [-1.25, -0.85, 0.72]
+    material: hedge
+    family: foliage
+    snap: {to: tree_trunk, "on": top}
+  - name: body
+    size: [1.18, 1.22, 1.42]
+    location: [-0.38, 0.18, 0.80]
+    material: clapboard
+    family: clapboard
+    snap: {to: lawn, "on": top}
+  - name: wing
+    size: [0.92, 1.38, 1.32]
+    location: [0.52, 0.22, 0.75]
+    material: clapboard
+    family: clapboard
+    snap: {to: lawn, "on": top}
+  - name: turret
+    shape: cylinder
+    size: [0.74, 0.74, 2.02]
+    location: [0.78, -0.42, 1.10]
+    material: clapboard
+    family: clapboard
+  - name: turret_skirt
+    shape: cylinder
+    size: [0.80, 0.80, 0.30]
+    location: [0.78, -0.42, 2.00]
+    material: roof
+    family: roofing
+    snap: {to: turret, "on": top, embed: 0.06}
+  - name: roof
+    shape: tapered_box
+    taper: [1.0, 0.14]
+    size: [1.32, 1.36, 0.58]
+    location: [-0.38, 0.18, 1.80]
+    material: roof
+    family: roofing
+    snap: {to: body, "on": top, embed: 0.04}
+  - name: gable
+    shape: tapered_box
+    taper: [0.14, 1.0]
+    size: [1.04, 1.50, 0.52]
+    location: [0.52, 0.22, 1.70]
+    material: roof
+    family: roofing
+    snap: {to: wing, "on": top, embed: 0.04}
+  - name: hat
+    shape: cone
+    size: [0.86, 0.86, 0.62]
+    location: [0.78, -0.42, 2.28]
+    material: roof
+    family: roofing
+    snap: {to: turret_skirt, "on": top, embed: 0.02}
+  - name: finial
+    shape: cone
+    size: [0.07, 0.07, 0.16]
+    location: [0.78, -0.42, 2.65]
+    material: cream
+    family: plastic
+    snap: {to: hat, "on": top}
+  - name: cornice
+    size: [1.26, 1.30, 0.10]
+    location: [-0.38, 0.18, 1.48]
+    material: cream
+    family: plastic
+    component: cornice
+    component_params: {steps: 3}
+    snap: {to: body, "on": top}
+  - name: chimney
+    size: [0.16, 0.20, 0.36]
+    location: [0.20, 0.48, 2.10]
+    material: brownstone
+    family: brownstone
+    snap: {to: gable, "on": top, embed: 0.08}
+  - name: chimney_cap
+    size: [0.20, 0.24, 0.05]
+    location: [0.20, 0.48, 2.30]
+    material: roof
+    family: roofing
+    snap: {to: chimney, "on": top}
+  - name: porch
+    size: [1.55, 0.78, 0.10]
+    location: [-0.10, -0.82, 0.12]
+    material: cream
+    family: plastic
+  - name: porch_wrap
+    size: [0.62, 0.72, 0.10]
+    location: [0.70, -0.55, 0.12]
+    material: cream
+    family: plastic
+  - name: step
+    size: [0.50, 0.22, 0.08]
+    location: [-0.25, -1.28, 0.10]
+    material: cream
+    family: plastic
+    snap: {to: porch, "on": front}
+  - name: col_a
+    shape: cylinder
+    size: [0.09, 0.09, 0.78]
+    location: [-0.72, -1.10, 0.55]
+    material: cream
+    family: plastic
+    snap: {to: porch, "on": top}
+  - name: col_b
+    shape: cylinder
+    size: [0.09, 0.09, 0.78]
+    location: [0.18, -1.10, 0.55]
+    material: cream
+    family: plastic
+    snap: {to: porch, "on": top}
+  - name: col_c
+    shape: cylinder
+    size: [0.09, 0.09, 0.78]
+    location: [0.88, -0.82, 0.55]
+    material: cream
+    family: plastic
+    snap: {to: porch_wrap, "on": top}
+  - name: porch_roof
+    size: [1.62, 0.84, 0.08]
+    location: [-0.10, -0.84, 0.98]
+    material: cream
+    family: plastic
+    snap: {to: col_a, "on": top}
+  - name: porch_roof_w
+    size: [0.68, 0.78, 0.08]
+    location: [0.70, -0.55, 0.98]
+    material: cream
+    family: plastic
+    snap: {to: col_c, "on": top}
+  - name: porch_ped
+    shape: tapered_box
+    taper: [0.18, 1.0]
+    size: [0.72, 0.22, 0.24]
+    location: [-0.25, -1.18, 1.14]
+    material: cream
+    family: plastic
+    snap: {to: porch_roof, "on": front}
+  - name: porch_rail
+    size: [1.50, 0.72, 0.20]
+    location: [-0.10, -0.82, 0.28]
+    material: cream
+    family: plastic
+    component: rail
+    snap: {to: porch, "on": top}
+  - name: porch_lace
+    component: x_brace
+    size: [1.40, 0.05, 0.16]
+    location: [-0.10, -1.12, 0.86]
+    material: cream
+    family: plastic
+  - name: door
+    size: [0.26, 0.06, 0.56]
+    location: [-0.25, -0.44, 0.48]
+    material: wood
+    family: varnished_wood
+    snap: {to: body, "on": front, embed: 0.02}
+  - name: win_cut_f
+    size: [0.22, 0.14, 0.40]
+    location: [-0.62, -0.44, 1.15]
+    material: ink
+    bevel: false
+    snap: {to: body, "on": front, embed: 0.10}
+    cutout: {target: body}
+    array: {count: 2, offset: [0.48, 0.0, 0.0]}
+  - name: win_f
+    size: [0.18, 0.03, 0.34]
+    location: [-0.62, -0.44, 1.15]
+    material: ink
+    family: plastic
+    snap: {to: body, "on": front, embed: 0.03}
+    array: {count: 2, offset: [0.48, 0.0, 0.0]}
+  - name: win_cut_s
+    size: [0.14, 0.22, 0.38]
+    location: [0.98, 0.35, 0.85]
+    material: ink
+    bevel: false
+    snap: {to: wing, "on": right, embed: 0.10}
+    cutout: {target: wing}
+    array: {count: 2, offset: [0.0, 0.0, 0.48]}
+  - name: win_s
+    size: [0.03, 0.18, 0.32]
+    location: [0.98, 0.35, 0.85]
+    material: ink
+    family: plastic
+    snap: {to: wing, "on": right, embed: 0.03}
+    array: {count: 2, offset: [0.0, 0.0, 0.48]}
+  - name: win_cut_t
+    size: [0.16, 0.16, 0.36]
+    location: [0.78, -0.80, 0.70]
+    material: ink
+    bevel: false
+    snap: {to: turret, "on": front, embed: 0.12}
+    cutout: {target: turret}
+    array: {count: 2, offset: [0.0, 0.0, 0.62]}
+  - name: win_t
+    size: [0.12, 0.03, 0.30]
+    location: [0.78, -0.80, 0.70]
+    material: ink
+    family: plastic
+    snap: {to: turret, "on": front, embed: 0.04}
+    array: {count: 2, offset: [0.0, 0.0, 0.62]}
+  - name: win_cut_tr
+    size: [0.16, 0.16, 0.34]
+    location: [1.16, -0.42, 0.85]
+    material: ink
+    bevel: false
+    snap: {to: turret, "on": right, embed: 0.12}
+    cutout: {target: turret}
+    array: {count: 2, offset: [0.0, 0.0, 0.58]}
+  - name: win_tr
+    size: [0.03, 0.12, 0.28]
+    location: [1.16, -0.42, 0.85]
+    material: ink
+    family: plastic
+    snap: {to: turret, "on": right, embed: 0.04}
+    array: {count: 2, offset: [0.0, 0.0, 0.58]}
+materials:
+  strategy: family
+  primary: clapboard
+  palette_overrides:
+    clapboard: '#E8C4B0'
+    cream: '#F4F0E6'
+    roof: '#2A2826'
+    wood: '#6B3A28'
+    brownstone: '#6B3A28'
+    lawn: '#3F7A46'
+    hedge: '#2A5530'
+    path: '#C2B089'
+    ink: '#1A1410'
+export:
+  format: glb
+  save_blend: true

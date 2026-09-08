@@ -138,3 +138,30 @@ def test_figure_has_coat() -> None:
     assert "hero_hat" in names
     assert "hero_coat" in names
     assert "hero_flare" in names
+
+
+def test_courses_are_horizontal() -> None:
+    layers = expand_stamps([
+        RasterLayer(
+            name="siding",
+            fill="clapboard_gap",
+            stamp="courses",
+            rect=LayerRect(x=0, y=0, width=64, height=64),
+        ),
+    ])
+    assert len(layers) == 10
+    assert all(ly.rect.height == 2 for ly in layers)
+
+
+def test_pavers_make_a_grid() -> None:
+    layers = expand_stamps([
+        RasterLayer(
+            name="walk",
+            fill="path_dark",
+            stamp="pavers",
+            rect=LayerRect(x=0, y=0, width=64, height=64),
+        ),
+    ])
+    names = [ly.name for ly in layers]
+    assert any(n.startswith("walk_h") for n in names)
+    assert any(n.startswith("walk_v") for n in names)

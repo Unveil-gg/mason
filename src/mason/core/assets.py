@@ -137,6 +137,7 @@ class RasterLayer(BaseModel):
     stamp: Literal[
         "l_corner", "gem", "rule", "bond",
         "dapple", "vignette", "figure", "speckle",
+        "courses", "pavers",
     ] | None = None
     stamp_corner: Literal["tl", "tr", "bl", "br"] = "tl"
     stamp_inner: str | None = None
