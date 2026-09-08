@@ -33,7 +33,7 @@ from mason.core.workspace import find_project_root, init_project
 from mason.errors import MasonError
 from mason.pipelines.common import project_context
 from mason.pipelines.dispatch import run_build, run_rebuild
-from mason.pipelines.evaluate import history_payload, run_evaluate
+from mason.pipelines.evaluate import evaluate_payload, history_payload
 from mason.pipelines.stats import run_stats
 from mason.pipelines.export import run_export, run_export_kit
 from mason.tools.registry import detect_all, doctor_payload, scan_and_store
@@ -405,18 +405,85 @@ def evaluate(
     asset_id: Annotated[str, typer.Argument()],
     evaluation: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
     json_mode: JsonFlag = False,
+    iteration: Annotated[
+        int | None,
+        typer.Option(
+            "--iteration",
+            help="Score a snapshot instead of the current job.",
+        ),
+    ] = None,
 ) -> None:
-    """Store an external visual evaluation for the current iteration."""
+    """Store a critic evaluation and accept or reject the checkpoint."""
 
     def _run():
-        record = run_evaluate(asset_id, evaluation)
+        payload = evaluate_payload(
+            asset_id, evaluation, iteration=iteration,
+        )
+        check = payload.get("checkpoint") or {}
         _emit(
             json_mode,
-            record.model_dump(mode="json"),
+            payload,
             lambda: typer.echo(
-                f"iteration {record.iteration}: "
-                f"{'ship' if record.ship else 'hold'}",
+                f"iteration {payload.get('iteration')}: "
+                f"{check.get('verdict') or 'hold'} "
+                f"(best={check.get('current_best')})",
             ),
+        )
+
+    _guard(json_mode, _run)
+
+
+@app.command()
+def checkpoint(
+    asset_id: Annotated[str, typer.Argument()],
+    json_mode: JsonFlag = False,
+    iteration: Annotated[
+        int | None,
+        typer.Option(
+            "--iteration",
+            help="Snapshot to mark as current_best.",
+        ),
+    ] = None,
+) -> None:
+    """Promote an existing snapshot to current_best."""
+
+    def _run():
+        from mason.pipelines.checkpoint import promote_checkpoint
+        root = find_project_root()
+        job = require_job(root, asset_id)
+        payload = promote_checkpoint(job, iteration)
+        _emit(
+            json_mode,
+            payload,
+            lambda: typer.echo(f"current_best={payload['current_best']}"),
+        )
+
+    _guard(json_mode, _run)
+
+
+@app.command()
+def revert(
+    asset_id: Annotated[str, typer.Argument()],
+    json_mode: JsonFlag = False,
+    iteration: Annotated[
+        int | None,
+        typer.Option(
+            "--iteration",
+            help="Snapshot to restore. Default: current_best.",
+        ),
+    ] = None,
+) -> None:
+    """Restore job + source spec from current_best (or --iteration)."""
+
+    def _run():
+        from mason.pipelines.checkpoint import restore_checkpoint
+        root = find_project_root()
+        job = require_job(root, asset_id)
+        payload = restore_checkpoint(job, iteration)
+        _emit(
+            json_mode,
+            payload,
+            lambda: typer.echo(f"restored iteration {payload['restored']}"),
         )
 
     _guard(json_mode, _run)

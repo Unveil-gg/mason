@@ -24,6 +24,7 @@ class JobMeta(BaseModel):
     created_at: str = ""
     updated_at: str = ""
     iteration: int = 0
+    current_best: int | None = None
 
 
 class AssetJob:
@@ -119,22 +120,37 @@ class AssetJob:
         source_spec: str | None,
         *,
         iteration: int | None = None,
+        current_best: int | None = None,
+        set_best: bool = False,
     ) -> None:
         now = datetime.now(timezone.utc).isoformat()
         existing = self.load_meta()
         created = existing.created_at if existing else now
         if iteration is None:
             iteration = existing.iteration if existing else 0
+        if not set_best:
+            current_best = existing.current_best if existing else None
         meta = JobMeta(
             asset_id=self.asset_id,
             source_spec=source_spec,
             created_at=created,
             updated_at=now,
             iteration=iteration,
+            current_best=current_best,
         )
         self.meta_yaml.write_text(
             yaml.safe_dump(meta.model_dump(), sort_keys=False),
             encoding="utf-8",
+        )
+
+    def set_current_best(self, iteration: int | None) -> None:
+        """Record the highest-quality snapshot. Does not bump."""
+        existing = self.load_meta()
+        self.write_meta(
+            existing.source_spec if existing else None,
+            iteration=existing.iteration if existing else 0,
+            current_best=iteration,
+            set_best=True,
         )
 
     def bump_iteration(self) -> int:

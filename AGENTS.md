@@ -35,8 +35,9 @@ previews in a fresh pass and looks for reasons not to ship.
 6. Write `geometric_plan` (intent): primary read, recognition
    driver, masses, silhouette vs similar objects, proportions,
    symmetry, negative space, abstraction, landmarks bound to
-   `part`+`node`, and `stage` (blockout / silhouette / secondary /
-   tertiary / material / final). Do not assume anatomical realism.
+   `part`+`node`, `critical_views` (which cameras matter most),
+   and `stage` (blockout / silhouette / secondary / tertiary /
+   material / final). Do not assume anatomical realism.
 7. Choose hybrid modeling techniques from the object's geometry
    (lathe, box, curve, outline, skin, remesh, modular). Record them
    on `construction_plan.techniques`. ConstructionPlan is intent,
@@ -63,10 +64,17 @@ previews in a fresh pass and looks for reasons not to ship.
     `silhouette_regressed` is advisory.
 15. Record the critique: `mason evaluate <id> <evaluation.json>`.
     Set `mode` (beauty|silhouette), `represents_object`,
-    `represents_style`, `stage`, and ranked `discrepancies`
+    `represents_style`, `stage`, `view_scores`, and `compare`
+    versus `current_best` (`improves` / `worsens` / verdict
+    accept|reject|try_again). Ranked `discrepancies`
     (critical / major / minor) with `geometric_intent` and a
     landmark. Recognition alone is not success. Do not advance
     `stage` while any critical discrepancy remains.
+    Newest is never automatically best: accept only if the
+    candidate is meaningfully better and no critical view
+    dropped. Otherwise `mason revert` and try another edit.
+    For hard corrections, branch best-of-N candidates from
+    the same checkpoint and promote at most one.
 16. Translate intent to a landmark/control-point edit, record
     `actions_taken` on the next evaluate, rebuild. Use
     `mason history <id> --json --summary`.
@@ -75,7 +83,7 @@ previews in a fresh pass and looks for reasons not to ship.
 18. Treat `asset.yaml`, `art_direction.yaml`,
     `construction_plan.yaml`, `geometric_plan.yaml`, and
     `build.py` as reproducible source.
-18. Export with `mason export <id> --to <dir>` when needed. Only
+19. Export with `mason export <id> --to <dir>` when needed. Only
     finished glb/png (and sprite `frames.json`) are copied. For a
     multi-asset pack, write `kits/<id>.yaml` ({id, name, members})
     and run `mason export --kit <id> --to <dir>` once every member

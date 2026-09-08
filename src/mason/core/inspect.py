@@ -8,6 +8,7 @@ from mason.core.jobs import AssetJob
 from mason.core.results import SLIM_METRICS_KEYS
 from mason.core.styles import QualityGuidance, StyleProfile, load_style
 from mason.core.preview_roles import preview_roles_for
+from mason.pipelines.checkpoint import checkpoint_status
 from mason.pipelines.compare import reference_iou, silhouette_regressed
 
 
@@ -55,6 +56,8 @@ def inspect_payload(job: AssetJob, *, full: bool = False) -> dict[str, Any]:
         ),
         "depends_on": list(spec.depends_on),
         "iteration": latest_iter,
+        "current_best": meta.current_best if meta else None,
+        "checkpoint": checkpoint_status(job),
         "evaluation": (
             latest_eval.model_dump(mode="json") if latest_eval else None
         ),

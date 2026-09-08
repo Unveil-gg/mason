@@ -68,6 +68,7 @@ def test_inspect_includes_art_and_iteration(project: Path) -> None:
     job = _seed_job(project)
     payload = inspect_payload(job)
     assert payload["iteration"] == 1
+    assert payload["current_best"] is None
     assert payload["art_direction"]["subject"] == "crate"
     assert payload["evaluation"] is None
     assert payload["previews"]["front"].endswith("front.png")
@@ -114,10 +115,13 @@ def test_evaluate_and_history(project: Path, monkeypatch) -> None:
     data = json.loads(result.stdout)
     assert data["iteration"] == 1
     assert data["ship"] is False
+    assert data["checkpoint"]["current_best"] == 1
     hist = runner.invoke(app, ["history", "box", "--json"])
     assert hist.exit_code == 0
     payload = json.loads(hist.stdout)
     assert payload["iterations"][0]["evaluation_ship"] is False
+    assert payload["current_best"] == 1
+    assert payload["iterations"][0]["is_best"] is True
     summary = runner.invoke(app, ["history", "box", "--json", "--summary"])
     assert summary.exit_code == 0
     slim = json.loads(summary.stdout)
@@ -127,3 +131,4 @@ def test_evaluate_and_history(project: Path, monkeypatch) -> None:
     assert inspect.exit_code == 0
     info = json.loads(inspect.stdout)
     assert info["evaluation"]["scores"]["silhouette"] == 5
+    assert info["current_best"] == 1

@@ -18,8 +18,9 @@ Separate creator and critic even if you are one model.
 3. Run `mason vocab --json` and read the style profile.
 4. If references exist, inspect them and write `art_analysis`.
 5. Write `art_direction` (forms, usage, silhouette, materials).
-6. Write geometric_plan (masses, silhouette, landmarks, stage).
-   Intent only. Recognition is not ship; style/type must match.
+6. Write geometric_plan (masses, silhouette, landmarks,
+   critical_views, stage). Intent only. Recognition is not
+   ship; style/type must match.
 7. Choose hybrid techniques (lathe/box/curve/outline/skin/remesh)
    and record them on construction_plan.techniques. Intent only.
 8. Create or modify the AssetSpec YAML. Blockout first when
@@ -30,7 +31,9 @@ Separate creator and critic even if you are one model.
     first. Ignore materials and tiny details.
 12. Inspect beauty three_quarter.png after the silhouette holds.
 13. Inspect clay_three_quarter.png if geometry needs review.
-14. Evaluate with ranked discrepancies (critical/major/minor).
+14. Evaluate vs current_best (view_scores + compare verdict).
+    Reject if a critical view dropped. Newest is not best.
+    Revert and retry, or try best-of-N from the checkpoint.
     Do not advance stage while critical issues remain.
 15. Move named landmarks, record actions_taken, rebuild.
 16. Repeat until validation passes and evaluation `ship` is true.

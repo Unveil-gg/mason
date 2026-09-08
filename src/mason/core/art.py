@@ -241,6 +241,12 @@ class EvalScores(BaseModel):
     game_readability: int = Field(ge=1, le=10)
     continuity: int | None = Field(default=None, ge=1, le=10)
     form_conviction: int | None = Field(default=None, ge=1, le=10)
+    target_identity: int | None = Field(default=None, ge=1, le=10)
+    primary_silhouette: int | None = Field(default=None, ge=1, le=10)
+    major_masses: int | None = Field(default=None, ge=1, le=10)
+    style_match: int | None = Field(default=None, ge=1, le=10)
+    multi_view_coherence: int | None = Field(default=None, ge=1, le=10)
+    technical_quality: int | None = Field(default=None, ge=1, le=10)
 
 
 class EvalIssue(BaseModel):
@@ -265,6 +271,28 @@ class EvalDiscrepancy(BaseModel):
     landmark: str | None = None
 
 
+class ViewScore(BaseModel):
+    """Per-view critic score used to block cross-view regression."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    view: str
+    score: int = Field(ge=1, le=10)
+    notes: str = ""
+
+
+class CompareToBest(BaseModel):
+    """Candidate versus current_best. Required for a promote."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    best_iteration: int | None = None
+    improves: list[str] = Field(default_factory=list)
+    worsens: list[str] = Field(default_factory=list)
+    verdict: Literal["accept", "reject", "try_again"] | None = None
+    reason: str = ""
+
+
 class VisualEvaluation(BaseModel):
     """Critic scores written by mason evaluate, not by the build."""
 
@@ -280,6 +308,9 @@ class VisualEvaluation(BaseModel):
     stage: QualityStage | None = None
     actions_taken: list[str] = Field(default_factory=list)
     acceptance_reason: str = ""
+    view_scores: list[ViewScore] = Field(default_factory=list)
+    compare: CompareToBest | None = None
+    candidate: str | None = None
     ship: bool = False
     iteration: int | None = None
     created_at: str = ""

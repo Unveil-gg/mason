@@ -161,12 +161,15 @@ def test_silhouette_eval_ranked_discrepancies() -> None:
     assert evaluation.mode == "silhouette"
     assert evaluation.discrepancies[0].rank == "critical"
     assert evaluation.represents_style is False
+    assert evaluation.view_scores == []
+    assert evaluation.compare is None
 
 
 def test_geometric_plan_defaults() -> None:
     plan = GeometricPlan()
     assert plan.stage == "blockout"
     assert plan.landmarks == []
+    assert plan.critical_views == []
 
 
 def test_construction_plan_empty() -> None:

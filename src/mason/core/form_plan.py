@@ -53,6 +53,15 @@ class MassNote(BaseModel):
     notes: str = ""
 
 
+class ViewWeight(BaseModel):
+    """One camera or silhouette view and its critique weight."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    view: str
+    weight: float = Field(default=1.0, gt=0)
+
+
 class GeometricPlan(BaseModel):
     """Form analysis written before parts. Not compiled."""
 
@@ -73,5 +82,6 @@ class GeometricPlan(BaseModel):
     negative_space: str = ""
     abstraction: str = ""
     landmarks: list[Landmark] = Field(default_factory=list)
+    critical_views: list[ViewWeight] = Field(default_factory=list)
     stage: QualityStage = "blockout"
     notes: list[str] = Field(default_factory=list)

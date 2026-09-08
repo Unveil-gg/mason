@@ -176,3 +176,6 @@ def test_knight_example_parses() -> None:
     assert spec.geometric_plan is not None
     assert spec.geometric_plan.recognition == "silhouette"
     assert spec.geometric_plan.landmarks[0].node == "neck_base"
+    assert spec.geometric_plan.critical_views[0].view == (
+        "silhouette_side"
+    )

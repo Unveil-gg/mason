@@ -10,10 +10,30 @@ from mason.core.jobs import require_job
 from mason.core.runs import JobRun
 from mason.core.workspace import find_project_root
 from mason.errors import MasonError
+from mason.pipelines.checkpoint import apply_checkpoint
 
 
-def run_evaluate(asset_id: str, evaluation_path: Path) -> VisualEvaluation:
-    """Validate and persist a critic evaluation for the current iteration."""
+def run_evaluate(
+    asset_id: str,
+    evaluation_path: Path,
+    *,
+    iteration: int | None = None,
+) -> VisualEvaluation:
+    """Validate and persist a critic evaluation, then apply checkpoint."""
+    payload = evaluate_payload(
+        asset_id, evaluation_path, iteration=iteration,
+    )
+    payload.pop("checkpoint", None)
+    return VisualEvaluation.model_validate(payload)
+
+
+def evaluate_payload(
+    asset_id: str,
+    evaluation_path: Path,
+    *,
+    iteration: int | None = None,
+) -> dict:
+    """Evaluation dump plus checkpoint accept/reject."""
     if not evaluation_path.is_file():
         raise MasonError(
             f"Evaluation file not found: {evaluation_path}",
@@ -32,12 +52,18 @@ def run_evaluate(asset_id: str, evaluation_path: Path) -> VisualEvaluation:
     root = find_project_root()
     job = require_job(root, asset_id)
     meta = job.load_meta()
-    iteration = meta.iteration if meta and meta.iteration else 1
+    if iteration is None:
+        iteration = meta.iteration if meta and meta.iteration else 1
     evaluation.iteration = iteration
     if not evaluation.created_at:
         evaluation.created_at = datetime.now(timezone.utc).isoformat()
     job.write_evaluation(evaluation)
-    return evaluation
+    status = apply_checkpoint(job, evaluation)
+    stored = job.load_evaluation(evaluation.iteration or iteration)
+    record = stored or evaluation
+    payload = record.model_dump(mode="json")
+    payload["checkpoint"] = status
+    return payload
 
 
 def history_payload(asset_id: str, *, summary: bool = False) -> dict:
@@ -48,6 +74,8 @@ def history_payload(asset_id: str, *, summary: bool = False) -> dict:
     primary_key = "full"
     if result and result.preview_roles.get("primary"):
         primary_key = result.preview_roles["primary"]
+    meta = job.load_meta()
+    current_best = meta.current_best if meta else None
     rows = []
     for number in job.list_iterations():
         evaluation = job.load_evaluation(number)
@@ -59,6 +87,7 @@ def history_payload(asset_id: str, *, summary: bool = False) -> dict:
         row = {
             "iteration": number,
             "built_at": result.built_at if result else None,
+            "is_best": number == current_best,
             "evaluation_ship": evaluation.ship if evaluation else None,
             "evaluation_passed": evaluation.passed if evaluation else None,
         }
@@ -71,6 +100,10 @@ def history_payload(asset_id: str, *, summary: bool = False) -> dict:
                 1 for d in evaluation.discrepancies
                 if d.rank == "critical"
             )
+            if evaluation.compare:
+                row["verdict"] = evaluation.compare.verdict
+            if evaluation.candidate:
+                row["candidate"] = evaluation.candidate
             if evaluation.actions_taken:
                 row["actions_taken"] = evaluation.actions_taken
             if evaluation.acceptance_reason:
@@ -88,7 +121,11 @@ def history_payload(asset_id: str, *, summary: bool = False) -> dict:
         else:
             row["previews"] = previews
         rows.append(row)
-    return {"asset_id": asset_id, "iterations": rows}
+    return {
+        "asset_id": asset_id,
+        "current_best": current_best,
+        "iterations": rows,
+    }
 
 
 def _primary_preview(previews: dict[str, str], primary_key: str) -> str | None:

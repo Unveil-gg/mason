@@ -14,10 +14,9 @@ from mason.pipelines.ingest import silhouette_iou
 def write_compare_plate(job: AssetJob) -> Path | None:
     """Write previews/compare.png. Returns the path, or None.
 
-    Layout is [current silhouette, current beauty; previous
-    iteration's beauty (frozen, for regression diffing), reference
-    or detail crop]. Each tile is captioned so "previous iteration"
-    is never mistaken for the live model.
+    Layout is [current silhouette, current beauty; current_best
+    beauty (frozen checkpoint), reference or detail crop]. Falls
+    back to the previous iteration when no checkpoint exists.
     """
     job.previews.mkdir(parents=True, exist_ok=True)
     current_sil = _current_silhouette(job)
@@ -25,14 +24,14 @@ def write_compare_plate(job: AssetJob) -> Path | None:
     if current_sil is None and current_beauty is None:
         return None
     size = _tile_size(current_sil or current_beauty)
-    prev_dir = _previous_preview_dir(job)
+    prev_dir, prev_n, prev_kind = _compare_baseline(job)
     prev_beauty = _first_existing(prev_dir, (
         "three_quarter.png", "full.png", "silhouette_front.png",
     ))
-    prev_n = None
-    if prev_dir is not None and prev_dir.parent.name.isdigit():
-        prev_n = int(prev_dir.parent.name)
-    prev_label = f"previous (iter {prev_n:03d})" if prev_n else "previous"
+    if prev_n:
+        prev_label = f"{prev_kind} (iter {prev_n:03d})"
+    else:
+        prev_label = prev_kind
     ref = job.previews / "reference_silhouette.png"
     detail = _first_existing(job.previews, (
         "detail.png", "full.png",
@@ -61,14 +60,13 @@ def compare_payload(job: AssetJob) -> dict:
     path = write_compare_plate(job)
     meta = job.load_meta()
     current = meta.iteration if meta else 0
-    prev_dir = _previous_preview_dir(job)
-    prev_n = None
-    if prev_dir is not None and prev_dir.parent.name.isdigit():
-        prev_n = int(prev_dir.parent.name)
+    _prev_dir, prev_n, prev_kind = _compare_baseline(job)
     payload = {
         "compare": job.rel(path) if path else None,
         "iteration": current,
         "previous_iteration": prev_n,
+        "current_best": meta.current_best if meta else None,
+        "baseline": prev_kind,
         "silhouette_regressed": silhouette_regressed(job),
     }
     iou = reference_iou(job)
@@ -78,12 +76,27 @@ def compare_payload(job: AssetJob) -> dict:
 
 
 def silhouette_regressed(job: AssetJob) -> bool:
-    """True if the last two evaluations exist and silhouette dropped."""
+    """True if silhouette dropped vs current_best or the prior eval."""
+    meta = job.load_meta()
+    if meta and meta.current_best and meta.iteration:
+        if _silhouette_dropped(
+            job.load_evaluation(meta.current_best),
+            job.load_evaluation(meta.iteration),
+        ):
+            return True
     found = job.list_evaluations()
     if len(found) < 2:
         return False
-    older = job.load_evaluation(found[-2][0])
-    newer = job.load_evaluation(found[-1][0])
+    return _silhouette_dropped(
+        job.load_evaluation(found[-2][0]),
+        job.load_evaluation(found[-1][0]),
+    )
+
+
+def _silhouette_dropped(
+    older: object,
+    newer: object,
+) -> bool:
     if older is None or newer is None:
         return False
     older_s = older.scores.silhouette
@@ -127,6 +140,20 @@ def _current_beauty(job: AssetJob) -> Path | None:
         if path.is_file():
             return path
     return None
+
+
+def _compare_baseline(job: AssetJob) -> tuple[Path | None, int | None, str]:
+    """Prefer current_best previews over the previous iteration."""
+    meta = job.load_meta()
+    if meta and meta.current_best:
+        folder = job.iterations / f"{meta.current_best:03d}" / "previews"
+        if folder.is_dir():
+            return folder, meta.current_best, "best"
+    prev = _previous_preview_dir(job)
+    prev_n = None
+    if prev is not None and prev.parent.name.isdigit():
+        prev_n = int(prev.parent.name)
+    return prev, prev_n, "previous"
 
 
 def _previous_preview_dir(job: AssetJob) -> Path | None:
