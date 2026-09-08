@@ -72,6 +72,9 @@ def test_vocab_json() -> None:
     assert "outline" in data["shapes"]
     assert "modeling" in data
     assert "construction_plan.techniques" in data["modeling"]
+    assert "geometric_plan" in data
+    assert "landmarks" in data["geometric_plan"]
+    assert "critical|" in data["critique"]
     assert "profile:" in data["lathe"]
     assert "origin: center|base" in data["bend"]
     assert "--fetch" in data["ingest"]

@@ -7,7 +7,7 @@ art_direction:
   usage:
     importance: hero
     viewing_distance: close
-  silhouette: weighted turned base, S-curve neck, horse head in profile
+  silhouette: weighted turned base, backward-arched neck, compact carved head
   forms:
     primary: [turned socle, stem, arched neck, horse head]
     secondary: [muzzle, jaw, ears, mane crest]
@@ -20,6 +20,61 @@ art_direction:
   - path: examples/ref/staunton_knight.jpg
     purpose: color
   constraints: []
+geometric_plan:
+  primary_read: sculptural side profile, not a literal horse
+  recognition: silhouette
+  must_survive_small:
+  - turned weighted base
+  - backward-arched neck
+  - compact downward muzzle
+  - two small rear ears
+  masses:
+  - name: socle
+    role: primary
+    notes: rotationally symmetric foot
+  - name: stem
+    role: primary
+    connects_to: [socle, neck]
+    notes: turned column
+  - name: neck
+    role: primary
+    connects_to: [stem, skull]
+    notes: thick S-curve, arches back then into the head
+  - name: skull
+    role: primary
+    connects_to: [neck, muzzle]
+    notes: rear mass and brow, not a long snout
+  silhouette: >
+    Side view is the identity view. Neck rises and bows toward +Y
+    (away from the face), then the head hooks compactly toward -Y
+    and slightly down. Distinguish from a cute/literal horse or
+    llama by the short muzzle and heavy rear skull/mane.
+  silhouette_vs_similar: >
+    Not a toy horse on a stick. Not a long horizontal head.
+    Ears are two small points at the poll, not one fused crest.
+  proportions: >
+    Base ~1/5 of height. Neck mass thicker than the muzzle.
+    Muzzle shorter than the skull. Ears small vs the poll.
+  symmetry: bilateral
+  negative_space: notch under the jaw; gap behind the ears
+  abstraction: stylized sculptural carving, not anatomical realism
+  stage: silhouette
+  landmarks:
+  - {id: neck_base, role: neck base, part: upper, node: neck_base}
+  - {id: neck_apex, role: rear neck apex, part: upper, node: neck_apex}
+  - {id: withers, role: rear skull/mane mass, part: upper, node: withers}
+  - {id: poll, role: poll, part: upper, node: poll}
+  - {id: brow, role: brow, part: upper, node: brow}
+  - {id: muzzle, role: muzzle root, part: upper, node: muzzle}
+  - {id: nose, role: nose tip, part: upper, node: nose}
+  - {id: jaw, role: lower jaw, part: upper, node: jaw}
+  - {id: ear_l, role: left ear base, part: upper, node: ear_l}
+  - {id: ear_l_tip, role: left ear tip, part: upper, node: ear_l_tip}
+  - {id: ear_r, role: right ear base, part: upper, node: ear_r}
+  - {id: ear_r_tip, role: right ear tip, part: upper, node: ear_r_tip}
+  notes:
+  - Face -Y. +Y is the rear of the neck.
+  - Bind critiques to these nodes; do not regenerate the whole head.
 construction_plan:
   techniques:
   - kind: lathe
@@ -90,9 +145,9 @@ geometry:
     members: [upper]
     method: remesh
     remesh:
-      voxel_size: 0.0016
+      voxel_size: 0.0014
       adaptivity: 0.0
-    smooth: 1
+    smooth: 0
     subdivide: 0
   parts:
   - name: socle
@@ -130,26 +185,30 @@ geometry:
       subdivide: 2
       smooth: true
       nodes:
-      - {id: neck_base, at: [0.0, 0.0, 0.0], radius: 0.014}
-      - {id: neck, at: [0.0, -0.005, 0.008], radius: 0.011}
-      - {id: neck_arch, at: [0.0, -0.014, 0.016], radius: 0.0105}
-      - {id: withers, at: [0.0, -0.010, 0.024], radius: 0.007}
-      - {id: poll, at: [0.0, -0.016, 0.032], radius: 0.008}
-      - {id: skull, at: [0.0, -0.022, 0.022], radius: 0.011}
-      - {id: cheek_l, at: [-0.007, -0.026, 0.024], radius: 0.006}
-      - {id: cheek_r, at: [0.007, -0.026, 0.024], radius: 0.006}
-      - {id: muzzle, at: [0.0, -0.038, 0.024], radius: 0.006}
-      - {id: nose, at: [0.0, -0.050, 0.020], radius: 0.0045}
-      - {id: jaw, at: [0.0, -0.028, 0.016], radius: 0.007}
-      - {id: chin, at: [0.0, -0.042, 0.015], radius: 0.0045}
-      - {id: ear_l, at: [-0.007, -0.012, 0.044], radius: 0.0038}
-      - {id: ear_r, at: [0.007, -0.012, 0.044], radius: 0.0038}
+      - {id: neck_base, at: [0.0, 0.002, 0.0], radius: 0.014}
+      - {id: neck, at: [0.0, 0.006, 0.010], radius: 0.0115}
+      - {id: neck_apex, at: [0.0, 0.018, 0.018], radius: 0.0105}
+      - {id: withers, at: [0.0, 0.020, 0.026], radius: 0.010}
+      - {id: poll, at: [0.0, 0.008, 0.034], radius: 0.007}
+      - {id: skull, at: [0.0, -0.006, 0.026], radius: 0.011}
+      - {id: brow, at: [0.0, -0.012, 0.029], radius: 0.0055}
+      - {id: cheek_l, at: [-0.007, -0.010, 0.024], radius: 0.005}
+      - {id: cheek_r, at: [0.007, -0.010, 0.024], radius: 0.005}
+      - {id: muzzle, at: [0.0, -0.018, 0.022], radius: 0.005}
+      - {id: nose, at: [0.0, -0.024, 0.018], radius: 0.0036}
+      - {id: jaw, at: [0.0, -0.010, 0.016], radius: 0.006}
+      - {id: chin, at: [0.0, -0.016, 0.014], radius: 0.0038}
+      - {id: ear_l, at: [-0.011, 0.010, 0.036], radius: 0.002}
+      - {id: ear_l_tip, at: [-0.013, 0.013, 0.040], radius: 0.0011}
+      - {id: ear_r, at: [0.011, 0.010, 0.036], radius: 0.002}
+      - {id: ear_r_tip, at: [0.013, 0.013, 0.040], radius: 0.0011}
       edges:
       - [neck_base, neck]
-      - [neck, neck_arch]
-      - [neck_arch, withers]
+      - [neck, neck_apex]
+      - [neck_apex, withers]
       - [withers, poll]
-      - [neck_arch, skull]
+      - [neck_apex, skull]
+      - [skull, brow]
       - [skull, muzzle]
       - [muzzle, nose]
       - [skull, jaw]
@@ -158,11 +217,13 @@ geometry:
       - [skull, cheek_l]
       - [skull, cheek_r]
       - [poll, ear_l]
+      - [ear_l, ear_l_tip]
       - [poll, ear_r]
+      - [ear_r, ear_r_tip]
   - name: eye
     shape: sphere
     size: [0.004, 0.0032, 0.0032]
-    location: [-0.008, -0.028, 0.081]
+    location: [-0.007, -0.012, 0.084]
     material: charcoal
     family: bare_metal
     mirror: x

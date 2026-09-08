@@ -8,6 +8,7 @@ from mason.tools.blender.preview import (
     BEAUTY_VIEWS,
     DIAGNOSTIC_VIEWS,
     PRIMARY_VIEW,
+    SILHOUETTE_VIEWS,
 )
 
 
@@ -18,11 +19,13 @@ def preview_roles_for(asset_type: str) -> dict[str, Any]:
             "primary": "full",
             "beauty": ["full"],
             "diagnostic": ["compare"],
+            "silhouette": [],
             "context": None,
         }
     return {
         "primary": PRIMARY_VIEW,
         "beauty": list(BEAUTY_VIEWS),
         "diagnostic": list(DIAGNOSTIC_VIEWS),
+        "silhouette": list(SILHOUETTE_VIEWS),
         "context": None,
     }

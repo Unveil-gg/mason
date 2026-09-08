@@ -6,6 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from mason.core.form_plan import GeometricPlan, QualityStage
+
 
 class UsageSpec(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -250,6 +252,19 @@ class EvalIssue(BaseModel):
     suggested_change: str = ""
 
 
+class EvalDiscrepancy(BaseModel):
+    """Ranked geometric error. Fix critical before major/minor."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    rank: Literal["critical", "major", "minor"]
+    category: str
+    description: str
+    geometric_intent: str = ""
+    suggested_action: str = ""
+    landmark: str | None = None
+
+
 class VisualEvaluation(BaseModel):
     """Critic scores written by mason evaluate, not by the build."""
 
@@ -258,6 +273,13 @@ class VisualEvaluation(BaseModel):
     passed: bool
     scores: EvalScores
     issues: list[EvalIssue] = Field(default_factory=list)
+    discrepancies: list[EvalDiscrepancy] = Field(default_factory=list)
+    mode: Literal["beauty", "silhouette"] = "beauty"
+    represents_object: bool | None = None
+    represents_style: bool | None = None
+    stage: QualityStage | None = None
+    actions_taken: list[str] = Field(default_factory=list)
+    acceptance_reason: str = ""
     ship: bool = False
     iteration: int | None = None
     created_at: str = ""
@@ -268,5 +290,6 @@ class ArtFields(BaseModel):
 
     art_direction: ArtDirection | None = None
     construction_plan: ConstructionPlan | None = None
+    geometric_plan: GeometricPlan | None = None
     art_analysis: ArtAnalysis | None = None
     depends_on: list[str] = Field(default_factory=list)

@@ -173,3 +173,6 @@ def test_knight_example_parses() -> None:
     assert spec.geometry.bodies[0].method == "remesh"
     kinds = [t.kind for t in spec.construction_plan.techniques]
     assert kinds == ["lathe", "skin", "remesh"]
+    assert spec.geometric_plan is not None
+    assert spec.geometric_plan.recognition == "silhouette"
+    assert spec.geometric_plan.landmarks[0].node == "neck_base"

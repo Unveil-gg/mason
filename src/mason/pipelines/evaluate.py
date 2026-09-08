@@ -62,6 +62,19 @@ def history_payload(asset_id: str, *, summary: bool = False) -> dict:
             "evaluation_ship": evaluation.ship if evaluation else None,
             "evaluation_passed": evaluation.passed if evaluation else None,
         }
+        if evaluation:
+            row["evaluation_mode"] = evaluation.mode
+            row["stage"] = evaluation.stage
+            row["represents_object"] = evaluation.represents_object
+            row["represents_style"] = evaluation.represents_style
+            row["critical_count"] = sum(
+                1 for d in evaluation.discrepancies
+                if d.rank == "critical"
+            )
+            if evaluation.actions_taken:
+                row["actions_taken"] = evaluation.actions_taken
+            if evaluation.acceptance_reason:
+                row["acceptance_reason"] = evaluation.acceptance_reason
         run_path = job.iterations / f"{number:03d}" / "run.json"
         if run_path.is_file():
             run = JobRun.model_validate_json(

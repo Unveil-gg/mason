@@ -9,6 +9,7 @@ from mason.core.art import (
     ConstructionPlan,
     VisualEvaluation,
 )
+from mason.core.form_plan import GeometricPlan
 from mason.core.assets import dump_asset_spec, parse_asset_spec
 from mason.core.styles import load_style
 
@@ -41,11 +42,20 @@ def test_spec_with_art_loop_roundtrip(tmp_path: Path) -> None:
             ],
             "notes": ["taper legs"],
         },
+        "geometric_plan": {
+            "recognition": "silhouette",
+            "stage": "blockout",
+            "landmarks": [
+                {"id": "seat_front", "role": "seat corner", "part": "seat"},
+            ],
+        },
         "depends_on": ["plank_texture"],
     })
     assert spec.art_direction.subject == "wooden chair"
     assert spec.construction_plan.notes == ["taper legs"]
     assert spec.construction_plan.techniques[0].kind == "box"
+    assert spec.geometric_plan.stage == "blockout"
+    assert spec.geometric_plan.landmarks[0].id == "seat_front"
     assert spec.depends_on == ["plank_texture"]
     dest = tmp_path / "chair.yaml"
     dump_asset_spec(spec, dest)
@@ -65,6 +75,7 @@ def test_old_spec_has_no_art_fields() -> None:
     })
     assert spec.art_direction is None
     assert spec.construction_plan is None
+    assert spec.geometric_plan is None
     assert spec.depends_on == []
 
 
@@ -115,6 +126,47 @@ def test_visual_evaluation_beauty_scores() -> None:
     assert evaluation.scores.overall_visual_quality == 7
     assert evaluation.scores.silhouette is None
     assert evaluation.scores.form_conviction is None
+    assert evaluation.mode == "beauty"
+    assert evaluation.discrepancies == []
+
+
+def test_silhouette_eval_ranked_discrepancies() -> None:
+    evaluation = VisualEvaluation.model_validate({
+        "passed": True,
+        "ship": False,
+        "mode": "silhouette",
+        "stage": "silhouette",
+        "represents_object": True,
+        "represents_style": False,
+        "scores": {
+            "proportions": 5,
+            "secondary_forms": 4,
+            "tertiary_detail": 3,
+            "materials": 5,
+            "visual_hierarchy": 5,
+            "style_consistency": 4,
+            "game_readability": 6,
+            "silhouette": 5,
+        },
+        "discrepancies": [{
+            "rank": "critical",
+            "category": "silhouette",
+            "description": "Neck lacks the backward arch",
+            "geometric_intent": "Increase rear neck curvature",
+            "suggested_action": "Move neck_apex +Y",
+            "landmark": "neck_apex",
+        }],
+        "actions_taken": ["moved neck_apex toward +Y"],
+    })
+    assert evaluation.mode == "silhouette"
+    assert evaluation.discrepancies[0].rank == "critical"
+    assert evaluation.represents_style is False
+
+
+def test_geometric_plan_defaults() -> None:
+    plan = GeometricPlan()
+    assert plan.stage == "blockout"
+    assert plan.landmarks == []
 
 
 def test_construction_plan_empty() -> None:

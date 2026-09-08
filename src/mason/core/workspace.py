@@ -18,23 +18,23 @@ Separate creator and critic even if you are one model.
 3. Run `mason vocab --json` and read the style profile.
 4. If references exist, inspect them and write `art_analysis`.
 5. Write `art_direction` (forms, usage, silhouette, materials).
-6. Choose hybrid techniques (lathe/box/curve/outline/skin/remesh)
+6. Write geometric_plan (masses, silhouette, landmarks, stage).
+   Intent only. Recognition is not ship; style/type must match.
+7. Choose hybrid techniques (lathe/box/curve/outline/skin/remesh)
    and record them on construction_plan.techniques. Intent only.
-   Recognition is not ship.
-7. Create or modify the AssetSpec YAML.
-8. Run `mason build <spec> --json`.
-9. Check technical validation. Do not ignore failures.
-10. Inspect beauty three_quarter.png first.
-11. Inspect clay_three_quarter.png if geometry needs review.
-12. Inspect front/side/top for structure. Silhouette only if
-    readability is questionable.
-13. Critically evaluate the beauty render: overall quality,
-    materials, secondary forms, style, game readability.
-    For organic work also score continuity and form_conviction.
-14. Record the critique with `mason evaluate <id> <evaluation.json>`.
-15. If it should not ship, revise and rebuild. Use `mason history`.
+8. Create or modify the AssetSpec YAML. Blockout first when
+   silhouette dominates recognition.
+9. Run `mason build <spec> --json`.
+10. Check technical validation. Do not ignore failures.
+11. If recognition is silhouette, inspect preview_roles.silhouette
+    first. Ignore materials and tiny details.
+12. Inspect beauty three_quarter.png after the silhouette holds.
+13. Inspect clay_three_quarter.png if geometry needs review.
+14. Evaluate with ranked discrepancies (critical/major/minor).
+    Do not advance stage while critical issues remain.
+15. Move named landmarks, record actions_taken, rebuild.
 16. Repeat until validation passes and evaluation `ship` is true.
-17. Treat asset.yaml, art_direction.yaml, construction_plan.yaml,
+17. Treat asset.yaml, geometric_plan.yaml, construction_plan.yaml,
     and build.py as reproducible source.
 
 Important rules:

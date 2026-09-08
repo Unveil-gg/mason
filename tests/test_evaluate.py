@@ -76,6 +76,7 @@ def test_inspect_includes_art_and_iteration(project: Path) -> None:
     assert payload["preview_roles"]["primary"] == "three_quarter"
     assert payload["preview_roles"]["context"] is None
     assert "clay_three_quarter" in payload["preview_roles"]["diagnostic"]
+    assert "silhouette_side" in payload["preview_roles"]["silhouette"]
     assert "spec" not in payload
     full = inspect_payload(job, full=True)
     assert "spec" in full

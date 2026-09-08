@@ -63,6 +63,9 @@ def inspect_payload(job: AssetJob, *, full: bool = False) -> dict[str, Any]:
         "silhouette_regressed": _silhouette_regressed(job),
         "preview_roles": preview_roles_for(spec.type),
     }
+    if spec.geometric_plan:
+        payload["stage"] = spec.geometric_plan.stage
+        payload["recognition"] = spec.geometric_plan.recognition
     iou = _silhouette_iou(job)
     if iou is not None:
         payload["silhouette_iou"] = iou
@@ -74,6 +77,10 @@ def inspect_payload(job: AssetJob, *, full: bool = False) -> dict[str, Any]:
         payload["construction_plan"] = (
             spec.construction_plan.model_dump(mode="json")
             if spec.construction_plan else None
+        )
+        payload["geometric_plan"] = (
+            spec.geometric_plan.model_dump(mode="json")
+            if spec.geometric_plan else None
         )
         payload["art_analysis"] = (
             spec.art_analysis.model_dump(mode="json")

@@ -87,6 +87,10 @@ class AssetJob:
         return self.dir / "art_analysis.yaml"
 
     @property
+    def geometric_plan_yaml(self) -> Path:
+        return self.dir / "geometric_plan.yaml"
+
+    @property
     def run_json(self) -> Path:
         return self.dir / "run.json"
 
@@ -178,6 +182,7 @@ class AssetJob:
         mapping = (
             (spec.art_direction, self.art_direction_yaml),
             (spec.construction_plan, self.construction_plan_yaml),
+            (spec.geometric_plan, self.geometric_plan_yaml),
             (spec.art_analysis, self.art_analysis_yaml),
         )
         for value, dest in mapping:
@@ -237,6 +242,7 @@ class AssetJob:
             self.validation_json,
             self.art_direction_yaml,
             self.construction_plan_yaml,
+            self.geometric_plan_yaml,
             self.art_analysis_yaml,
             self.run_json,
         ):

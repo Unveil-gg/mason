@@ -32,58 +32,62 @@ previews in a fresh pass and looks for reasons not to ship.
    from there. Ingest does not compile a mesh.
 5. Write `art_direction`: subject, usage, silhouette goal, primary /
    secondary / tertiary forms, material families, detail density.
-6. Choose hybrid modeling techniques from the object's geometry
+6. Write `geometric_plan` (intent): primary read, recognition
+   driver, masses, silhouette vs similar objects, proportions,
+   symmetry, negative space, abstraction, landmarks bound to
+   `part`+`node`, and `stage` (blockout / silhouette / secondary /
+   tertiary / material / final). Do not assume anatomical realism.
+7. Choose hybrid modeling techniques from the object's geometry
    (lathe, box, curve, outline, skin, remesh, modular). Record them
    on `construction_plan.techniques`. ConstructionPlan is intent,
-   not compiled into meshes. Recognition is not ship.
-7. Create or modify the AssetSpec (`geometry.parts`, `recipe`, or
-   `component`).
-8. Run `mason build <spec> --json`. Each run writes `run.json`
+   not compiled into meshes.
+8. Create or modify the AssetSpec (`geometry.parts`, `recipe`, or
+   `component`). For silhouette-dominated objects, block out
+   primary masses only at `stage: blockout`.
+9. Run `mason build <spec> --json`. Each run writes `run.json`
    (timings, prompt, triangles). `model`/`tokens` stay null unless
    `mason note <id> --model --tokens` records a measured count.
-9. Check technical validation. Do not ignore failures.
-   Success is not “Blender exited” or “the GLB exists.”
-10. Inspect `previews/three_quarter.png` first (beauty). This is
-    the primary artistic target. Ask:
-    - Does this look like a good game asset?
-    - Does it match the intended style?
-    - Does it look overly primitive?
-    - Are materials convincing?
-    - Are secondary forms present?
-    - Is the detail level appropriate?
-    - Is the form convincing, or merely recognizable?
-11. Inspect `clay_three_quarter.png` if geometry needs review
-    (proportions, bevels, intersections, continuity, shape
-    language). Required for organic / semi-organic assets.
-12. Inspect `front` / `side` / `top` for structural problems.
-13. Inspect silhouettes only if readability, identity, or
-    negative space is questionable. Do not ship or fail
-    primarily on silhouette. `silhouette_regressed` is advisory.
-14. Record the critique: `mason evaluate <id> <evaluation.json>`.
-    Score the beauty render (`overall_visual_quality`). Treat
-    `silhouette` as optional. For organic work, score
-    `continuity` and `form_conviction`. Recognition alone is
-    not success. Identify reasons not to ship
-    (`primitive_assembly`, `continuity`, `intersection`,
-    `transition`, `defining_features`).
-15. If `ship` is false, modify spec/plan/source and rebuild.
-    Compare `iterations/NNN` via `mason history <id> --json --summary`.
-16. Repeat until validation passes, the beauty render looks
-    production-ready, and evaluation `ship` is true.
-17. Treat `asset.yaml`, `art_direction.yaml`, `construction_plan.yaml`,
-    and `build.py` as reproducible source.
+10. Check technical validation. Do not ignore failures.
+    Success is not “Blender exited” or “the GLB exists.”
+11. If `geometric_plan.recognition` is silhouette, inspect
+    `preview_roles.silhouette` first (black-on-white). Ignore
+    materials, textures, and tiny details. Ask: is the STYLE/TYPE
+    correct, not merely recognizable?
+12. Inspect `previews/three_quarter.png` (beauty) after the
+    silhouette is acceptable, or when recognition is mixed.
+    Ask whether the form is convincing, not merely recognizable.
+13. Inspect `clay_three_quarter.png` if geometry needs review
+    (proportions, continuity, shape language). Required for
+    organic / semi-organic assets.
+14. Inspect `front` / `side` / `top` for structure.
+    `silhouette_regressed` is advisory.
+15. Record the critique: `mason evaluate <id> <evaluation.json>`.
+    Set `mode` (beauty|silhouette), `represents_object`,
+    `represents_style`, `stage`, and ranked `discrepancies`
+    (critical / major / minor) with `geometric_intent` and a
+    landmark. Recognition alone is not success. Do not advance
+    `stage` while any critical discrepancy remains.
+16. Translate intent to a landmark/control-point edit, record
+    `actions_taken` on the next evaluate, rebuild. Use
+    `mason history <id> --json --summary`.
+17. Repeat until validation passes, no critical discrepancies,
+    beauty looks production-ready, and `ship` is true.
+18. Treat `asset.yaml`, `art_direction.yaml`,
+    `construction_plan.yaml`, `geometric_plan.yaml`, and
+    `build.py` as reproducible source.
 18. Export with `mason export <id> --to <dir>` when needed. Only
     finished glb/png (and sprite `frames.json`) are copied. For a
     multi-asset pack, write `kits/<id>.yaml` ({id, name, members})
     and run `mason export --kit <id> --to <dir>` once every member
     has a successful build.
 
-The beauty three-quarter render is the primary artistic
-evaluation image. Inspect it before diagnostic renders. Do not
-treat silhouette success as proof that an asset is visually
-complete. Use clay for modeling quality. Use silhouettes for
-readability and shape. When `preview_roles.context` is set,
-prefer that in-engine preview as the last look.
+When `geometric_plan.recognition` is silhouette, inspect
+`preview_roles.silhouette` before beauty. Beauty three-quarter
+is the primary artistic image once the profile holds. Do not
+treat silhouette success as proof the asset is visually
+complete. Use clay for modeling quality. When
+`preview_roles.context` is set, prefer that in-engine preview
+as the last look.
 
 Important rules:
 
