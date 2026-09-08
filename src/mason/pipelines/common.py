@@ -79,6 +79,8 @@ def finish_result(
     job.write_art_sidecars(spec)
     job.write_validation(report)
     job.write_result(result)
+    from mason.pipelines.silhouette import write_job_metrics
+    write_job_metrics(job)
     iteration = job.bump_iteration()
     record_build_run(job, result, iteration)
     job.snapshot_iteration(iteration)

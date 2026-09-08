@@ -9,6 +9,7 @@ from mason.core.assets import dump_asset_spec, load_asset_spec
 from mason.core.form_plan import GeometricPlan, ViewWeight
 from mason.core.jobs import AssetJob
 from mason.errors import MasonError
+from mason.pipelines.silhouette import iou_regressed, load_metrics
 
 CRITICAL_DROP = 2
 IMPROVE_DELTA = 1
@@ -18,7 +19,10 @@ _SIDECARS = (
     "construction_plan.yaml",
     "geometric_plan.yaml",
     "art_analysis.yaml",
+    "reference_analysis.yaml",
     "validation.json",
+    "result.json",
+    "silhouette_metrics.json",
 )
 
 
@@ -136,6 +140,14 @@ def apply_checkpoint(
     compare = evaluation.compare
     verdict = compare.verdict if compare else None
     reason = compare.reason if compare else ""
+    iou_dropped = []
+    if best_n and best_n != candidate:
+        iou_dropped = iou_regressed(
+            load_metrics(job, candidate),
+            load_metrics(job, best_n),
+            [row.view for row in views],
+        )
+        dropped = list(dict.fromkeys([*dropped, *iou_dropped]))
     if dropped:
         verdict = "reject"
         names = ", ".join(dropped)
@@ -244,9 +256,10 @@ def restore_checkpoint(
             continue
         src = snap / name
         dest = job.dir / name
-        if src.is_file() and not dest.is_file():
+        if src.is_file():
             dest.write_bytes(src.read_bytes())
     _copy_previews(snap / "previews", job.previews)
+    outputs_restored = _copy_dir(snap / "output", job.output)
     source_spec = None
     if meta and meta.source_spec:
         dest = job.project_root / meta.source_spec
@@ -257,6 +270,7 @@ def restore_checkpoint(
         "restored": target,
         "source_spec": source_spec,
         "current_best": meta.current_best if meta else target,
+        "outputs_restored": outputs_restored,
     }
 
 
@@ -288,10 +302,69 @@ def promote_checkpoint(job: AssetJob, iteration: int | None = None) -> dict:
     }
 
 
+def restart_parts(
+    job: AssetJob,
+    *,
+    keep: list[str],
+    rebuild: list[str],
+) -> dict:
+    """Copy keep parts from current_best; drop rebuild parts."""
+    meta = job.load_meta()
+    best = meta.current_best if meta else None
+    if not best:
+        raise MasonError(
+            "No current_best to restart from.",
+            code="no_checkpoint",
+        )
+    snap = job.iterations / f"{best:03d}" / "asset.yaml"
+    if not snap.is_file():
+        raise MasonError(
+            f"No snapshot for iteration {best:03d}.",
+            code="snapshot_not_found",
+        )
+    best_spec = load_asset_spec(snap)
+    live = job.load_spec()
+    if live.type != "static_prop" or best_spec.type != "static_prop":
+        raise MasonError(
+            "restart only applies to static_prop parts.",
+            code="restart_not_prop",
+        )
+    keep_set = set(keep)
+    rebuild_set = set(rebuild)
+    kept = [p for p in best_spec.geometry.parts if p.name in keep_set]
+    others = [
+        p for p in live.geometry.parts
+        if p.name not in keep_set and p.name not in rebuild_set
+    ]
+    live.geometry.parts = kept + others
+    if live.construction_plan is None:
+        from mason.core.art import ConstructionPlan
+        live.construction_plan = ConstructionPlan()
+    live.construction_plan.keep_parts = list(keep)
+    live.construction_plan.rebuild_parts = list(rebuild)
+    job.write_spec(live)
+    job.write_art_sidecars(live)
+    if meta.source_spec:
+        dest = job.project_root / meta.source_spec
+        dump_asset_spec(live, dest)
+    return {
+        "kept": [p.name for p in kept],
+        "removed": list(rebuild_set),
+        "from_iteration": best,
+    }
+
+
 def _copy_previews(src: Path, dest: Path) -> None:
+    _copy_dir(src, dest)
+
+
+def _copy_dir(src: Path, dest: Path) -> bool:
     if not src.is_dir():
-        return
+        return False
     dest.mkdir(parents=True, exist_ok=True)
+    copied = False
     for path in src.iterdir():
         if path.is_file():
             (dest / path.name).write_bytes(path.read_bytes())
+            copied = True
+    return copied

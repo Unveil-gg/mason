@@ -15,7 +15,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from PIL import Image, ImageDraw, ImageOps, ImageStat
+from PIL import Image, ImageDraw
 
 from mason.core.art import (
     ArtAnalysis,
@@ -31,6 +31,7 @@ from mason.core.art import (
     ShapeLanguageNotes,
     SourceSize,
 )
+from mason.core.ref_analysis import ReferenceAnalysis, ReferenceView
 from mason.core.assets import (
     AssetSpec,
     Dimensions3D,
@@ -52,6 +53,13 @@ from mason.core.styles import StyleProfile, resolve_style
 from mason.core.workspace import find_project_root
 from mason.errors import MasonError
 from mason.pipelines.fetch import fetch_reference
+from mason.pipelines.silhouette import (
+    extract_silhouette,
+    mask_extrema,
+    silhouette_iou,
+    subject_mask,
+    width_samples,
+)
 
 _MAX_REGIONS = 6
 _REGION_K = 6
@@ -62,33 +70,6 @@ _SCAFFOLD_MAX_CANVAS = 2048
 _SCAFFOLD_TYPES = ("static_prop", "layered_raster")
 
 
-def extract_silhouette(src: Path) -> tuple[Image.Image, float]:
-    """Threshold, trim, and return (L image, height/width)."""
-    gray = Image.open(src).convert("L")
-    mean = ImageStat.Stat(gray).mean[0]
-    if mean < 128:
-        gray = ImageOps.invert(gray)
-    mask = gray.point(lambda p: 255 if p < 200 else 0)
-    bbox = mask.getbbox()
-    if bbox:
-        mask = mask.crop(bbox)
-    out = ImageOps.invert(mask)
-    width, height = out.size
-    ratio = (height / width) if width else 1.0
-    return out, ratio
-
-
-def silhouette_iou(current: Path, reference: Path) -> float:
-    """Coarse IoU of two silhouette PNGs. Dark pixels are subject."""
-    with Image.open(current) as ia, Image.open(reference) as ib:
-        a = ia.convert("L").point(lambda p: 255 if p < 128 else 0)
-        b = ib.convert("L").resize(a.size, Image.Resampling.NEAREST)
-        b = b.point(lambda p: 255 if p < 128 else 0)
-        pa = a.tobytes()
-        pb = b.tobytes()
-    inter = sum(x and y for x, y in zip(pa, pb))
-    union = sum(x or y for x, y in zip(pa, pb))
-    return inter / union if union else 0.0
 
 
 def ensure_reference_silhouette(
@@ -96,13 +77,28 @@ def ensure_reference_silhouette(
     spec: AssetSpec,
 ) -> float | None:
     """Extract a silhouette reference on build when one is listed."""
-    src = _silhouette_source(job, spec)
-    if src is None or not src.is_file():
+    sources = _silhouette_sources(job, spec)
+    if not sources:
         return None
-    image, ratio = extract_silhouette(src)
-    dest = job.previews / "reference_silhouette.png"
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    image.save(dest)
+    ratio = None
+    dest_dir = job.previews
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    for view, src in sources.items():
+        if not src.is_file():
+            continue
+        image, measured = extract_silhouette(src)
+        name = (
+            "reference_silhouette.png"
+            if view == "default"
+            else f"reference_silhouette_{view}.png"
+        )
+        image.save(dest_dir / name)
+        if view == "default" or ratio is None:
+            ratio = measured
+            if view != "default":
+                image.save(dest_dir / "reference_silhouette.png")
+    if ratio is None:
+        return None
     _apply_ratio(spec, ratio)
     return ratio
 
@@ -143,10 +139,7 @@ def _subject_mask(
 ) -> tuple[np.ndarray, tuple[int, int, int, int]]:
     """Threshold + invert-if-needed, matching `extract_silhouette`.
     Returns (mask, bbox); mask is 255 on the subject."""
-    work = gray
-    if float(work.mean()) < 128:
-        work = 255 - work
-    mask = np.where(work < 200, 255, 0).astype(np.uint8)
+    mask = subject_mask(gray)
     ys, xs = np.nonzero(mask)
     if len(xs) == 0:
         h, w = gray.shape
@@ -341,6 +334,7 @@ def run_ingest(
     spec_type: str | None = None,
     out: Path | None = None,
     fetch_url: str | None = None,
+    view: str | None = None,
 ) -> dict:
     """CLI entry: measure a reference image and hand it to Mason.
 
@@ -406,18 +400,22 @@ def run_ingest(
         job = AssetJob(root, asset_id)
         if job.exists():
             spec = _apply_analysis(job.load_spec(), ratio, analysis)
+            spec = _apply_reference_view(
+                spec, analysis, ratio, view, image,
+            )
             job.write_spec(spec)
             job.write_art_sidecars(spec)
             meta = job.load_meta()
             if meta and meta.source_spec:
                 original = root / meta.source_spec
                 if original.is_file():
-                    dump_asset_spec(
-                        _apply_analysis(
-                            load_asset_spec(original), ratio, analysis,
-                        ),
-                        original,
+                    updated = _apply_analysis(
+                        load_asset_spec(original), ratio, analysis,
                     )
+                    updated = _apply_reference_view(
+                        updated, analysis, ratio, view, image,
+                    )
+                    dump_asset_spec(updated, original)
         else:
             _spec, scaffold_path = _write_scaffold(
                 root, asset_id, spec_type or "static_prop",
@@ -429,10 +427,17 @@ def run_ingest(
             job.write_art_sidecars(_spec)
             payload["scaffold"] = _rel(root, scaffold_path)
         dest = job.previews / "reference_silhouette.png"
+        if view:
+            dest = job.previews / f"reference_silhouette_{view}.png"
         regions_dest = job.previews / "reference_regions.png"
         payload["asset_id"] = asset_id
+        payload["view"] = view
     dest.parent.mkdir(parents=True, exist_ok=True)
     sil.save(dest)
+    if asset_id and view:
+        primary = job.previews / "reference_silhouette.png"
+        if dest.resolve() != primary.resolve():
+            sil.save(primary)
     payload["path"] = str(dest)
     if fetched_from:
         payload["source_url"] = fetched_from
@@ -459,13 +464,69 @@ def _rel(root: Path, path: Path) -> str:
 
 
 def _silhouette_source(job: AssetJob, spec: AssetSpec) -> Path | None:
+    sources = _silhouette_sources(job, spec)
+    if "default" in sources:
+        return sources["default"]
+    if sources:
+        return next(iter(sources.values()))
+    return None
+
+
+def _silhouette_sources(job: AssetJob, spec: AssetSpec) -> dict[str, Path]:
+    """Map view name (or default) to a silhouette reference path."""
     direction = spec.art_direction
     if direction is None:
-        return None
+        return {}
+    found: dict[str, Path] = {}
     for ref in direction.references:
-        if ref.purpose == "silhouette":
-            return resolve_project_path(job.project_root, ref.path)
-    return None
+        if ref.purpose != "silhouette":
+            continue
+        path = resolve_project_path(job.project_root, ref.path)
+        key = ref.view or "default"
+        found[key] = path
+    return found
+
+
+def _apply_reference_view(
+    spec: AssetSpec,
+    analysis: ImageAnalysis,
+    ratio: float,
+    view: str | None,
+    image: Path,
+) -> AssetSpec:
+    """Merge one measured view into reference_analysis. No parts."""
+    if not view:
+        return spec
+    profile = [
+        (round(u, 4), round(1.0 - v, 4)) for u, v in analysis.contour
+    ]
+    mask = subject_mask(
+        np.array(Image.open(image).convert("L")),
+    )
+    entry = ReferenceView(
+        view=view,
+        path=str(image),
+        purpose="silhouette",
+        height_width_ratio=round(ratio, 4),
+        contour=list(analysis.contour),
+        profile=profile,
+        com=_mask_com(mask),
+        widths=width_samples(mask),
+        landmarks=mask_extrema(mask),
+    )
+    current = spec.reference_analysis or ReferenceAnalysis()
+    views = [row for row in current.views if row.view != view]
+    views.append(entry)
+    spec.reference_analysis = current.model_copy(update={"views": views})
+    return spec
+
+
+def _mask_com(mask: np.ndarray) -> tuple[float, float] | None:
+    ys, xs = np.nonzero(mask)
+    if len(xs) == 0:
+        return None
+    h, w = mask.shape[:2]
+    return (round(float(xs.mean()) / w, 4), round(float(ys.mean()) / h, 4))
 
 
 def _apply_ratio(spec: AssetSpec, ratio: float) -> AssetSpec:

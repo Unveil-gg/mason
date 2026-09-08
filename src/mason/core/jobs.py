@@ -92,6 +92,10 @@ class AssetJob:
         return self.dir / "geometric_plan.yaml"
 
     @property
+    def reference_analysis_yaml(self) -> Path:
+        return self.dir / "reference_analysis.yaml"
+
+    @property
     def run_json(self) -> Path:
         return self.dir / "run.json"
 
@@ -200,6 +204,7 @@ class AssetJob:
             (spec.construction_plan, self.construction_plan_yaml),
             (spec.geometric_plan, self.geometric_plan_yaml),
             (spec.art_analysis, self.art_analysis_yaml),
+            (spec.reference_analysis, self.reference_analysis_yaml),
         )
         for value, dest in mapping:
             if value is None:
@@ -244,7 +249,7 @@ class AssetJob:
         return found
 
     def snapshot_iteration(self, iteration: int) -> Path:
-        """Copy previews, spec, and validation into iterations/NNN."""
+        """Copy previews, spec, outputs, and validation into iterations/NNN."""
         dest = self.iterations / f"{iteration:03d}"
         dest.mkdir(parents=True, exist_ok=True)
         preview_dest = dest / "previews"
@@ -260,10 +265,19 @@ class AssetJob:
             self.construction_plan_yaml,
             self.geometric_plan_yaml,
             self.art_analysis_yaml,
+            self.reference_analysis_yaml,
             self.run_json,
+            self.result_json,
+            self.dir / "silhouette_metrics.json",
         ):
             if src.is_file():
                 (dest / src.name).write_bytes(src.read_bytes())
+        if self.output.is_dir():
+            out_dest = dest / "output"
+            out_dest.mkdir(parents=True, exist_ok=True)
+            for src in self.output.iterdir():
+                if src.is_file():
+                    (out_dest / src.name).write_bytes(src.read_bytes())
         return dest
 
     def list_iterations(self) -> list[int]:

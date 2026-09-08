@@ -80,12 +80,13 @@ def _seed(project: Path) -> AssetJob:
         checks=[ValidationCheck(name="ok", passed=True)],
         metrics={"triangles": 12},
     )
+    (job.output / "box.glb").write_bytes(b"glb")
     finish_result(
         job,
         spec,
         tool="blender",
         version="0",
-        outputs={},
+        outputs={"glb": job.rel(job.output / "box.glb")},
         previews={},
         report=report,
         source_spec="assets/box.yaml",
@@ -171,9 +172,13 @@ def test_revert_restores_spec(project: Path) -> None:
         "geometry": {"recipe": "crate"},
     })
     job.write_spec(mutated)
+    (job.output / "box.glb").write_bytes(b"stale")
     payload = restore_checkpoint(job)
     assert payload["restored"] == 1
     assert job.load_spec().name == "Box"
+    assert payload["outputs_restored"] is True
+    assert (job.output / "box.glb").read_bytes() == b"glb"
+    assert (job.iterations / "001" / "output" / "box.glb").is_file()
 
 
 def test_evaluate_cli_checkpoint(project: Path, monkeypatch) -> None:

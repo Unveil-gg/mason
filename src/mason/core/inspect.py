@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from mason.core.jobs import AssetJob
@@ -65,10 +66,27 @@ def inspect_payload(job: AssetJob, *, full: bool = False) -> dict[str, Any]:
         "compare": _compare_path(job, result),
         "silhouette_regressed": _silhouette_regressed(job),
         "preview_roles": preview_roles_for(spec.type),
+        "critics": {
+            "art": "evaluation (likeness, silhouette, style)",
+            "technical": "validation (manifold, UVs, budget)",
+        },
     }
     if spec.geometric_plan:
         payload["stage"] = spec.geometric_plan.stage
         payload["recognition"] = spec.geometric_plan.recognition
+        payload["silhouette_first"] = (
+            spec.geometric_plan.recognition == "silhouette"
+            and spec.geometric_plan.stage in ("blockout", "silhouette")
+        )
+    if spec.reference_analysis:
+        payload["reference_views"] = [
+            row.view for row in spec.reference_analysis.views
+        ]
+    metrics_path = job.dir / "silhouette_metrics.json"
+    if metrics_path.is_file():
+        payload["silhouette_metrics"] = json.loads(
+            metrics_path.read_text(encoding="utf-8"),
+        )
     iou = _silhouette_iou(job)
     if iou is not None:
         payload["silhouette_iou"] = iou
@@ -88,6 +106,10 @@ def inspect_payload(job: AssetJob, *, full: bool = False) -> dict[str, Any]:
         payload["art_analysis"] = (
             spec.art_analysis.model_dump(mode="json")
             if spec.art_analysis else None
+        )
+        payload["reference_analysis"] = (
+            spec.reference_analysis.model_dump(mode="json")
+            if spec.reference_analysis else None
         )
         payload["references"] = (
             [ref.model_dump(mode="json") for ref in direction.references]

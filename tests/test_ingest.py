@@ -87,6 +87,38 @@ def test_ingest_asset_updates_analysis(
     assert (job.previews / "reference_silhouette.png").is_file()
 
 
+def test_ingest_view_writes_reference_analysis(
+    project: Path, monkeypatch, tmp_path: Path,
+) -> None:
+    spec = parse_asset_spec({
+        "type": "static_prop",
+        "id": "box",
+        "name": "Box",
+        "dimensions": {"width": 1, "depth": 1, "height": 1},
+        "geometry": {"recipe": "crate"},
+    })
+    job = AssetJob(project, spec.id)
+    job.prepare()
+    job.write_spec(spec)
+    job.write_meta(None)
+    src = tmp_path / "ref.png"
+    _dark_rect(src)
+    monkeypatch.chdir(project)
+    result = runner.invoke(
+        app,
+        [
+            "ingest", str(src), "--asset", "box",
+            "--view", "side", "--json",
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+    loaded = job.load_spec()
+    assert loaded.reference_analysis is not None
+    assert loaded.reference_analysis.views[0].view == "side"
+    assert loaded.reference_analysis.views[0].profile
+    assert (job.previews / "reference_silhouette_side.png").is_file()
+
+
 def test_silhouette_iou_self(tmp_path: Path) -> None:
     src = tmp_path / "a.png"
     _dark_rect(src)

@@ -15,10 +15,13 @@ art_direction:
   materials: []
   detail_density: high
   references:
-  - path: examples/ref/staunton_knight.jpg
+  - path: examples/ref/staunton_knight_side.png
     purpose: silhouette
+    view: side
   - path: examples/ref/staunton_knight.jpg
     purpose: color
+  - path: examples/ref/staunton_knight.jpg
+    purpose: detail
   constraints: []
 geometric_plan:
   primary_read: sculptural side profile, not a literal horse
@@ -47,27 +50,28 @@ geometric_plan:
   silhouette: >
     Side view is the identity view. Neck rises and bows toward +Y
     (away from the face), then the head hooks compactly toward -Y
-    and slightly down. Distinguish from a cute/literal horse or
-    llama by the short muzzle and heavy rear skull/mane.
+    and slightly down. Deep C-notch under the jaw. Distinguish
+    from a cute/literal horse by the short muzzle and heavy rear
+    skull/mane.
   silhouette_vs_similar: >
     Not a toy horse on a stick. Not a long horizontal head.
     Ears are two small points at the poll, not one fused crest.
   proportions: >
-    Base ~1/5 of height. Neck mass thicker than the muzzle.
-    Muzzle shorter than the skull. Ears small vs the poll.
+    Side bbox is nearly square because the muzzle projects.
+    Base ~1/5 of height. Neck thicker than the muzzle.
   symmetry: bilateral
-  negative_space: notch under the jaw; gap behind the ears
+  negative_space: C-notch under the jaw; gap behind the ears
   abstraction: stylized sculptural carving, not anatomical realism
   stage: silhouette
   landmarks:
   - {id: neck_base, role: neck base, part: upper, node: neck_base}
   - {id: neck_apex, role: rear neck apex, part: upper, node: neck_arch}
   - {id: withers, role: rear skull/mane mass, part: upper, node: withers}
-  - {id: poll, role: poll, part: upper, node: poll}
+  - {id: poll, role: poll, part: upper, node: poll, uv: [0.496, 0.0]}
   - {id: muzzle, role: muzzle root, part: upper, node: muzzle}
   - {id: nose, role: nose tip, part: upper, node: nose}
   - {id: jaw, role: lower jaw, part: upper, node: jaw}
-  - {id: ear_l, role: left ear, part: upper, node: ear_l}
+  - {id: ear_l, role: left ear, part: upper, node: ear_l, uv: [0.370, 0.088]}
   - {id: ear_r, role: right ear, part: upper, node: ear_r}
   critical_views:
   - {view: silhouette_side, weight: 3}
@@ -79,6 +83,7 @@ geometric_plan:
   - Face -Y. +Y is the rear of the neck.
   - Side silhouette outranks the front view.
   - Bind critiques to these nodes; do not regenerate the whole head.
+  - "Silhouette-first: no eyes or materials until the side profile holds."
 construction_plan:
   techniques:
   - kind: lathe
@@ -100,23 +105,44 @@ construction_plan:
   secondary_forms:
   - type: remesh
     purpose: join upper into one carved form
-  tertiary_details:
-  - type: sphere
-    purpose: eyes
+  tertiary_details: []
   materials:
   - bare_metal
   - plastic
+  keep_parts: [socle, stem]
+  rebuild_parts: [upper]
   notes:
   - Face toward -Y so the front preview reads in profile
   - lathe/skin/remesh are general ops; the knight is a stress test
-  - plastic stands in for polished mahogany
+  - Keep the turned base; rebuild the head from the side profile
+reference_analysis:
+  defining_silhouette: >
+    Side S-curve, deep throat C-notch, blunt muzzle, flared base
+  primary_masses: [socle, stem, neck, skull, muzzle]
+  proportions: side bbox nearly square; mane peak above base center
+  style: carved Staunton, geometric notches, not fur
+  abstraction: clean boolean-like masses
+  views:
+  - view: side
+    path: examples/ref/staunton_knight_side.png
+    purpose: silhouette
+    height_width_ratio: 1.04
+    landmarks:
+    - {id: top, uv: [0.496, 0.0], role: highest}
+    - {id: bottom, uv: [0.510, 1.0], role: lowest}
+    - {id: left, uv: [0.0, 0.995], role: leftmost}
+    - {id: right, uv: [1.0, 0.989], role: rightmost}
+    - {id: forward, uv: [0.370, 0.088], role: leftmost in upper half}
+    - {id: rear_high, uv: [0.943, 0.105], role: rightmost in upper half}
+    negative_space: C-pocket under the jaw
+    curves: back is one convex arc; throat is a deep concave
 art_analysis:
   shape_language:
     primary: ''
     secondary: ''
     edges: soft
   proportions:
-    height_width_ratio: 1.7669632925472747
+    height_width_ratio: 1.04
     exaggerated_features: []
   detail_density: medium
   style:
@@ -130,8 +156,8 @@ art_analysis:
     secondary: '#E3D2B7'
     accent: '#9F7C4F'
   source_size:
-    width: 1798
-    height: 3180
+    width: 1376
+    height: 768
 type: static_prop
 id: chess_knight
 name: Knight Chess Piece
@@ -218,14 +244,6 @@ geometry:
       - [skull, cheek_r]
       - [poll, ear_l]
       - [poll, ear_r]
-  - name: eye
-    shape: sphere
-    size: [0.004, 0.0032, 0.0032]
-    location: [-0.008, -0.028, 0.081]
-    material: charcoal
-    family: bare_metal
-    mirror: x
-    parent: upper
 materials:
   strategy: family
   primary: wood_dark

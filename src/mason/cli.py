@@ -490,6 +490,41 @@ def revert(
 
 
 @app.command()
+def restart(
+    asset_id: Annotated[str, typer.Argument()],
+    json_mode: JsonFlag = False,
+    keep: Annotated[
+        str,
+        typer.Option("--keep", help="Comma-separated parts to keep."),
+    ] = "",
+    rebuild: Annotated[
+        str,
+        typer.Option("--rebuild", help="Comma-separated parts to drop."),
+    ] = "",
+) -> None:
+    """Keep successful parts from current_best; drop a failing region."""
+
+    def _run():
+        from mason.pipelines.checkpoint import restart_parts
+        root = find_project_root()
+        job = require_job(root, asset_id)
+        payload = restart_parts(
+            job,
+            keep=[p.strip() for p in keep.split(",") if p.strip()],
+            rebuild=[p.strip() for p in rebuild.split(",") if p.strip()],
+        )
+        _emit(
+            json_mode,
+            payload,
+            lambda: typer.echo(
+                f"kept {payload['kept']}; removed {payload['removed']}",
+            ),
+        )
+
+    _guard(json_mode, _run)
+
+
+@app.command()
 def stats(
     asset_id: Annotated[
         str | None,
@@ -609,6 +644,13 @@ def ingest(
         typer.Option("--out", help="Where to write a new scaffold spec."),
     ] = None,
     json_mode: JsonFlag = False,
+    view: Annotated[
+        str | None,
+        typer.Option(
+            "--view",
+            help="Bind this image as a critical view: side|front|...",
+        ),
+    ] = None,
 ) -> None:
     """Measure a reference image: silhouette ratio, palette, color
     regions, contour, and edge character. Not an image-to-mesh
@@ -620,7 +662,7 @@ def ingest(
         payload = run_ingest(
             image, asset,
             style_name=style, spec_type=spec_type, out=out,
-            fetch_url=fetch,
+            fetch_url=fetch, view=view,
         )
         _emit(
             json_mode,

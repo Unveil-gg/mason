@@ -39,6 +39,7 @@ class Landmark(BaseModel):
     part: str | None = None
     node: str | None = None
     at: tuple[float, float, float] | None = None
+    uv: tuple[float, float] | None = None
     notes: str = ""
 
 

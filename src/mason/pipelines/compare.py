@@ -69,9 +69,11 @@ def compare_payload(job: AssetJob) -> dict:
         "baseline": prev_kind,
         "silhouette_regressed": silhouette_regressed(job),
     }
-    iou = reference_iou(job)
-    if iou is not None:
-        payload["silhouette_iou"] = iou
+    from mason.pipelines.silhouette import write_job_metrics
+    metrics = write_job_metrics(job)
+    if metrics.get("iou") is not None:
+        payload["silhouette_iou"] = metrics["iou"]
+    payload["silhouette_metrics"] = metrics
     return payload
 
 

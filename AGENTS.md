@@ -25,11 +25,13 @@ previews in a fresh pass and looks for reasons not to ship.
 4. Understand the request. If `references` exist, run
    `mason ingest <image> --asset <id> [--style <name>] --json`
    or `mason ingest --fetch <url> --asset <id> --json` (caches
-   under `.mason/jobs/<id>/refs/`). OpenCV measures ratio, palette,
-   color regions, contour, and edge character. If `--asset` has no
-   spec yet, ingest writes a minimal buildable scaffold instead of
-   a finished mesh -- edit `art_analysis`, `parts`, or `layers`
-   from there. Ingest does not compile a mesh.
+   under `.mason/jobs/<id>/refs/`). Prefer `--view side|front|
+   three_quarter` so each image is a geometric constraint.
+   OpenCV measures ratio, palette, contour, profile, widths,
+   COM, and extrema landmarks into `reference_analysis`.
+   If `--asset` has no spec yet, ingest writes a minimal
+   buildable scaffold -- edit `art_analysis`, `parts`, or
+   `layers` from there. Ingest does not compile a mesh.
 5. Write `art_direction`: subject, usage, silhouette goal, primary /
    secondary / tertiary forms, material families, detail density.
 6. Write `geometric_plan` (intent): primary read, recognition
@@ -43,8 +45,11 @@ previews in a fresh pass and looks for reasons not to ship.
    on `construction_plan.techniques`. ConstructionPlan is intent,
    not compiled into meshes.
 8. Create or modify the AssetSpec (`geometry.parts`, `recipe`, or
-   `component`). For silhouette-dominated objects, block out
-   primary masses only at `stage: blockout`.
+   `component`). For silhouette-dominated objects, solve the 2D
+   profile first (`outline` / `lathe` / `skin` from
+   `reference_analysis` profile), then a coarse volume. Do not
+   add eyes, ears, grooves, or materials while the primary
+   silhouette fails. At `stage: blockout` only primary masses.
 9. Run `mason build <spec> --json`. Each run writes `run.json`
    (timings, prompt, triangles). `model`/`tokens` stay null unless
    `mason note <id> --model --tokens` records a measured count.
@@ -72,9 +77,13 @@ previews in a fresh pass and looks for reasons not to ship.
     `stage` while any critical discrepancy remains.
     Newest is never automatically best: accept only if the
     candidate is meaningfully better and no critical view
-    dropped. Otherwise `mason revert` and try another edit.
-    For hard corrections, branch best-of-N candidates from
-    the same checkpoint and promote at most one.
+    dropped (scores or silhouette IoU). Otherwise `mason revert`
+    (restores spec, previews, and the GLB) and try another edit.
+    If one region keeps failing, `mason restart --keep ...
+    --rebuild ...` and try a different technique. For hard
+    corrections, branch best-of-N from the same checkpoint.
+    Art critic = evaluate. Technical critic = validation.
+    Do not chase triangle/UV polish while the design is wrong.
 16. Translate intent to a landmark/control-point edit, record
     `actions_taken` on the next evaluate, rebuild. Use
     `mason history <id> --json --summary`.

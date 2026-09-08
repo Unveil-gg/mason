@@ -7,6 +7,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from mason.core.form_plan import GeometricPlan, QualityStage
+from mason.core.ref_analysis import ReferenceAnalysis
 
 
 class UsageSpec(BaseModel):
@@ -32,6 +33,7 @@ class ReferenceImage(BaseModel):
         "detail",
         "composition",
     ]
+    view: str | None = None
 
 
 class ArtStyleNotes(BaseModel):
@@ -107,6 +109,8 @@ class ConstructionPlan(BaseModel):
     secondary_forms: list[PlanForm] = Field(default_factory=list)
     tertiary_details: list[PlanForm] = Field(default_factory=list)
     materials: list[str] = Field(default_factory=list)
+    keep_parts: list[str] = Field(default_factory=list)
+    rebuild_parts: list[str] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
 
 
@@ -311,6 +315,7 @@ class VisualEvaluation(BaseModel):
     view_scores: list[ViewScore] = Field(default_factory=list)
     compare: CompareToBest | None = None
     candidate: str | None = None
+    critic: Literal["art", "technical"] = "art"
     ship: bool = False
     iteration: int | None = None
     created_at: str = ""
@@ -323,4 +328,5 @@ class ArtFields(BaseModel):
     construction_plan: ConstructionPlan | None = None
     geometric_plan: GeometricPlan | None = None
     art_analysis: ArtAnalysis | None = None
+    reference_analysis: ReferenceAnalysis | None = None
     depends_on: list[str] = Field(default_factory=list)
