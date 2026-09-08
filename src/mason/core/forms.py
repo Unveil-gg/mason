@@ -45,12 +45,13 @@ class SkinNode(BaseModel):
 
 
 class PartSkin(BaseModel):
-    """Sparse graph for Blender's Skin modifier."""
+    """Node volumes. skeleton = Skin pipes; blob = spheres."""
 
     model_config = ConfigDict(extra="forbid")
 
     nodes: list[SkinNode] = Field(min_length=2)
-    edges: list[tuple[str, str]] = Field(min_length=1)
+    edges: list[tuple[str, str]] = Field(default_factory=list)
+    mode: Literal["skeleton", "blob"] = "skeleton"
     subdivide: int = Field(default=1, ge=0, le=3)
     smooth: bool = True
 
@@ -59,6 +60,8 @@ class PartSkin(BaseModel):
         ids = [node.id for node in self.nodes]
         if len(set(ids)) != len(ids):
             raise ValueError("skin node ids must be unique")
+        if self.mode == "skeleton" and len(self.edges) < 1:
+            raise ValueError("skeleton skin needs edges")
         known = set(ids)
         for start, end in self.edges:
             if start not in known or end not in known:
@@ -106,6 +109,7 @@ class BodySpec(BaseModel):
     members: list[str] = Field(min_length=1)
     method: Literal["union", "remesh"] = "remesh"
     remesh: BodyRemesh | None = None
+    inflate: float = Field(default=0.0, ge=0)
     smooth: int = Field(default=0, ge=0, le=8)
     subdivide: int = Field(default=0, ge=0, le=3)
     material: str | None = None
@@ -117,14 +121,16 @@ class BodySpec(BaseModel):
         return self
 
 
-def curve_derived_size(curve: PartCurve) -> tuple[float, float, float]:
-    """AABB of path points plus bevel padding."""
-    pts = [point.at for point in curve.points]
-    return _aabb_size(pts, float(curve.bevel_depth))
+def curve_local_bounds(
+    curve: PartCurve,
+) -> tuple[list[float], list[float]]:
+    """Local min/max of path points plus bevel padding."""
+    pad = float(curve.bevel_depth)
+    return _points_bounds([point.at for point in curve.points], pad)
 
 
-def skin_derived_size(skin: PartSkin) -> tuple[float, float, float]:
-    """AABB of nodes expanded by each node's radius."""
+def skin_local_bounds(skin: PartSkin) -> tuple[list[float], list[float]]:
+    """Local min/max of nodes expanded by each radius."""
     xs: list[float] = []
     ys: list[float] = []
     zs: list[float] = []
@@ -134,23 +140,53 @@ def skin_derived_size(skin: PartSkin) -> tuple[float, float, float]:
         ys.extend((node.at[1] - r, node.at[1] + r))
         zs.extend((node.at[2] - r, node.at[2] + r))
     return (
-        max(max(xs) - min(xs), 0.001),
-        max(max(ys) - min(ys), 0.001),
-        max(max(zs) - min(zs), 0.001),
+        [min(xs), min(ys), min(zs)],
+        [max(xs), max(ys), max(zs)],
     )
+
+
+def outline_local_bounds(
+    outline: PartOutline,
+) -> tuple[list[float], list[float]]:
+    """Local min/max of an XZ silhouette extruded along Y."""
+    half = float(outline.depth) * 0.5
+    xs = [point[0] for point in outline.points]
+    zs = [point[1] for point in outline.points]
+    return (
+        [min(xs), -half, min(zs)],
+        [max(xs), half, max(zs)],
+    )
+
+
+def curve_derived_size(curve: PartCurve) -> tuple[float, float, float]:
+    """AABB of path points plus bevel padding."""
+    lo, hi = curve_local_bounds(curve)
+    return _span(lo, hi)
+
+
+def skin_derived_size(skin: PartSkin) -> tuple[float, float, float]:
+    """AABB of nodes expanded by each node's radius."""
+    lo, hi = skin_local_bounds(skin)
+    return _span(lo, hi)
 
 
 def outline_derived_size(
     outline: PartOutline,
 ) -> tuple[float, float, float]:
     """Width from X, depth from extrusion, height from Z."""
-    xs = [point[0] for point in outline.points]
-    zs = [point[1] for point in outline.points]
-    return (
-        max(max(xs) - min(xs), 0.001),
-        max(float(outline.depth), 0.001),
-        max(max(zs) - min(zs), 0.001),
-    )
+    lo, hi = outline_local_bounds(outline)
+    return _span(lo, hi)
+
+
+def part_local_bounds(part) -> tuple[list[float], list[float]] | None:
+    """Local AABB relative to location, or None if location is center."""
+    if part.skin is not None:
+        return skin_local_bounds(part.skin)
+    if part.curve is not None:
+        return curve_local_bounds(part.curve)
+    if part.outline is not None:
+        return outline_local_bounds(part.outline)
+    return None
 
 
 def finalize_form_part(part) -> bool:
@@ -200,15 +236,25 @@ def member_to_body(
     return mapping
 
 
-def _aabb_size(
+def _points_bounds(
     pts: list[tuple[float, float, float]],
     pad: float,
-) -> tuple[float, float, float]:
+) -> tuple[list[float], list[float]]:
     xs = [point[0] for point in pts]
     ys = [point[1] for point in pts]
     zs = [point[2] for point in pts]
     return (
-        max(max(xs) - min(xs) + 2.0 * pad, 0.001),
-        max(max(ys) - min(ys) + 2.0 * pad, 0.001),
-        max(max(zs) - min(zs) + 2.0 * pad, 0.001),
+        [min(xs) - pad, min(ys) - pad, min(zs) - pad],
+        [max(xs) + pad, max(ys) + pad, max(zs) + pad],
+    )
+
+
+def _span(
+    lo: list[float],
+    hi: list[float],
+) -> tuple[float, float, float]:
+    return (
+        max(hi[0] - lo[0], 0.001),
+        max(hi[1] - lo[1], 0.001),
+        max(hi[2] - lo[2], 0.001),
     )

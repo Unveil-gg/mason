@@ -65,6 +65,9 @@ geometric_plan:
   stage: silhouette
   landmarks:
   - {id: neck_base, role: neck base, part: upper, node: neck_base}
+  - {id: core, role: neck fill, part: upper, node: core}
+  - {id: chest, role: chest bulge, part: upper, node: chest}
+  - {id: throat, role: throat C-notch, part: upper, node: throat}
   - {id: neck_apex, role: rear neck apex, part: upper, node: neck_arch}
   - {id: withers, role: rear skull/mane mass, part: upper, node: withers}
   - {id: poll, role: poll, part: upper, node: poll, uv: [0.496, 0.0]}
@@ -175,9 +178,9 @@ geometry:
     members: [upper]
     method: remesh
     remesh:
-      voxel_size: 0.0016
+      voxel_size: 0.0014
       adaptivity: 0.0
-    smooth: 1
+    smooth: 0
     subdivide: 0
   parts:
   - name: socle
@@ -208,36 +211,46 @@ geometry:
     - [0.013, 0.058]
   - name: upper
     shape: skin
-    location: [0.0, 0.0, 0.057]
+    location: [0.0, 0.0, 0.054]
     material: wood_dark
     family: plastic
     skin:
       subdivide: 2
-      smooth: true
+      smooth: false
       nodes:
-      - {id: neck_base, at: [0.0, 0.0, 0.0], radius: 0.014}
-      - {id: neck, at: [0.0, -0.005, 0.008], radius: 0.011}
-      - {id: neck_arch, at: [0.0, -0.014, 0.016], radius: 0.0105}
-      - {id: withers, at: [0.0, -0.010, 0.024], radius: 0.007}
-      - {id: poll, at: [0.0, -0.016, 0.032], radius: 0.008}
-      - {id: skull, at: [0.0, -0.022, 0.022], radius: 0.011}
-      - {id: cheek_l, at: [-0.007, -0.026, 0.024], radius: 0.006}
-      - {id: cheek_r, at: [0.007, -0.026, 0.024], radius: 0.006}
-      - {id: muzzle, at: [0.0, -0.038, 0.024], radius: 0.006}
-      - {id: nose, at: [0.0, -0.050, 0.020], radius: 0.0045}
-      - {id: jaw, at: [0.0, -0.028, 0.016], radius: 0.007}
-      - {id: chin, at: [0.0, -0.042, 0.015], radius: 0.0045}
-      - {id: ear_l, at: [-0.007, -0.012, 0.044], radius: 0.0038}
-      - {id: ear_r, at: [0.007, -0.012, 0.044], radius: 0.0038}
+      - {id: neck_base, at: [0.0, 0.0, 0.0], radius: 0.017}
+      - {id: core, at: [0.0, -0.002, 0.012], radius: 0.012}
+      - {id: chest, at: [0.0, -0.026, 0.005], radius: 0.013}
+      - {id: neck, at: [0.0, 0.010, 0.012], radius: 0.011}
+      - {id: throat, at: [0.0, -0.008, 0.016], radius: 0.005}
+      - {id: neck_arch, at: [0.0, 0.018, 0.020], radius: 0.010}
+      - {id: jaw, at: [0.0, -0.024, 0.022], radius: 0.008}
+      - {id: withers, at: [0.0, 0.016, 0.028], radius: 0.008}
+      - {id: chin, at: [0.0, -0.034, 0.018], radius: 0.0045}
+      - {id: skull, at: [0.0, -0.016, 0.030], radius: 0.010}
+      - {id: brow, at: [0.0, -0.022, 0.034], radius: 0.005}
+      - {id: muzzle, at: [0.0, -0.038, 0.028], radius: 0.007}
+      - {id: poll, at: [0.0, 0.006, 0.038], radius: 0.007}
+      - {id: nose, at: [0.0, -0.048, 0.024], radius: 0.005}
+      - {id: cheek_l, at: [-0.006, -0.018, 0.028], radius: 0.005}
+      - {id: cheek_r, at: [0.006, -0.018, 0.028], radius: 0.005}
+      - {id: ear_l, at: [-0.005, 0.008, 0.042], radius: 0.0022}
+      - {id: ear_r, at: [0.005, 0.008, 0.042], radius: 0.0022}
       edges:
+      - [neck_base, core]
+      - [neck_base, chest]
       - [neck_base, neck]
+      - [core, neck]
+      - [core, throat]
+      - [core, skull]
       - [neck, neck_arch]
       - [neck_arch, withers]
       - [withers, poll]
       - [neck_arch, skull]
+      - [skull, brow]
+      - [skull, jaw]
       - [skull, muzzle]
       - [muzzle, nose]
-      - [skull, jaw]
       - [jaw, chin]
       - [muzzle, chin]
       - [skull, cheek_l]

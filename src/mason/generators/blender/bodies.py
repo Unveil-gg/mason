@@ -25,6 +25,12 @@ def apply_bodies(created, bodies):
             else:
                 _join_other(target, other)
             created.pop(other_name, None)
+        inflate = float(body.get("inflate") or 0.0)
+        if inflate > 0:
+            sol = target.modifiers.new(name="Inflate", type="SOLIDIFY")
+            sol.thickness = inflate
+            sol.offset = 1.0
+            bpy.ops.object.modifier_apply(modifier=sol.name)
         remesh = body.get("remesh") or {}
         if method == "remesh" or remesh:
             voxel = float(remesh.get("voxel_size") or 0.01)

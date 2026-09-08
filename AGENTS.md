@@ -138,10 +138,13 @@ Asset types:
   `inset`, `array` (linear or `radial`), `mirror`, `component`,
   `family`, `texture` (`{asset, file}`), `profile` (`[[radius, z],
   ...]` on `lathe`, spun about +Z), `curve` (Bezier path + bevel),
-  `skin` (node/edge skeleton), `outline` (XZ silhouette + depth),
+  `skin` (optional; `mode: skeleton` pipes or `blob` spheres),
+  `outline` (XZ silhouette + depth),
   `follow` (`{curve, stretch}`), `helper` (deform path, not
   exported), and `bend` (`{axis, angle, origin: center|base}`).
-  `geometry.bodies` unions/remeshes named members into one mesh.
+  Prefer primitives + `snap` + `geometry.bodies` remesh
+  (`inflate` closes gaps). Bodies fail validation on enclosed
+  silhouette holes.
   Components: bolt, hinge, handle, caster, bracket, trim, x_brace,
   rail, wire_wall, rivet_strip, cornice. Recipes: crate, shelf,
   table, hydrant, cart, house, tree, pool, estate. `cutout:

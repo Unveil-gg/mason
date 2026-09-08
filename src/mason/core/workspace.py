@@ -23,8 +23,9 @@ Separate creator and critic even if you are one model.
    critical_views, stage). Intent only. Recognition is not
    ship; style/type must match. Profile first when silhouette
    dominates; no secondary detail until the ortho profile holds.
-7. Choose hybrid techniques (lathe/box/curve/outline/skin/remesh)
-   and record them on construction_plan.techniques. Intent only.
+7. Block out with primitives, then snap + bodies remesh
+   (inflate). skin is optional (skeleton pipes / blob spheres).
+   Record techniques on construction_plan. Intent only.
 8. Create or modify the AssetSpec YAML. Blockout first when
    silhouette dominates recognition.
 9. Run `mason build <spec> --json`.

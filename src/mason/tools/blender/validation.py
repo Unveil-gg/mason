@@ -116,6 +116,25 @@ def validate_static_prop(
     else:
         touch_detail = "ok"
     checks.append(_check("parts_touch", touch_ok, touch_detail))
+    if spec.geometry.bodies:
+        from mason.pipelines.continuity import preview_continuity
+        for name in (
+            "silhouette_side",
+            "silhouette_front",
+            "silhouette_three_quarter",
+        ):
+            path = job.previews / f"{name}.png"
+            if not path.is_file():
+                continue
+            solid = preview_continuity(path)
+            checks.append(_check(
+                f"solid_{name}",
+                solid["holes"] == 0,
+                (
+                    f"holes={solid['holes']} "
+                    f"islands={solid['islands']}"
+                ),
+            ))
 
     return ValidationReport(
         passed=all(c.passed for c in checks),

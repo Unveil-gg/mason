@@ -121,6 +121,52 @@ def test_curve_field_rejected_on_box() -> None:
         }))
 
 
+def test_blob_skin_allows_nodes_only() -> None:
+    spec = parse_asset_spec(_prop({
+        "parts": [{
+            "name": "mass",
+            "shape": "skin",
+            "location": [0, 0, 0],
+            "skin": {
+                "mode": "blob",
+                "nodes": [
+                    {"id": "a", "at": [0, 0, 0], "radius": 0.1},
+                    {"id": "b", "at": [0, 0.05, 0.1], "radius": 0.08},
+                ],
+            },
+        }],
+    }))
+    assert spec.geometry.parts[0].skin.mode == "blob"
+    assert spec.geometry.parts[0].skin.edges == []
+
+
+def test_bodies_inflate_parses() -> None:
+    spec = parse_asset_spec(_prop({
+        "parts": [
+            {
+                "name": "a",
+                "shape": "sphere",
+                "size": [0.1, 0.1, 0.1],
+                "location": [0, 0, 0],
+            },
+            {
+                "name": "b",
+                "shape": "cylinder",
+                "size": [0.08, 0.08, 0.12],
+                "location": [0, 0, 0.06],
+            },
+        ],
+        "bodies": [{
+            "name": "joined",
+            "members": ["a", "b"],
+            "method": "remesh",
+            "inflate": 0.004,
+            "remesh": {"voxel_size": 0.01},
+        }],
+    }))
+    assert spec.geometry.bodies[0].inflate == pytest.approx(0.004)
+
+
 def test_skin_needs_nodes() -> None:
     with pytest.raises(MasonError):
         parse_asset_spec(_prop({

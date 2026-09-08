@@ -29,6 +29,20 @@ def _rect(path: Path, box: tuple[int, int, int, int], size=(40, 80)) -> None:
     img.save(path)
 
 
+def _l_shape(path: Path, *, flip: bool, size=(40, 80)) -> None:
+    """Asymmetric L so a mirror is a different mask after normalize."""
+    img = Image.new("L", size, 255)
+    bar = range(28, 36) if flip else range(4, 12)
+    for x in bar:
+        for y in range(10, 70):
+            img.putpixel((x, y), 0)
+    foot = range(4, 36) if not flip else range(4, 36)
+    for x in foot:
+        for y in range(60, 70):
+            img.putpixel((x, y), 0)
+    img.save(path)
+
+
 def test_normalized_iou_self(tmp_path: Path) -> None:
     src = tmp_path / "a.png"
     _rect(src, (10, 10, 30, 70))
@@ -48,6 +62,16 @@ def test_compare_masks_detects_shift(tmp_path: Path) -> None:
     assert metrics["iou"] < 0.8
     assert metrics["contour_distance"] > 0
     assert metrics["widths"]
+
+
+def test_compare_masks_flips_mirrored_ref(tmp_path: Path) -> None:
+    a = tmp_path / "a.png"
+    b = tmp_path / "b.png"
+    _l_shape(a, flip=False)
+    _l_shape(b, flip=True)
+    metrics = compare_masks(a, b)
+    assert metrics["flipped_reference"] is True
+    assert metrics["iou"] > 0.9
 
 
 def test_mask_extrema_use_full_mask(tmp_path: Path) -> None:

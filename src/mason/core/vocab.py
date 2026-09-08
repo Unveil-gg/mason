@@ -167,15 +167,14 @@ def vocab_payload() -> dict[str, Any]:
             "can be rebuilt with a different technique."
         ),
         "modeling": (
-            "Before writing parts, pick hybrid techniques from "
-            "the object's geometry and record them on "
-            "construction_plan.techniques. Rotational symmetry "
-            "-> lathe. Hard-surface boxes -> box. Path (pipe, "
-            "cable, neck) -> curve. 2D blade/ornament -> "
-            "outline. Branching volume (limb, tree, creature) "
-            "-> skin. Overlapping volumes that must become one "
-            "surface -> geometry.bodies remesh. Modular repeats "
-            "-> array/component. Recognition is not ship."
+            "Before writing parts, pick techniques and record "
+            "them on construction_plan.techniques. Block out "
+            "with primitives (box, sphere, cylinder, lathe). "
+            "snap seats them. geometry.bodies remesh "
+            "(optional inflate) blends overlaps. skin is "
+            "optional: skeleton for pipes/limbs, blob for node "
+            "spheres. Do not replace a primitive blockout with "
+            "a skin graph. Recognition is not ship."
         ),
         "curve": (
             "shape: curve + curve.points [{at, radius, "
@@ -186,11 +185,12 @@ def vocab_payload() -> dict[str, Any]:
             "for part.follow without exporting it."
         ),
         "skin": (
-            "shape: skin + skin.nodes [{id, at, radius}] and "
-            "edges [[a, b]] is a sparse skeleton. Skin "
-            "modifier, then optional subdivide/smooth. Node "
-            "ids become vertex groups. Branching necks, "
-            "limbs, handles, trees -- not a subject recipe."
+            "Optional. skin.nodes [{id, at, radius}]. "
+            "mode skeleton (default) needs edges and uses "
+            "the Skin modifier (pipes). mode blob is spheres "
+            "at nodes, optional edge capsules -- no Skin "
+            "modifier. Prefer primitives + bodies remesh "
+            "when that is enough."
         ),
         "outline": (
             "shape: outline + outline.points [[x, z], ...] "
@@ -204,9 +204,11 @@ def vocab_payload() -> dict[str, Any]:
         "bodies": (
             "geometry.bodies: [{name, members, method: "
             "union|remesh, remesh: {voxel_size, adaptivity}, "
-            "smooth, subdivide}] joins overlapping parts into "
-            "one continuous surface and discards members. "
-            "Keep hard-surface or other-material parts out."
+            "inflate, smooth, subdivide}] joins overlapping "
+            "primitives into one surface. inflate (solidify) "
+            "closes small gaps before remesh. Keep other-"
+            "material parts out. Joined bodies must have no "
+            "enclosed silhouette holes."
         ),
         "lathe": (
             "shape: lathe + profile: [[radius, z], ...] revolves "
@@ -232,8 +234,9 @@ def vocab_payload() -> dict[str, Any]:
         ),
         "snap": (
             "part.snap {to, on: top|bottom|front|back|left|right, "
-            "embed} meets a named face. embed pushes into the "
-            "target so sloped roofs get a through-joint."
+            "embed} meets a named face. Skin/curve/outline snap "
+            "against their local AABB (location is the origin, "
+            "not the box center). embed pushes into the target."
         ),
         "decal_face": (
             "decal.face: top|bottom|front|back|left|right derives "

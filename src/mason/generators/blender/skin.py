@@ -5,6 +5,8 @@ def create_skin(name, size, location, rotation=(0.0, 0.0, 0.0),
                 skin=None):
     """Skeleton graph thickened with the Skin modifier."""
     spec = skin or {}
+    if (spec.get("mode") or "skeleton") == "blob":
+        return create_blob(name, size, location, rotation, spec)
     nodes = spec.get("nodes") or []
     edges_spec = spec.get("edges") or []
     if len(nodes) < 2 or not edges_spec:
@@ -61,4 +63,92 @@ def create_skin(name, size, location, rotation=(0.0, 0.0, 0.0),
         bpy.ops.object.modifier_apply(modifier=sm.name)
     shade_smooth(obj)
     return obj
+
+
+def create_blob(name, size, location, rotation=(0.0, 0.0, 0.0),
+                spec=None):
+    """Node spheres plus optional edge capsules. No Skin modifier."""
+    spec = spec or {}
+    nodes = spec.get("nodes") or []
+    if not nodes:
+        return create_sphere(name, size, location, rotation)
+    pieces = []
+    by_id = {}
+    for i, node in enumerate(nodes):
+        nid = node.get("id") or ("n%d" % i)
+        at = tuple(node.get("at") or (0.0, 0.0, 0.0))
+        radius = float(node.get("radius") or 0.01)
+        diam = max(radius * 2.0, 0.001)
+        obj = create_sphere(
+            "%s_%s" % (name, nid), (diam, diam, diam), at,
+        )
+        pieces.append(obj)
+        by_id[nid] = (at, radius)
+    for pair in spec.get("edges") or []:
+        a, b = pair[0], pair[1]
+        if a not in by_id or b not in by_id:
+            continue
+        cap = _blob_capsule(
+            "%s_%s_%s" % (name, a, b),
+            by_id[a][0], by_id[b][0],
+            min(by_id[a][1], by_id[b][1]),
+        )
+        if cap is not None:
+            pieces.append(cap)
+    target = pieces[0]
+    for other in pieces[1:]:
+        _join_blob(target, other)
+    target.name = name
+    target.location = location
+    target.rotation_euler = rotation
+    shade_smooth(target)
+    return target
+
+
+def _blob_capsule(name, p0, p1, radius):
+    """Cylinder from p0 to p1. Returns None if the span is tiny."""
+    import math
+    dx = p1[0] - p0[0]
+    dy = p1[1] - p0[1]
+    dz = p1[2] - p0[2]
+    length = math.sqrt(dx * dx + dy * dy + dz * dz)
+    if length < 1e-6:
+        return None
+    mid = (
+        (p0[0] + p1[0]) * 0.5,
+        (p0[1] + p1[1]) * 0.5,
+        (p0[2] + p1[2]) * 0.5,
+    )
+    diam = max(radius * 2.0, 0.001)
+    obj = create_cylinder(name, (diam, diam, length), mid)
+    vec = Vector((dx, dy, dz))
+    obj.rotation_euler = vec.to_track_quat("Z", "Y").to_euler()
+    bpy.ops.object.select_all(action="DESELECT")
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.transform_apply(
+        location=False, rotation=True, scale=True,
+    )
+    obj.location = mid
+    return obj
+
+
+def _join_blob(target, other):
+    """Bake and join a blob piece into target."""
+    bpy.ops.object.select_all(action="DESELECT")
+    target.select_set(True)
+    bpy.context.view_layer.objects.active = target
+    bpy.ops.object.transform_apply(
+        location=True, rotation=True, scale=True,
+    )
+    other.select_set(True)
+    bpy.context.view_layer.objects.active = other
+    bpy.ops.object.transform_apply(
+        location=True, rotation=True, scale=True,
+    )
+    bpy.ops.object.select_all(action="DESELECT")
+    target.select_set(True)
+    other.select_set(True)
+    bpy.context.view_layer.objects.active = target
+    bpy.ops.object.join()
 '''

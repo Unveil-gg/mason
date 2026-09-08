@@ -81,9 +81,17 @@ def compare_masks(current: Path, reference: Path) -> dict:
             "com": None,
             "widths": [],
         }
-    iou = _iou(a, b)
+    iou_n = _iou(a, b)
+    iou_f = _iou(a, np.fliplr(b))
+    flipped = iou_f > iou_n
+    if flipped:
+        b = np.fliplr(b)
+        iou = iou_f
+    else:
+        iou = iou_n
     return {
-        "iou": round(iou, 4),
+        "iou": round(float(iou), 4),
+        "flipped_reference": flipped,
         "contour_distance": round(_chamfer(a, b), 4),
         "bbox_ratio": round(_bbox_ratio(a), 4),
         "ref_bbox_ratio": round(_bbox_ratio(b), 4),
@@ -164,6 +172,7 @@ def width_samples(mask: np.ndarray) -> list[WidthSample]:
 def write_job_metrics(job: AssetJob) -> dict:
     """Compare live previews to ingested reference silhouettes."""
     payload = measure_job(job)
+    payload["continuity"] = _preview_continuity(job.previews)
     dest = job.dir / "silhouette_metrics.json"
     dest.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     return payload
@@ -355,3 +364,18 @@ def _widths(mask: np.ndarray) -> list[dict]:
 
 def _uv(point: tuple[float, float]) -> tuple[float, float]:
     return (round(float(point[0]), 4), round(float(point[1]), 4))
+
+
+def _preview_continuity(previews: Path) -> dict:
+    from mason.pipelines.continuity import preview_continuity
+
+    out: dict[str, dict] = {}
+    for name in (
+        "silhouette_side",
+        "silhouette_front",
+        "silhouette_three_quarter",
+    ):
+        path = previews / f"{name}.png"
+        if path.is_file():
+            out[name] = preview_continuity(path)
+    return out

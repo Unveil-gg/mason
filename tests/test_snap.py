@@ -106,6 +106,31 @@ def test_parents_touch_skips_body_members() -> None:
     assert ok, detail
 
 
+def test_snap_skin_uses_node_origin() -> None:
+    base = PropPart(
+        name="base",
+        size=(0.2, 0.2, 0.1),
+        location=(0.0, 0.0, 0.05),
+    )
+    upper = PropPart(
+        name="upper",
+        shape="skin",
+        location=(0.0, 0.0, 5.0),
+        snap=PartSnap(to="base", on="top", embed=0.02),
+        skin={
+            "nodes": [
+                {"id": "root", "at": [0.0, 0.0, 0.0], "radius": 0.05},
+                {"id": "tip", "at": [0.0, 0.0, 0.2], "radius": 0.02},
+            ],
+            "edges": [["root", "tip"]],
+        },
+    )
+    out = apply_snaps([base, upper])
+    assert out[1].location[2] == pytest.approx(0.13)
+    ok, detail = snaps_touch(out)
+    assert ok, detail
+
+
 def test_unknown_to_raises() -> None:
     part = PropPart(
         name="lid",

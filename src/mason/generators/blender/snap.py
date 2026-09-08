@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from mason.core.forms import BodySpec, member_to_body
+from mason.core.forms import BodySpec, member_to_body, part_local_bounds
 from mason.core.parts import PropPart
 from mason.errors import MasonError
 
@@ -18,13 +18,21 @@ _FACES = {
 
 
 def aabb(part: PropPart) -> tuple[list[float], list[float]]:
-    """Axis-aligned min/max from location and size. Returns (min, max)."""
+    """Axis-aligned min/max. Skin/curve/outline use local origin."""
     loc = list(part.location)
+    local = part_local_bounds(part)
+    if local is not None:
+        lo, hi = local
+        return (
+            [loc[i] + lo[i] for i in range(3)],
+            [loc[i] + hi[i] for i in range(3)],
+        )
     dims = part.size or (0.001, 0.001, 0.001)
     half = [s / 2.0 for s in dims]
-    lo = [loc[i] - half[i] for i in range(3)]
-    hi = [loc[i] + half[i] for i in range(3)]
-    return lo, hi
+    return (
+        [loc[i] - half[i] for i in range(3)],
+        [loc[i] + half[i] for i in range(3)],
+    )
 
 
 def union_aabb(
