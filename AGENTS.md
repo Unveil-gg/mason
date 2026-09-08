@@ -113,8 +113,9 @@ Asset types:
 - `layered_raster` — Krita layers: fill, text (`font`, `align`),
   `stamp` (`l_corner`, `gem`, `rule`, `bond`, `dapple`, `vignette`,
   `figure`, `speckle`), `shape` (`rect` / `ellipse`), `opacity`
-  (0–1), `stamp_seed`, `pixels` + `keys`, or imported image. Source
-  is `.kra`.
+  (0–1), `stamp_seed`, `pixels` + `keys`, imported image, or
+  `expression` (`formula`, `mode`, `to`, `seed`). Text shrinks to
+  fit its rect. Source is `.kra`.
 - `sprite_sheet` — Aseprite animations of timed frames. Prefer
   `pixels` + `keys`. Source is `.aseprite`; outputs PNG + `frames.json`.
 - `image_process` — ImageMagick resize/crop/trim/composite/quantize/convert

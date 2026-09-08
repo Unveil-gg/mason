@@ -106,6 +106,18 @@ class LayerRect(BaseModel):
 PIXEL_TRANSPARENT = frozenset(". _")
 
 
+class LayerExpression(BaseModel):
+    """Sandboxed formula over x/y/u/v/w/h/seed. Mason bakes a PNG
+    and hands it to Krita as a role:image layer."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    formula: str
+    mode: Literal["alpha", "color"] = "alpha"
+    to: str | None = None
+    seed: int = 0
+
+
 class RasterLayer(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -131,9 +143,16 @@ class RasterLayer(BaseModel):
     stamp_seed: int | None = None
     shape: Literal["rect", "ellipse"] = "rect"
     opacity: float = Field(default=1.0, ge=0, le=1)
+    expression: LayerExpression | None = None
 
     @model_validator(mode="after")
     def need_content(self) -> RasterLayer:
+        if self.expression:
+            if not self.fill or self.rect is None:
+                raise ValueError("expression needs fill and rect")
+            if self.expression.mode == "color" and not self.expression.to:
+                raise ValueError("expression color mode needs to")
+            return self
         if self.stamp:
             if not self.fill or self.rect is None:
                 raise ValueError("stamp needs fill and rect")

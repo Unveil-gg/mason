@@ -7,17 +7,25 @@ dimensions:
   depth: 0.3
   height: 0.075
 
-style: default
+style: harvest
 
 geometry:
   bevel: true
-  bevel_width: 0.003
+  bevel_width: 0.002
   bevel_segments: 2
   parts:
-    - name: shell
+    - name: tray
       shape: box
-      size: [0.3, 0.3, 0.075]
-      location: [0, 0, 0.0375]
+      size: [0.292, 0.292, 0.06]
+      location: [0, 0, 0.03]
+      family: cardboard
+      material: wood_light
+    - name: lid
+      shape: box
+      size: [0.3, 0.3, 0.016]
+      location: [0, 0, 0.067]
+      family: cardboard
+      material: cream
 
 materials:
   primary: cream
@@ -26,33 +34,39 @@ decals:
   - name: top_art
     image: {asset: harvest_hollow_ai_top, file: output/asset.png}
     face: top
+    inset: 0.0003
   - name: bottom_art
     image: {asset: boardgame_box_bottom, file: output/asset.png}
     face: bottom
+    inset: 0.0003
   - name: front_info
     image: {asset: boardgame_box_side_info, file: output/asset.png}
     face: front
+    inset: 0.0003
   - name: back_promo
-    image: {asset: boardgame_box_side_promo, file: output/asset.png}
+    image: {asset: harvest_hollow_ai_promo, file: output/asset.png}
     face: back
+    inset: 0.0003
   - name: right_promo
-    image: {asset: boardgame_box_side_promo, file: output/asset.png}
+    image: {asset: harvest_hollow_ai_promo, file: output/asset.png}
     face: right
+    inset: 0.0003
   - name: left_promo
-    image: {asset: boardgame_box_side_promo, file: output/asset.png}
+    image: {asset: harvest_hollow_ai_promo, file: output/asset.png}
     face: left
+    inset: 0.0003
 
 art_direction:
   subject: standard square Euro board game box, farming and trade theme
   usage:
     importance: hero
     viewing_distance: close
-  silhouette: flat rectangular lid-and-tray box, square footprint
+  silhouette: lid-and-tray rectangular box, square footprint
   detail_density: medium
 
 art_analysis:
   shape_language:
-    primary: flat rectangular prism
+    primary: lid over a slightly smaller tray
     edges: hard
 
 export:

@@ -79,7 +79,7 @@ name: Harvest Hollow Ai Top
 dimensions:
   width: 1024
   height: 1024
-style: default
+style: harvest
 layers:
 - name: background
   role: background

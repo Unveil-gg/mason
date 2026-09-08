@@ -6,7 +6,7 @@ dimensions:
   width: 1024
   height: 1024
 
-style: default
+style: harvest
 
 layers:
   - name: background
@@ -15,10 +15,12 @@ layers:
   - name: grain
     role: overlay
     fill: wood_light
-    stamp: speckle
-    stamp_inner: cream
-    stamp_seed: 3
+    opacity: 0.35
     rect: {x: 0, y: 0, width: 1024, height: 1024}
+    expression:
+      formula: noise(u * 28, v * 28, seed) * 0.5
+      mode: alpha
+      seed: 3
   - name: header_band
     role: fill
     fill: wood_dark
@@ -153,7 +155,7 @@ layers:
     rect: {x: 890, y: 940, width: 8, height: 60}
   - name: frame_vignette
     role: overlay
-    fill: ink
+    fill: wood_dark
     stamp: vignette
     rect: {x: 0, y: 0, width: 1024, height: 1024}
 

@@ -43,10 +43,15 @@ def vocab_payload() -> dict[str, Any]:
         ),
         "raster": (
             "layered_raster: fill, text, image, stamp, "
-            "pixels+keys. shape rect|ellipse. opacity 0-1. "
-            "stamps: l_corner gem rule bond dapple "
-            "vignette figure speckle. stamp_seed for "
-            "reproducible dapple/speckle."
+            "pixels+keys, expression. shape rect|ellipse. "
+            "opacity 0-1. stamps: l_corner gem rule bond "
+            "dapple vignette figure speckle. stamp_seed for "
+            "reproducible dapple/speckle. expression: "
+            "{formula, mode: alpha|color, to, seed} over "
+            "x y u v w h; Mason bakes a PNG (no raw Krita "
+            "code). Text shrinks to fit its rect. "
+            "Mixed 2D: AI image for atmosphere, Mason text/"
+            "icons/chrome on top. Never AI the type."
         ),
         "sprites": (
             "sprite_sheet via Aseprite. One animation per "
@@ -54,9 +59,12 @@ def vocab_payload() -> dict[str, Any]:
             "palette. Example: examples/assets/barbarian.yaml."
         ),
         "style_tune": (
-            "Edit styles/<name>.yaml: palette, family "
-            "roughness/variation/noise_scale/tile_size/"
-            "albedo, bevel, lighting, render."
+            "styles/<name>.yaml is the project look bible "
+            "(not example-only). mason.yaml default_style "
+            "plus each spec's style: name. Edit palette, "
+            "family roughness/variation/noise_scale/"
+            "tile_size/albedo, bevel, lighting, render. "
+            "harvest is the Harvest Hollow pack bible."
         ),
         "recipes_note": (
             "Recipes are named clusters, not the path to "

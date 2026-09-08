@@ -16,6 +16,8 @@ from mason.core.styles import StyleProfile
 from mason.errors import MasonError
 from mason.generators.krita.script_builder import build_krita_script
 from mason.generators.krita.stamps import expand_stamps
+from mason.generators.raster.expression import materialize_expressions
+from mason.pipelines.text_fit import fit_text_layers
 from mason.pipelines.compare import write_compare_plate
 from mason.pipelines.common import finish_result, tool_failed
 from mason.pipelines.ingest import ensure_reference_silhouette
@@ -53,9 +55,10 @@ def build_layered_raster(
     job.write_spec(spec)
     job.write_style(style)
     job.write_meta(source_spec)
+    prepared = fit_text_layers(materialize_expressions(spec, style, job))
     job.build_py.write_text(
         build_krita_script(
-            spec,
+            prepared,
             style,
             job.dir,
             width,
