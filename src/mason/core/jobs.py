@@ -86,6 +86,10 @@ class AssetJob:
     def art_analysis_yaml(self) -> Path:
         return self.dir / "art_analysis.yaml"
 
+    @property
+    def run_json(self) -> Path:
+        return self.dir / "run.json"
+
     def exists(self) -> bool:
         return self.dir.is_dir() and self.asset_yaml.is_file()
 
@@ -234,6 +238,7 @@ class AssetJob:
             self.art_direction_yaml,
             self.construction_plan_yaml,
             self.art_analysis_yaml,
+            self.run_json,
         ):
             if src.is_file():
                 (dest / src.name).write_bytes(src.read_bytes())

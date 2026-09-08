@@ -24,16 +24,20 @@ previews in a fresh pass and looks for reasons not to ship.
    (`mason style <name> --json`, or `styles/*.yaml`).
 4. Understand the request. If `references` exist, run
    `mason ingest <image> --asset <id> [--style <name>] --json`
-   (OpenCV measures ratio, palette, color regions, contour, and
-   edge character). If `--asset` has no spec yet, ingest writes a
-   minimal buildable scaffold instead of a finished mesh -- edit
-   `art_analysis`, `parts`, or `layers` from there.
+   or `mason ingest --fetch <url> --asset <id> --json` (caches
+   under `.mason/jobs/<id>/refs/`). OpenCV measures ratio, palette,
+   color regions, contour, and edge character. If `--asset` has no
+   spec yet, ingest writes a minimal buildable scaffold instead of
+   a finished mesh -- edit `art_analysis`, `parts`, or `layers`
+   from there. Ingest does not compile a mesh.
 5. Write `art_direction`: subject, usage, silhouette goal, primary /
    secondary / tertiary forms, material families, detail density.
 6. Write `construction_plan` as intent (not compiled into meshes).
 7. Create or modify the AssetSpec (`geometry.parts`, `recipe`, or
    `component`).
-8. Run `mason build <spec> --json`.
+8. Run `mason build <spec> --json`. Each run writes `run.json`
+   (timings, prompt, triangles). `model`/`tokens` stay null unless
+   `mason note <id> --model --tokens` records a measured count.
 9. Check technical validation. Do not ignore failures.
    Success is not “Blender exited” or “the GLB exists.”
 10. Inspect `previews/three_quarter.png` first (beauty). This is
@@ -99,9 +103,11 @@ Important rules:
 Asset types:
 
 - `static_prop` — Blender parts (`box`, `cylinder`, `plane`, `cone`,
-  `torus`, `tapered_box`, `sphere`) with optional `parent`, `snap`
-  (`{to, on, embed}`), `inset`, `array` (linear or `radial`), `mirror`,
-  `component`, `family`, and `texture` (`{asset, file}`). Components:
+  `torus`, `tapered_box`, `sphere`, `lathe`) with optional `parent`,
+  `snap` (`{to, on, embed}`), `inset`, `array` (linear or `radial`),
+  `mirror`, `component`, `family`, `texture` (`{asset, file}`),
+  `profile` (`[[radius, z], ...]` on `lathe`, spun about +Z), and
+  `bend` (`{axis, angle, origin: center|base}`). Components:
   bolt, hinge, handle, caster, bracket, trim, x_brace, rail,
   wire_wall, rivet_strip, cornice. Recipes: crate, shelf, table,
   hydrant, cart, house, tree, pool, estate. `cutout: {target}`

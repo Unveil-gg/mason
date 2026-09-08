@@ -154,6 +154,12 @@ def create_primitive(part):
             *args,
             tuple(part.get("taper") or (0.72, 0.72)),
         )
+    if shape == "lathe":
+        return create_lathe(
+            *args,
+            part.get("profile") or [],
+            int(part.get("segments") or 24),
+        )
     return create_box(*args)
 
 

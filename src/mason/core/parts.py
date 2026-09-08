@@ -114,6 +114,21 @@ class PartCutout(BaseModel):
     target: str
 
 
+class PartBend(BaseModel):
+    """Simple-deform bend applied after the primitive is built.
+
+    General modeling op (necks, leaning posts, curved horns) -- not
+    tied to any one subject. `angle` is radians. `origin: base`
+    plants the min-Z end so the top leans.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    axis: Literal["x", "y", "z"] = "x"
+    angle: float = 0.0
+    origin: Literal["center", "base"] = "center"
+
+
 class PropPart(BaseModel):
     """One primitive or component instance in a static prop."""
 
@@ -122,15 +137,18 @@ class PropPart(BaseModel):
     name: str
     shape: Literal[
         "box", "cylinder", "plane", "cone", "torus",
-        "tapered_box", "sphere",
+        "tapered_box", "sphere", "lathe",
     ] = "box"
-    size: tuple[float, float, float]
+    size: tuple[float, float, float] | None = None
     location: tuple[float, float, float]
     rotation: tuple[float, float, float] = (0.0, 0.0, 0.0)
     material: str = "primary"
     family: str | None = None
     wear: float = Field(default=0.0, ge=0, le=1)
     taper: tuple[float, float] | None = None
+    profile: list[tuple[float, float]] | None = None
+    segments: int = Field(default=24, ge=8, le=64)
+    bend: PartBend | None = None
     texture: ImageSource | None = None
     bevel: bool | None = None
     parent: str | None = None
@@ -144,6 +162,32 @@ class PropPart(BaseModel):
         "x_brace", "rail", "wire_wall", "rivet_strip", "cornice",
     ] | None = None
     component_params: dict[str, float] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def size_or_lathe(self) -> PropPart:
+        if self.profile is not None and self.shape != "lathe":
+            raise ValueError("profile is only valid on shape: lathe")
+        if self.shape == "lathe":
+            if not self.profile or len(self.profile) < 2:
+                raise ValueError(
+                    "lathe needs profile with 2+ [radius, z] points",
+                )
+            for radius, _z in self.profile:
+                if radius < 0:
+                    raise ValueError("lathe radius must be >= 0")
+            if self.size is None:
+                radius = max(point[0] for point in self.profile)
+                zs = [point[1] for point in self.profile]
+                height = max(zs) - min(zs)
+                self.size = (
+                    max(2.0 * radius, 0.001),
+                    max(2.0 * radius, 0.001),
+                    height if height > 0 else 0.001,
+                )
+            return self
+        if self.size is None:
+            raise ValueError("part needs size")
+        return self
 
 
 class RecipeParams(BaseModel):

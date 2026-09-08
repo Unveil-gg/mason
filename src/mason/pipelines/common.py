@@ -10,6 +10,7 @@ from mason.core.config import load_project_config
 from mason.core.jobs import AssetJob
 from mason.core.preview_roles import preview_roles_for
 from mason.core.results import BuildResult, ValidationReport
+from mason.core.runs import record_build_run
 from mason.core.styles import StyleProfile, resolve_style
 from mason.core.workspace import find_project_root
 from mason.errors import MasonError
@@ -79,6 +80,7 @@ def finish_result(
     job.write_validation(report)
     job.write_result(result)
     iteration = job.bump_iteration()
+    record_build_run(job, result, iteration)
     job.snapshot_iteration(iteration)
     return result
 

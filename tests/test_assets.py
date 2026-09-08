@@ -179,6 +179,46 @@ def test_sprite_sheet_rejects_unknown_pixel_key() -> None:
         })
 
 
+def test_lathe_derives_size() -> None:
+    spec = parse_asset_spec({
+        "type": "static_prop",
+        "id": "vase",
+        "name": "Vase",
+        "dimensions": {"width": 0.2, "depth": 0.2, "height": 0.3},
+        "geometry": {
+            "parts": [{
+                "name": "body",
+                "shape": "lathe",
+                "location": [0, 0, 0.15],
+                "profile": [[0.05, 0.0], [0.03, 0.3]],
+                "bend": {"axis": "x", "angle": 0.4, "origin": "base"},
+            }],
+        },
+    })
+    part = spec.geometry.parts[0]
+    assert part.shape == "lathe"
+    assert part.size == (0.1, 0.1, 0.3)
+    assert part.bend is not None
+    assert part.bend.origin == "base"
+
+
+def test_lathe_requires_profile() -> None:
+    with pytest.raises(MasonError):
+        parse_asset_spec({
+            "type": "static_prop",
+            "id": "vase",
+            "name": "Vase",
+            "dimensions": {"width": 1, "depth": 1, "height": 1},
+            "geometry": {
+                "parts": [{
+                    "name": "body",
+                    "shape": "lathe",
+                    "location": [0, 0, 0.5],
+                }],
+            },
+        })
+
+
 def test_rejects_unknown_type() -> None:
     with pytest.raises(MasonError):
         parse_asset_spec({"type": "spaceship", "id": "a", "name": "A"})

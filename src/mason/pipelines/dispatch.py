@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 
 from mason.core.assets import (
@@ -23,10 +24,16 @@ from mason.pipelines.common import (
 from mason.pipelines.image_process import build_image_process
 from mason.pipelines.layered_raster import build_layered_raster
 from mason.pipelines.sprite_sheet import build_sprite_sheet
+from mason.core.runs import RunContext, prompt_from_spec
 from mason.pipelines.static_prop import build_static_prop, rel_source
 
 
-def run_build(spec_path: Path, *, mode: str = "all") -> BuildResult:
+def run_build(
+    spec_path: Path,
+    *,
+    mode: str = "all",
+    prompt: str | None = None,
+) -> BuildResult:
     """Build from a spec file in the current project."""
     root, project = project_context()
     spec = load_asset_spec(spec_path)
@@ -39,7 +46,10 @@ def run_build(spec_path: Path, *, mode: str = "all") -> BuildResult:
     style = resolve_job_style(root, spec, project.default_style)
     job = AssetJob(root, spec.id)
     source = rel_source(root, spec_path)
-    result = _run(spec, style, job, source, mode)
+    result = _run(
+        spec, style, job, source, mode,
+        prompt=prompt, command="build",
+    )
     if result.success and variants:
         result = _build_variants(variants, spec_path, result)
     return result
@@ -88,7 +98,11 @@ def _build_variants(
 
 
 def run_rebuild(
-    asset_id: str, *, mode: str = "all", demo_lighting: bool = False,
+    asset_id: str,
+    *,
+    mode: str = "all",
+    demo_lighting: bool = False,
+    prompt: str | None = None,
 ) -> BuildResult:
     """Rebuild an existing job. `demo_lighting` (preview mode only)
     swaps in a nicer one-off light rig without touching the stored
@@ -101,7 +115,13 @@ def run_rebuild(
     if source is None:
         meta = job.load_meta()
         source = meta.source_spec if meta else None
-    return _run(spec, style, job, source, mode, demo_lighting=demo_lighting)
+    command = "preview" if mode == "preview" else "rebuild"
+    return _run(
+        spec, style, job, source, mode,
+        demo_lighting=demo_lighting,
+        prompt=prompt,
+        command=command,
+    )
 
 
 def _run(
@@ -112,7 +132,14 @@ def _run(
     mode: str,
     *,
     demo_lighting: bool = False,
+    prompt: str | None = None,
+    command: str = "build",
 ) -> BuildResult:
+    job.run_ctx = RunContext(
+        started_at=datetime.now(timezone.utc),
+        command=command,
+        prompt=prompt_from_spec(spec, prompt),
+    )
     if isinstance(spec, StaticPropSpec):
         return build_static_prop(
             spec, style, job, source, mode=mode, demo_lighting=demo_lighting,

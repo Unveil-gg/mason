@@ -35,6 +35,8 @@ def test_blender_script_has_helpers(project: Path) -> None:
     assert "def create_cylinder" in script
     assert "def create_plane" in script
     assert "def create_primitive" in script
+    assert "def create_lathe" in script
+    assert "def apply_bend" in script
     assert "def create_material" in script
     assert "def export_glb" in script
     assert "json.loads" in script

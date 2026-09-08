@@ -9,7 +9,7 @@ from mason.generators.krita.stamps import STAMPS
 
 SHAPES = (
     "box", "cylinder", "plane", "cone", "torus",
-    "tapered_box", "sphere",
+    "tapered_box", "sphere", "lathe",
 )
 RECIPES = (
     "crate", "shelf", "table", "hydrant", "cart",
@@ -84,6 +84,28 @@ def vocab_payload() -> dict[str, Any]:
             "default (drops bulky arrays like layer_names); pass "
             "--full for the complete metrics."
         ),
+        "lathe": (
+            "shape: lathe + profile: [[radius, z], ...] revolves "
+            "around +Z (vases, stems, bottles, columns). size is "
+            "optional and derived from the profile for snap. "
+            "segments 8-64 (default 24). General turned form, "
+            "not a subject-specific recipe."
+        ),
+        "bend": (
+            "part.bend {axis: x|y|z, angle radians, "
+            "origin: center|base} is a Simple Deform after the "
+            "primitive is built. Works on any shape. origin=base "
+            "plants min-Z so the top leans (necks, posts, horns)."
+        ),
+        "run": (
+            "Each build writes .mason/jobs/<id>/run.json (copied "
+            "into iterations/NNN): started_at, ended_at, "
+            "duration_ms, prompt (art_direction.subject or "
+            "--prompt), triangles, tool, style. model and tokens "
+            "stay null unless mason note <id> --model --tokens "
+            "records a measured count. Mason cannot see Cursor's "
+            "meter."
+        ),
         "snap": (
             "part.snap {to, on: top|bottom|front|back|left|right, "
             "embed} meets a named face. embed pushes into the "
@@ -132,12 +154,14 @@ def vocab_payload() -> dict[str, Any]:
         ),
         "ingest": (
             "mason ingest <image> [--asset id] [--style name] "
-            "[--type static_prop|layered_raster] [--out path]: "
-            "OpenCV measures silhouette ratio, a k-means palette, "
-            "a few color regions, a simplified contour, and edge "
-            "character (hard/soft). Merges into art_analysis on an "
-            "existing spec (parts/layers untouched), or writes a "
-            "minimal buildable scaffold for a brand-new --asset id. "
+            "[--type static_prop|layered_raster] [--out path] "
+            "or mason ingest --fetch URL --asset id: downloads "
+            "into .mason/jobs/<id>/refs/ (source_url sidecar), "
+            "then OpenCV measures silhouette ratio, a k-means "
+            "palette, color regions, contour, and edge character. "
+            "Merges into art_analysis on an existing spec "
+            "(parts/layers untouched), or writes a minimal "
+            "buildable scaffold for a brand-new --asset id. "
             "Not an image-to-mesh compiler."
         ),
     }

@@ -10,6 +10,7 @@ scaffold. Parts and layers are always authored by the agent.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 
 import cv2
@@ -46,9 +47,11 @@ from mason.core.assets import (
 from mason.core.config import load_project_config
 from mason.core.jobs import AssetJob
 from mason.core.paths import resolve_project_path
+from mason.core.runs import record_ingest_run
 from mason.core.styles import StyleProfile, resolve_style
 from mason.core.workspace import find_project_root
 from mason.errors import MasonError
+from mason.pipelines.fetch import fetch_reference
 
 _MAX_REGIONS = 6
 _REGION_K = 6
@@ -331,12 +334,13 @@ def _draw_regions(
 
 
 def run_ingest(
-    image: Path,
+    image: Path | None,
     asset_id: str | None,
     *,
     style_name: str | None = None,
     spec_type: str | None = None,
     out: Path | None = None,
+    fetch_url: str | None = None,
 ) -> dict:
     """CLI entry: measure a reference image and hand it to Mason.
 
@@ -344,7 +348,32 @@ def run_ingest(
     `art_analysis` is merged (parts/layers are never touched). With
     `--asset` naming a new id, a minimal buildable scaffold is
     written instead (`--type` picks static_prop or layered_raster).
+    `--fetch` downloads into `.mason/jobs/<id>/refs/` first.
     """
+    started = datetime.now(timezone.utc)
+    fetched_from = None
+    if fetch_url and image is not None:
+        raise MasonError(
+            "Pass a local image or --fetch, not both.",
+            code="ingest_ambiguous",
+        )
+    if fetch_url:
+        if not asset_id:
+            raise MasonError(
+                "ingest --fetch needs --asset.",
+                code="ingest_fetch_needs_asset",
+                hint="mason ingest --fetch URL --asset <id>",
+            )
+        root = find_project_root()
+        refs = AssetJob(root, asset_id).dir / "refs"
+        image = fetch_reference(fetch_url, refs)
+        fetched_from = fetch_url
+    if image is None:
+        raise MasonError(
+            "ingest needs an image path or --fetch.",
+            code="ingest_missing",
+            hint="mason ingest <image> | mason ingest --fetch URL --asset <id>",
+        )
     if not image.is_file():
         raise MasonError(
             f"Image not found: {image}",
@@ -405,9 +434,19 @@ def run_ingest(
     dest.parent.mkdir(parents=True, exist_ok=True)
     sil.save(dest)
     payload["path"] = str(dest)
+    if fetched_from:
+        payload["source_url"] = fetched_from
+        payload["fetched"] = str(image)
     if analysis.regions:
         _draw_regions(image, analysis.regions, regions_dest)
         payload["regions_preview"] = str(regions_dest)
+    if asset_id:
+        job = AssetJob(root or find_project_root(), asset_id)
+        record_ingest_run(
+            job,
+            source=fetched_from or str(image),
+            started_at=started,
+        )
     return payload
 
 

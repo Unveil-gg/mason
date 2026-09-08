@@ -97,6 +97,17 @@ FullFlag = Annotated[
     ),
 ]
 
+PromptFlag = Annotated[
+    str | None,
+    typer.Option(
+        "--prompt",
+        help=(
+            "Override the run.json prompt. Default is "
+            "art_direction.subject."
+        ),
+    ),
+]
+
 
 @app.command()
 def version() -> None:
@@ -131,11 +142,12 @@ def build(
     spec: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
     json_mode: JsonFlag = False,
     full: FullFlag = False,
+    prompt: PromptFlag = None,
 ) -> None:
     """Build an asset from a YAML spec."""
 
     def _run():
-        result = run_build(spec)
+        result = run_build(spec, prompt=prompt)
         _emit(
             json_mode, _build_payload(result, full),
             lambda: print_build(result),
@@ -151,11 +163,12 @@ def rebuild(
     asset_id: Annotated[str, typer.Argument()],
     json_mode: JsonFlag = False,
     full: FullFlag = False,
+    prompt: PromptFlag = None,
 ) -> None:
     """Rebuild a stored job by asset id."""
 
     def _run():
-        result = run_rebuild(asset_id)
+        result = run_rebuild(asset_id, prompt=prompt)
         _emit(
             json_mode, _build_payload(result, full),
             lambda: print_build(result),
@@ -182,12 +195,14 @@ def preview(
         ),
     ] = False,
     full: FullFlag = False,
+    prompt: PromptFlag = None,
 ) -> None:
     """Re-render previews for an existing job."""
 
     def _run():
         result = run_rebuild(
             asset_id, mode="preview", demo_lighting=demo_lighting,
+            prompt=prompt,
         )
         _emit(
             json_mode, _build_payload(result, full),
@@ -344,6 +359,48 @@ def validate(
 
 
 @app.command()
+def note(
+    asset_id: Annotated[str, typer.Argument()],
+    model: Annotated[
+        str | None,
+        typer.Option("--model", help="Agent/model name that authored this run."),
+    ] = None,
+    tokens: Annotated[
+        int | None,
+        typer.Option(
+            "--tokens",
+            help="Measured token count. Leave unset if unknown.",
+        ),
+    ] = None,
+    prompt: PromptFlag = None,
+    json_mode: JsonFlag = False,
+) -> None:
+    """Attach model/token notes to the latest run.json.
+
+    Mason cannot see Cursor's meter. tokens stay null unless you
+    pass a measured count.
+    """
+
+    def _run():
+        from mason.core.runs import patch_run
+        root, _project = project_context()
+        job = require_job(root, asset_id)
+        record = patch_run(
+            job, model=model, tokens=tokens, prompt=prompt,
+        )
+        _emit(
+            json_mode,
+            record.model_dump(mode="json"),
+            lambda: typer.echo(
+                f"noted {asset_id} model={record.model or '-'} "
+                f"tokens={record.tokens if record.tokens is not None else '-'}",
+            ),
+        )
+
+    _guard(json_mode, _run)
+
+
+@app.command()
 def evaluate(
     asset_id: Annotated[str, typer.Argument()],
     evaluation: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
@@ -448,7 +505,17 @@ def compare(
 
 @app.command()
 def ingest(
-    image: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
+    image: Annotated[
+        Path | None,
+        typer.Argument(help="Local reference image."),
+    ] = None,
+    fetch: Annotated[
+        str | None,
+        typer.Option(
+            "--fetch",
+            help="Download a reference URL into the job's refs/ cache.",
+        ),
+    ] = None,
     asset: Annotated[
         str | None,
         typer.Option("--asset", help="Job id to attach the analysis."),
@@ -486,6 +553,7 @@ def ingest(
         payload = run_ingest(
             image, asset,
             style_name=style, spec_type=spec_type, out=out,
+            fetch_url=fetch,
         )
         _emit(
             json_mode,

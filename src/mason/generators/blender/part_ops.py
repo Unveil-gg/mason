@@ -96,9 +96,11 @@ def _mirrored(part: PropPart, axis: str) -> PropPart:
 
 
 def _inset_size(
-    size: tuple[float, float, float],
+    size: tuple[float, float, float] | None,
     inset: float,
 ) -> tuple[float, float, float]:
+    if size is None:
+        return (0.001, 0.001, 0.001)
     if inset <= 0:
         return size
     return tuple(max(0.001, s - 2.0 * inset) for s in size)

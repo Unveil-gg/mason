@@ -193,3 +193,59 @@ def test_ingest_preserves_existing_geometry(
     assert loaded.geometry.recipe == "crate"
     assert loaded.art_analysis is not None
     assert loaded.art_analysis.regions
+
+
+def test_ingest_fetch_caches_ref(
+    project: Path, monkeypatch, tmp_path: Path,
+) -> None:
+    spec = parse_asset_spec({
+        "type": "static_prop",
+        "id": "box",
+        "name": "Box",
+        "dimensions": {"width": 1, "depth": 1, "height": 1},
+        "geometry": {"recipe": "crate"},
+    })
+    job = AssetJob(project, spec.id)
+    job.prepare()
+    job.write_spec(spec)
+    job.write_meta(None)
+    from io import BytesIO
+    buf = BytesIO()
+    Image.new("RGB", (20, 40), (10, 10, 10)).save(buf, format="PNG")
+    payload = buf.getvalue()
+
+    class _Headers:
+        def get_content_type(self) -> str:
+            return "image/png"
+
+    class _Resp:
+        headers = _Headers()
+
+        def read(self, _n: int) -> bytes:
+            return payload
+
+        def __enter__(self) -> "_Resp":
+            return self
+
+        def __exit__(self, *_args) -> bool:
+            return False
+
+    monkeypatch.setattr(
+        "mason.pipelines.fetch.urlopen",
+        lambda _req, timeout=None: _Resp(),
+    )
+    monkeypatch.chdir(project)
+    result = runner.invoke(
+        app,
+        [
+            "ingest", "--fetch", "https://example.com/ref.png",
+            "--asset", "box", "--json",
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+    data = json.loads(result.stdout)
+    assert data["source_url"] == "https://example.com/ref.png"
+    cached = job.dir / "refs" / "ref.png"
+    assert cached.is_file()
+    assert (job.dir / "refs" / "ref.source.json").is_file()
+    assert job.run_json.is_file()

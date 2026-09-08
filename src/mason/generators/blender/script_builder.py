@@ -8,6 +8,7 @@ from pathlib import Path
 from mason.core.assets import PropPart, StaticPropSpec
 from mason.core.styles import StyleProfile
 from mason.generators.blender.export import EXPORT_SRC
+from mason.generators.blender.lathe import CREATE_LATHE_SRC
 from mason.generators.blender.materials import CREATE_MATERIAL_SRC
 from mason.generators.blender.preview_scene import PREVIEW_SCENE_SRC
 from mason.generators.blender.primitives import CREATE_BOX_SRC
@@ -97,6 +98,7 @@ CONFIG = json.loads(r\'\'\'
 
 _BODY = (
     CREATE_BOX_SRC
+    + CREATE_LATHE_SRC
     + CREATE_MATERIAL_SRC
     + EXPORT_SRC
     + PREVIEW_SCENE_SRC
@@ -193,6 +195,8 @@ def build_geometry():
     created = {}
     for part in CONFIG["parts"]:
         obj = create_primitive(part)
+        if part.get("bend"):
+            apply_bend(obj, part["bend"])
         created[obj.name] = obj
         is_plane = (part.get("shape") or "box") == "plane"
         tex_path = CONFIG["part_textures"].get(part["name"])
@@ -209,7 +213,7 @@ def build_geometry():
             use_bevel = CONFIG["bevel"]
         if part.get("cutout") or part.get("family") == "lawn":
             use_bevel = False
-        if (part.get("shape") or "box") == "sphere":
+        if (part.get("shape") or "box") in ("sphere", "lathe"):
             use_bevel = False
         if use_bevel and not is_plane:
             apply_bevel(obj, CONFIG["bevel_width"], CONFIG["bevel_segments"])

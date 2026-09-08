@@ -66,6 +66,11 @@ def test_vocab_json() -> None:
     assert "barbarian.yaml" in data["sprites"]
     assert "shopping_cart.yaml" in data["variants"]
     assert "--demo-lighting" in data["demo_lighting"]
+    assert "lathe" in data["shapes"]
+    assert "profile:" in data["lathe"]
+    assert "origin: center|base" in data["bend"]
+    assert "--fetch" in data["ingest"]
+    assert "run.json" in data["run"]
 
 
 def test_clean_removes_jobs(project: Path, monkeypatch) -> None:
@@ -78,6 +83,17 @@ def test_clean_removes_jobs(project: Path, monkeypatch) -> None:
     data = json.loads(result.stdout)
     assert data["removed"] == ["box"]
     assert not job_dir.is_dir()
+
+
+def test_note_requires_run(project: Path, monkeypatch) -> None:
+    monkeypatch.chdir(project)
+    job_dir = project / ".mason" / "jobs" / "box"
+    job_dir.mkdir(parents=True)
+    (job_dir / "asset.yaml").write_text("id: box\n", encoding="utf-8")
+    result = runner.invoke(app, ["note", "box", "--json"])
+    assert result.exit_code != 0
+    data = json.loads(result.stdout)
+    assert data["error"]["code"] == "run_not_found"
 
 
 def test_inspect_missing(project: Path, monkeypatch) -> None:

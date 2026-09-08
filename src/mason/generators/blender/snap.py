@@ -19,7 +19,8 @@ _FACES = {
 def aabb(part: PropPart) -> tuple[list[float], list[float]]:
     """Axis-aligned min/max from location and size. Returns (min, max)."""
     loc = list(part.location)
-    half = [s / 2.0 for s in part.size]
+    dims = part.size or (0.001, 0.001, 0.001)
+    half = [s / 2.0 for s in dims]
     lo = [loc[i] - half[i] for i in range(3)]
     hi = [loc[i] + half[i] for i in range(3)]
     return lo, hi

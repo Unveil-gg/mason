@@ -7,6 +7,7 @@ from pathlib import Path
 
 from mason.core.art import VisualEvaluation
 from mason.core.jobs import require_job
+from mason.core.runs import JobRun
 from mason.core.workspace import find_project_root
 from mason.errors import MasonError
 
@@ -61,6 +62,14 @@ def history_payload(asset_id: str, *, summary: bool = False) -> dict:
             "evaluation_ship": evaluation.ship if evaluation else None,
             "evaluation_passed": evaluation.passed if evaluation else None,
         }
+        run_path = job.iterations / f"{number:03d}" / "run.json"
+        if run_path.is_file():
+            run = JobRun.model_validate_json(
+                run_path.read_text(encoding="utf-8"),
+            )
+            row["duration_ms"] = run.duration_ms
+            row["triangles"] = run.triangles
+            row["prompt"] = run.prompt
         if summary:
             row["primary_preview"] = _primary_preview(previews, primary_key)
         else:
