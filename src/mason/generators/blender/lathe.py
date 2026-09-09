@@ -74,4 +74,31 @@ def apply_bend(obj, spec):
         mod.deform_axis = axis
     mod.angle = angle
     bpy.ops.object.modifier_apply(modifier=mod.name)
+
+
+def apply_drape(obj, spec):
+    """Hem flare via Simple Deform. origin=top plants max-Z."""
+    if not spec:
+        return
+    amount = float(spec.get("amount") or 0.0)
+    if abs(amount) < 1e-6:
+        return
+    axis = (spec.get("axis") or "x").upper()
+    origin = spec.get("origin") or "top"
+    if origin != "center" and obj.data.vertices:
+        zs = [v.co.z for v in obj.data.vertices]
+        pivot = max(zs) if origin == "top" else min(zs)
+        for vert in obj.data.vertices:
+            vert.co.z -= pivot
+        obj.data.update()
+        obj.location.z += pivot
+    bpy.ops.object.select_all(action="DESELECT")
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    mod = obj.modifiers.new(name="Drape", type="SIMPLE_DEFORM")
+    mod.deform_method = "BEND"
+    if hasattr(mod, "deform_axis"):
+        mod.deform_axis = axis
+    mod.angle = amount
+    bpy.ops.object.modifier_apply(modifier=mod.name)
 '''

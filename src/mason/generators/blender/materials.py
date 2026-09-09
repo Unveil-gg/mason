@@ -56,8 +56,66 @@ def create_material(
     return mat
 
 
+def _socket(bsdf, *names):
+    """First matching Principled input, or None."""
+    for name in names:
+        if name in bsdf.inputs:
+            return bsdf.inputs[name]
+    return None
+
+
+def apply_shader(mat, shader, params=None):
+    """Tune a Principled tree for a named shader. fabric adds sheen."""
+    params = params or {}
+    if shader != "fabric":
+        return
+    bsdf = next(
+        n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED"
+    )
+    sheen = _socket(bsdf, "Sheen Weight", "Sheen")
+    if sheen is not None:
+        sheen.default_value = float(params.get("sheen", 0.35))
+    tint = _socket(bsdf, "Sheen Tint")
+    if tint is not None and tint.type == "VALUE":
+        tint.default_value = float(params.get("sheen_tint", 0.5))
+
+
+def apply_bump_and_normal(
+    mat, wrap, bump_path=None, normal_path=None, bump_strength=0.04,
+):
+    """Wire bump (height) and/or a normal map into Principled."""
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    bsdf = next(n for n in nodes if n.type == "BSDF_PRINCIPLED")
+    normal_out = None
+    ext = "REPEAT" if wrap == "repeat" else "EXTEND"
+    if normal_path:
+        ntex = nodes.new("ShaderNodeTexImage")
+        ntex.image = bpy.data.images.load(normal_path)
+        ntex.image.colorspace_settings.name = "Non-Color"
+        ntex.extension = ext
+        nmap = nodes.new("ShaderNodeNormalMap")
+        links.new(ntex.outputs["Color"], nmap.inputs["Color"])
+        normal_out = nmap.outputs["Normal"]
+    if bump_path:
+        btex = nodes.new("ShaderNodeTexImage")
+        btex.image = bpy.data.images.load(bump_path)
+        btex.image.colorspace_settings.name = "Non-Color"
+        btex.extension = ext
+        bump = nodes.new("ShaderNodeBump")
+        bump.inputs["Strength"].default_value = float(bump_strength)
+        links.new(btex.outputs["Color"], bump.inputs["Height"])
+        if normal_out is not None:
+            links.new(normal_out, bump.inputs["Normal"])
+        normal_out = bump.outputs["Normal"]
+    if normal_out is not None:
+        links.new(normal_out, bsdf.inputs["Normal"])
+
+
 def create_textured_material(
     name, image_path, roughness, metallic, wrap, roughness_path=None,
+    bump_path=None, normal_path=None, bump_strength=0.04,
+    shader="principled", shader_params=None,
 ):
     """Create a Principled BSDF material with an Image Texture as its
     Base Color, loaded from a previously-built 2D asset's PNG."""
@@ -83,6 +141,10 @@ def create_textured_material(
             "REPEAT" if wrap == "repeat" else "EXTEND"
         )
         links.new(rough_tex.outputs["Color"], bsdf.inputs["Roughness"])
+    apply_shader(mat, shader, shader_params)
+    apply_bump_and_normal(
+        mat, wrap, bump_path, normal_path, bump_strength,
+    )
     return mat
 
 

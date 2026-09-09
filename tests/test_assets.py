@@ -224,6 +224,109 @@ def test_rejects_unknown_type() -> None:
         parse_asset_spec({"type": "spaceship", "id": "a", "name": "A"})
 
 
+def test_attachments_and_drape() -> None:
+    spec = parse_asset_spec({
+        "type": "static_prop",
+        "id": "shirt",
+        "name": "Shirt",
+        "dimensions": {"width": 1, "depth": 1, "height": 1},
+        "geometry": {
+            "parts": [{
+                "name": "front",
+                "size": [0.4, 0.01, 0.3],
+                "location": [0, -0.1, 0.4],
+                "drape": {"axis": "x", "amount": 0.1, "origin": "top"},
+            }],
+        },
+        "attachments": [
+            {"name": "neck", "location": [0, 0, 0.6]},
+        ],
+        "materials": {
+            "shader": "fabric",
+            "bump_strength": 0.05,
+        },
+    })
+    assert spec.attachments[0].name == "neck"
+    assert spec.geometry.parts[0].drape is not None
+    assert spec.materials.shader == "fabric"
+
+
+def test_height_to_normal_op() -> None:
+    spec = parse_asset_spec({
+        "type": "image_process",
+        "id": "n",
+        "name": "N",
+        "source": {"path": "h.png"},
+        "operations": [{"op": "height_to_normal", "strength": 2.0}],
+    })
+    assert spec.operations[0].op == "height_to_normal"
+    assert spec.operations[0].strength == 2.0
+
+
+def test_static_prop_garment_modes() -> None:
+    template = parse_asset_spec({
+        "type": "static_prop",
+        "id": "fitted_shirt",
+        "name": "Fitted Shirt",
+        "dimensions": {"width": 0.5, "depth": 0.4, "height": 0.4},
+        "geometry": {
+            "garment": {
+                "mode": "template",
+                "kind": "shirt",
+                "archetype": "small_animal",
+            },
+        },
+    })
+    assert template.geometry.garment is not None
+    assert template.geometry.garment.mode == "template"
+    fit = parse_asset_spec({
+        "type": "static_prop",
+        "id": "fit_shirt",
+        "name": "Fit Shirt",
+        "dimensions": {"width": 0.5, "depth": 0.4, "height": 0.4},
+        "geometry": {
+            "garment": {
+                "mode": "fit",
+                "body": {"path": "refs/char.glb"},
+            },
+        },
+    })
+    assert fit.geometry.garment.body is not None
+    refit = parse_asset_spec({
+        "type": "static_prop",
+        "id": "refit_shirt",
+        "name": "Refit Shirt",
+        "dimensions": {"width": 0.5, "depth": 0.4, "height": 0.4},
+        "geometry": {
+            "garment": {
+                "mode": "refit",
+                "body": {"path": "refs/char.glb"},
+                "source": {
+                    "asset": "fitted_shirt",
+                    "file": "output/asset.glb",
+                },
+            },
+        },
+    })
+    assert refit.geometry.garment.source is not None
+    vest = parse_asset_spec({
+        "type": "static_prop",
+        "id": "vest",
+        "name": "Vest",
+        "dimensions": {"width": 0.5, "depth": 0.4, "height": 0.4},
+        "geometry": {"garment": {"kind": "vest", "sleeve": "short"}},
+    })
+    assert vest.geometry.garment.sleeve == "none"
+    with pytest.raises(MasonError):
+        parse_asset_spec({
+            "type": "static_prop",
+            "id": "bad_fit",
+            "name": "Bad",
+            "dimensions": {"width": 1, "depth": 1, "height": 1},
+            "geometry": {"garment": {"mode": "fit"}},
+        })
+
+
 def test_rejects_extra_fields() -> None:
     with pytest.raises(MasonError):
         parse_asset_spec({

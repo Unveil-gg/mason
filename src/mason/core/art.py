@@ -93,7 +93,7 @@ class PlanTechnique(BaseModel):
 
     kind: Literal[
         "lathe", "box", "curve", "outline", "skin",
-        "modular", "remesh", "refine", "sculpt",
+        "modular", "remesh", "refine", "sculpt", "fit",
     ]
     purpose: str = ""
     applies_to: str = ""
@@ -251,6 +251,10 @@ class EvalScores(BaseModel):
     style_match: int | None = Field(default=None, ge=1, le=10)
     multi_view_coherence: int | None = Field(default=None, ge=1, le=10)
     technical_quality: int | None = Field(default=None, ge=1, le=10)
+    wearable_fit: int | None = Field(default=None, ge=1, le=10)
+    anatomy_follow: int | None = Field(default=None, ge=1, le=10)
+    boxiness: int | None = Field(default=None, ge=1, le=10)
+    deformation: int | None = Field(default=None, ge=1, le=10)
 
 
 class EvalIssue(BaseModel):

@@ -14,7 +14,7 @@ SHAPES = (
 )
 TECHNIQUES = (
     "lathe", "box", "curve", "outline", "skin",
-    "modular", "remesh", "refine", "sculpt",
+    "modular", "remesh", "refine", "sculpt", "fit",
 )
 RECIPES = (
     "crate", "shelf", "table", "hydrant", "cart",
@@ -23,7 +23,7 @@ RECIPES = (
 LAYER_ROLES = ("background", "fill", "text", "image", "overlay")
 FAMILIES = (
     "painted_metal", "bare_metal", "varnished_wood",
-    "rubber", "plastic", "cardboard",
+    "rubber", "plastic", "cardboard", "fabric",
     "masonry", "brownstone", "roofing", "foliage", "lawn",
     "water", "pavement", "clapboard",
 )
@@ -46,7 +46,10 @@ def vocab_payload() -> dict[str, Any]:
             "textured shapes use world-space UVs. "
             "family.tile_size overrides style tile_size. "
             "Style family.albedo applies when the file "
-            "exists. family.noise_scale tunes solid grain. "
+            "exists. family.bump_map / part.bump_map is a "
+            "height PNG; family.normal_map / part.normal_map "
+            "is tangent RGB. materials.shader principled|"
+            "fabric. family.noise_scale tunes solid grain. "
             "Do not put masonry albedo on sidewalks or "
             "stoops; pavement is ground, brownstone/masonry "
             "are brick walls, clapboard is siding. Ornate "
@@ -62,9 +65,12 @@ def vocab_payload() -> dict[str, Any]:
             "courses=clapboard, pavers=sidewalk slabs. "
             "stamp_seed for "
             "reproducible dapple/speckle. expression: "
-            "{formula, mode: alpha|color, to, seed} over "
-            "x y u v w h; Mason bakes a PNG (no raw Krita "
-            "code). Text shrinks to fit its rect. "
+            "{formula, mode: alpha|color|height|normal, to, "
+            "seed} over x y u v w h; Mason bakes a PNG (no "
+            "raw Krita code). height is grayscale; normal is "
+            "a Sobel map. image_process op height_to_normal "
+            "converts a height PNG. Text shrinks to fit its "
+            "rect. "
             "Mixed 2D: AI image for atmosphere, Mason text/"
             "icons/chrome on top. Never AI the type."
         ),
@@ -238,6 +244,25 @@ def vocab_payload() -> dict[str, Any]:
             "origin: center|base} is a Simple Deform after the "
             "primitive is built. Works on any shape. origin=base "
             "plants min-Z so the top leans (necks, posts, horns)."
+        ),
+        "drape": (
+            "part.drape {axis, amount radians, origin: "
+            "top|base|center} flares the free end. origin=top "
+            "plants max-Z so the hem moves. First cloth step, "
+            "not a sim."
+        ),
+        "attachments": (
+            "static_prop.attachments: [{name, location, "
+            "rotation, parent}]. Empties named attach_<name> "
+            "export in the GLB and metadata.json / manifest."
+        ),
+        "garment": (
+            "geometry.garment builds clothes from a body, "
+            "not boxes. mode template|fit|refit. kind "
+            "shirt|tunic|vest. fit needs body GLB; refit "
+            "needs body + source GLB. template uses "
+            "archetype small_animal. Loops, shrinkwrap, "
+            "optional cloth, solidify last, weight transfer."
         ),
         "run": (
             "Each build writes .mason/jobs/<id>/run.json (copied "

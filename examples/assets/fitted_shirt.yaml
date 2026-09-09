@@ -1,0 +1,128 @@
+type: static_prop
+id: fitted_shirt
+name: Fitted Shirt
+
+# Body-first short-sleeve shirt. Template small_animal cage until
+# a character GLB is dropped in (then mode: fit, body.path).
+dimensions:
+  width: 0.46
+  depth: 0.26
+  height: 0.36
+
+style: default
+
+depends_on:
+  - cotton_weave
+
+geometry:
+  bevel: false
+  garment:
+    mode: template
+    kind: shirt
+    archetype: small_animal
+    fit: fitted
+    clearance: 0.012
+    thickness: 0.004
+    hem: 0.22
+    sleeve: short
+    neck: 0.14
+    tail_opening: false
+    stylization: 0.7
+    stiffness: 0.6
+    wrinkle: 0.2
+    cloth_frames: 0
+    pose_tests: true
+
+materials:
+  strategy: palette
+  primary: cotton
+  roughness: 0.85
+  metallic: 0.0
+  shader: fabric
+  bump_strength: 0.12
+  bump_map:
+    asset: cotton_weave
+    file: output/asset.png
+  palette_overrides:
+    cotton: "#F4F1EA"
+
+art_direction:
+  subject: >
+    Fitted short-sleeve shirt wrapped on a ~1 m cute animal
+    torso, generated from body loops not boxes
+  style:
+    realism: 0.25
+    stylization: 0.75
+    shape_language: [soft, clean, wearable]
+  usage:
+    importance: standard_prop
+    viewing_distance: medium
+  silhouette: >
+    Short-sleeve T-pose shirt at torso height. Open neck and
+    cuffs, hem above the ground. Follows the body, not a crate.
+  forms:
+    primary: [torso loft, short sleeves]
+    secondary: [neckline, armholes, hem]
+    tertiary: []
+  materials:
+    - {family: fabric, palette: cotton}
+  detail_density: low
+  constraints:
+    - No logos. No character body in the exported mesh.
+    - Origin at the feet. Stay below the face at Z 0.75.
+    - Inner cavity clears a 0.37 x 0.32 x 0.25 torso.
+
+geometric_plan:
+  primary_read: short-sleeve shirt fitted to a small-animal torso
+  recognition: mixed
+  must_survive_small:
+    - floating hem above the ground
+    - open neck
+    - T-pose short sleeves
+    - body-following silhouette
+  masses:
+    - {name: shirt, role: primary, connects_to: []}
+  silhouette: >
+    Front: rounded torso, neck hole, sleeve stubs.
+    Side: chest follow, open cuff. Shirt sits near Z 0.22-0.62.
+  silhouette_vs_similar: Not a vest. Not a box tube or crate.
+  proportions: >
+    About 0.46 wide in T-pose, 0.36 tall, 0.26 deep.
+    Neck hole 0.14. Hem at Z 0.22.
+  symmetry: bilateral
+  negative_space: neck hole, open cuffs, hollow torso
+  abstraction: lofted body loops, shrinkwrap, light cloth
+  stage: secondary
+  landmarks:
+    - {id: neck, role: neck opening, part: shirt}
+    - {id: hem, role: shirt hem, part: shirt}
+    - {id: cuff_l, role: left cuff, part: shirt}
+    - {id: cuff_r, role: right cuff, part: shirt}
+  critical_views:
+    - {view: front, weight: 3}
+    - {view: side, weight: 2}
+    - {view: three_quarter, weight: 2}
+  notes:
+    - Face -Y. No geometry.bodies. Openings stay open.
+    - Template body is _mason_body and is not exported.
+
+construction_plan:
+  techniques:
+    - {kind: fit, purpose: loft then shrinkwrap, applies_to: shirt}
+    - {kind: remesh, purpose: template cage only, applies_to: body}
+  primary_forms:
+    - {type: loft, purpose: torso rings from body slices}
+    - {type: loft, purpose: short sleeve tubes}
+  secondary_forms:
+    - {type: opening, purpose: neckline and cuffs}
+  tertiary_details: []
+  materials: [fabric]
+  keep_parts: []
+  rebuild_parts: []
+  notes:
+    - Generate from body loops. Do not use a box as primary.
+    - Solidify last. Export without the body.
+
+export:
+  format: glb
+  save_blend: true

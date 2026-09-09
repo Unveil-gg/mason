@@ -11,34 +11,43 @@ dimensions:
 
 style: default
 
+depends_on:
+  - cotton_weave
+
 geometry:
-  bevel: false
+  bevel: true
+  bevel_width: 0.003
+  bevel_segments: 2
   parts:
     - name: body_front
-      shape: box
+      shape: tapered_box
       size: [0.40, 0.012, 0.34]
+      taper: [0.92, 0.96]
       location: [0.0, -0.141, 0.39]
       material: cotton
-      family: cardboard
+      family: fabric
+      drape: {axis: x, amount: -0.16, origin: top}
     - name: body_back
-      shape: box
+      shape: tapered_box
       size: [0.40, 0.012, 0.34]
+      taper: [0.92, 0.96]
       location: [0.0, 0.141, 0.39]
       material: cotton
-      family: cardboard
+      family: fabric
+      drape: {axis: x, amount: 0.16, origin: top}
     - name: body_side_l
       shape: box
       size: [0.012, 0.270, 0.34]
       location: [-0.194, 0.0, 0.39]
       material: cotton
-      family: cardboard
+      family: fabric
       snap: {to: body_front, "on": left, embed: 0.012}
     - name: body_side_r
       shape: box
       size: [0.012, 0.270, 0.34]
       location: [0.194, 0.0, 0.39]
       material: cotton
-      family: cardboard
+      family: fabric
       snap: {to: body_front, "on": right, embed: 0.012}
     - name: arm_cut_l
       shape: box
@@ -61,7 +70,7 @@ geometry:
       size: [0.40, 0.294, 0.012]
       location: [0.0, 0.0, 0.566]
       material: cotton
-      family: cardboard
+      family: fabric
       snap: {to: body_front, "on": top}
     - name: neck_cut
       shape: cylinder
@@ -84,42 +93,42 @@ geometry:
       size: [0.06, 0.10, 0.010]
       location: [-0.218, 0.0, 0.555]
       material: cotton
-      family: cardboard
+      family: fabric
       mirror: x
     - name: sleeve_bot
       shape: box
       size: [0.06, 0.10, 0.010]
       location: [-0.218, 0.0, 0.465]
       material: cotton
-      family: cardboard
+      family: fabric
       mirror: x
     - name: sleeve_front
       shape: box
       size: [0.06, 0.010, 0.08]
       location: [-0.218, -0.045, 0.51]
       material: cotton
-      family: cardboard
+      family: fabric
       mirror: x
     - name: sleeve_back
       shape: box
       size: [0.06, 0.010, 0.08]
       location: [-0.218, 0.045, 0.51]
       material: cotton
-      family: cardboard
+      family: fabric
       mirror: x
     - name: collar_stand
       shape: box
       size: [0.16, 0.012, 0.030]
       location: [0.0, 0.074, 0.587]
       material: cotton
-      family: cardboard
+      family: fabric
       snap: {to: yoke, "on": top}
     - name: collar_side
       shape: box
       size: [0.012, 0.078, 0.030]
       location: [-0.074, 0.010, 0.587]
       material: cotton
-      family: cardboard
+      family: fabric
       mirror: x
     - name: collar_point
       shape: box
@@ -127,14 +136,14 @@ geometry:
       location: [-0.040, -0.096, 0.578]
       rotation: [0.15, 0.0, 0.45]
       material: cotton
-      family: cardboard
+      family: fabric
       mirror: x
     - name: placket
       shape: box
       size: [0.028, 0.008, 0.30]
       location: [0.0, -0.151, 0.41]
       material: cotton
-      family: cardboard
+      family: fabric
       snap: {to: body_front, "on": front}
     - name: button
       shape: cylinder
@@ -151,8 +160,20 @@ materials:
   primary: cotton
   roughness: 0.85
   metallic: 0.0
+  shader: fabric
+  bump_strength: 0.12
+  bump_map:
+    asset: cotton_weave
+    file: output/asset.png
   palette_overrides:
     cotton: "#F4F1EA"
+
+attachments:
+  - {name: neck, location: [0.0, 0.0, 0.60], parent: yoke}
+  - {name: chest, location: [0.0, -0.14, 0.42], parent: body_front}
+  - {name: hem, location: [0.0, 0.0, 0.22]}
+  - {name: cuff_l, location: [-0.248, 0.0, 0.51], parent: sleeve_top}
+  - {name: cuff_r, location: [0.248, 0.0, 0.51], parent: sleeve_top_m}
 
 art_direction:
   subject: >
@@ -161,7 +182,7 @@ art_direction:
   style:
     realism: 0.25
     stylization: 0.75
-    shape_language: [boxy, clean, wearable]
+    shape_language: [soft, clean, wearable]
   usage:
     importance: standard_prop
     viewing_distance: medium
@@ -174,7 +195,7 @@ art_direction:
     secondary: [collar, placket]
     tertiary: [buttons]
   materials:
-    - {family: cardboard, palette: cotton}
+    - {family: fabric, palette: cotton}
     - {family: plastic, palette: cream}
   detail_density: low
   constraints:
@@ -205,7 +226,7 @@ geometric_plan:
     Neck hole 0.14. Collar top at Z 0.60.
   symmetry: bilateral
   negative_space: neck hole, open cuffs, hollow torso
-  abstraction: thick box panels, no cloth drape
+  abstraction: tapered panels, small bevel, hem drape
   stage: secondary
   landmarks:
     - {id: yoke, role: neck opening, part: yoke}
@@ -218,7 +239,7 @@ geometric_plan:
     - {view: side, weight: 2}
     - {view: three_quarter, weight: 2}
   notes:
-    - Face -Y. No geometry.bodies. Bevel off.
+    - Face -Y. No geometry.bodies. Tiny bevel.
     - Keep the cavity clear of the 0.37 x 0.32 x 0.25 torso.
 
 construction_plan:
@@ -235,7 +256,7 @@ construction_plan:
     - {type: cutout, purpose: neck and arm holes}
   tertiary_details:
     - {type: cylinder, purpose: buttons, count: 4}
-  materials: [cardboard, plastic]
+  materials: [fabric, plastic]
   keep_parts:
     - body_front
     - body_back

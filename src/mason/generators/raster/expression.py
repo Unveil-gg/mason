@@ -100,7 +100,16 @@ def _to_rgba(
     assert layer.expression is not None
     src = np.array(hex_rgba(style.color(layer.fill)), dtype=np.float32)
     opacity = float(layer.opacity)
-    if layer.expression.mode == "color":
+    mode = layer.expression.mode
+    if mode == "height":
+        gray = value * 255.0
+        rgb = np.stack((gray, gray, gray), axis=-1)
+        alpha = np.full(value.shape, 255.0 * opacity, dtype=np.float32)
+    elif mode == "normal":
+        from mason.generators.raster.normal import height_array_to_normal
+        rgb = height_array_to_normal(value).astype(np.float32)
+        alpha = np.full(value.shape, 255.0 * opacity, dtype=np.float32)
+    elif mode == "color":
         if not layer.expression.to:
             raise MasonError(
                 "expression color mode needs 'to'.",

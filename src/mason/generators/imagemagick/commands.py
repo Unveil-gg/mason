@@ -8,6 +8,7 @@ from mason.core.assets import (
     CompositeOp,
     ConvertOp,
     CropOp,
+    HeightToNormalOp,
     ImageOp,
     ImageProcessSpec,
     QuantizeOp,
@@ -99,6 +100,8 @@ def op_args(
             args.extend(["-colors", str(op.colors)])
         return args
     if isinstance(op, ConvertOp):
+        return []
+    if isinstance(op, HeightToNormalOp):
         return []
     raise MasonError(f"Unknown op {op}", code="unknown_op")
 

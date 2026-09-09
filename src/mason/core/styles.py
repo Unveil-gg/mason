@@ -31,6 +31,11 @@ class MaterialFamily(BaseModel):
     noise_scale: float | None = Field(default=None, gt=0)
     albedo: ImageSource | None = None
     roughness_map: ImageSource | None = None
+    bump_map: ImageSource | None = None
+    normal_map: ImageSource | None = None
+    bump_strength: float = Field(default=0.04, ge=0, le=1)
+    shader: Literal["principled", "fabric"] = "principled"
+    shader_params: dict[str, float] = Field(default_factory=dict)
     tile_size: float | None = Field(default=None, gt=0)
 
 
@@ -246,6 +251,12 @@ materials:
       roughness: 0.85
       metallic: 0.0
       variation: 0.05
+    fabric:
+      roughness: 0.88
+      metallic: 0.0
+      variation: 0.06
+      shader: fabric
+      bump_strength: 0.05
 
 render:
   resolution:

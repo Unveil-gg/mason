@@ -57,7 +57,7 @@ def _manifest_extra(job: AssetJob) -> dict:
     if result is None:
         return {}
     extra: dict = {}
-    for key in ("bounds", "animations", "frame_size"):
+    for key in ("bounds", "animations", "frame_size", "attachments"):
         value = result.validation.get(key)
         if value:
             extra[key] = value

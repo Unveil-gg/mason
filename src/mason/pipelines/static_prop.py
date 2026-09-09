@@ -6,7 +6,7 @@ from pathlib import Path
 
 from mason.core.assets import StaticPropSpec
 from mason.core.jobs import AssetJob
-from mason.core.parts import PropPart
+from mason.core.parts import ImageSource, PropPart
 from mason.core.paths import resolve_image_source
 from mason.core.results import BuildResult
 from mason.core.styles import StyleProfile
@@ -33,14 +33,15 @@ def resolved_parts(spec: StaticPropSpec):
     """Return parts, using a recipe expander when needed."""
     if spec.geometry.parts:
         parts = list(spec.geometry.parts)
-    else:
-        assert spec.geometry.recipe is not None
+    elif spec.geometry.recipe is not None:
         parts = expand_recipe(
             spec.geometry.recipe,
             spec.dimensions,
             spec.geometry.recipe_params,
             spec.materials.primary,
         )
+    else:
+        parts = []
     parts = parts + _decal_parts(spec)
     after_ops = expand_part_ops(parts)
     after_snap = apply_snaps(after_ops)
@@ -115,13 +116,28 @@ def assert_known_families(
             )
 
 
+def _optional_image(
+    source: ImageSource | None,
+    job: AssetJob,
+) -> str | None:
+    """Resolve an ImageSource if the file exists. Returns a path."""
+    if source is None:
+        return None
+    path = resolve_image_source(source, job.project_root)
+    if path.is_file():
+        return str(path)
+    return None
+
+
 def resolve_part_textures(
     job: AssetJob,
     parts: list[PropPart],
     style: StyleProfile | None = None,
 ) -> dict[str, str]:
     """Map each textured part's name to its resolved PNG path."""
-    textures, _rough = resolve_part_maps(job, parts, style)
+    textures, _rough, _bump, _normal = resolve_part_maps(
+        job, parts, style,
+    )
     return textures
 
 
@@ -129,12 +145,14 @@ def resolve_part_maps(
     job: AssetJob,
     parts: list[PropPart],
     style: StyleProfile | None = None,
-) -> tuple[dict[str, str], dict[str, str]]:
-    """Resolve albedo and optional roughness maps. Explicit
-    part.texture is required if named; family albedo is used only
+) -> tuple[dict[str, str], dict[str, str], dict[str, str], dict[str, str]]:
+    """Resolve albedo, roughness, bump, and normal maps. Explicit
+    part.texture is required if named; family maps apply only
     when the file already exists."""
     textures: dict[str, str] = {}
     roughness: dict[str, str] = {}
+    bump: dict[str, str] = {}
+    normal: dict[str, str] = {}
     families = style.materials.families if style else {}
     for part in parts:
         if part.texture:
@@ -147,6 +165,27 @@ def resolve_part_maps(
                     context={"part": part.name, "path": str(path)},
                 )
             textures[part.name] = str(path)
+        if part.bump_map:
+            path = resolve_image_source(part.bump_map, job.project_root)
+            if not path.is_file():
+                raise MasonError(
+                    f"Bump for part '{part.name}' not found: {path}",
+                    code="texture_missing",
+                    hint="Build the referenced bump asset first.",
+                    context={"part": part.name, "path": str(path)},
+                )
+            bump[part.name] = str(path)
+        if part.normal_map:
+            path = resolve_image_source(part.normal_map, job.project_root)
+            if not path.is_file():
+                raise MasonError(
+                    f"Normal for part '{part.name}' not found: {path}",
+                    code="texture_missing",
+                    hint="Build the referenced normal asset first.",
+                    context={"part": part.name, "path": str(path)},
+                )
+            normal[part.name] = str(path)
+        if part.texture:
             continue
         fam = families.get(part.family or "")
         if fam is None:
@@ -161,7 +200,15 @@ def resolve_part_maps(
             )
             if path.is_file():
                 roughness[part.name] = str(path)
-    return textures, roughness
+        if fam.bump_map and part.name not in bump:
+            path = resolve_image_source(fam.bump_map, job.project_root)
+            if path.is_file():
+                bump[part.name] = str(path)
+        if fam.normal_map and part.name not in normal:
+            path = resolve_image_source(fam.normal_map, job.project_root)
+            if path.is_file():
+                normal[part.name] = str(path)
+    return textures, roughness, bump, normal
 
 
 def apply_style_defaults(spec: StaticPropSpec, style: StyleProfile):
@@ -223,8 +270,12 @@ def build_static_prop(
     job.write_meta(source_spec)
 
     bw, bs, rough, metal = apply_style_defaults(spec, style)
-    part_textures, part_roughness = resolve_part_maps(job, parts, style)
+    part_textures, part_roughness, part_bump, part_normal = (
+        resolve_part_maps(job, parts, style)
+    )
     surface = prepare_surface_maps(job, spec, style)
+    bump_image = _optional_image(spec.materials.bump_map, job)
+    normal_image = _optional_image(spec.materials.normal_map, job)
     script = build_blender_script(
         spec,
         style,
@@ -236,6 +287,12 @@ def build_static_prop(
         metallic=metal,
         part_textures=part_textures,
         part_roughness=part_roughness,
+        part_bump=part_bump,
+        part_normal=part_normal,
+        bump_image=bump_image,
+        normal_image=normal_image,
+        bump_strength=spec.materials.bump_strength,
+        shader=spec.materials.shader or "principled",
         demo_lighting=demo_lighting,
         **surface,
     )

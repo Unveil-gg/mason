@@ -37,6 +37,10 @@ def test_blender_script_has_helpers(project: Path) -> None:
     assert "def create_primitive" in script
     assert "def create_lathe" in script
     assert "def apply_bend" in script
+    assert "def apply_drape" in script
+    assert "def apply_bump_and_normal" in script
+    assert "def apply_shader" in script
+    assert "def create_attachments" in script
     assert "def create_curve" in script
     assert "def create_skin" in script
     assert "def create_blob" in script
@@ -242,3 +246,36 @@ def test_aseprite_script_draws_pixels(project: Path) -> None:
     layout = sheet_layout(spec)
     assert layout["sheet"] == {"width": 8, "height": 8}
     assert layout["animations"][0]["frames"][0]["duration_ms"] == 200
+
+
+def test_blender_script_has_garment_pipeline(project: Path) -> None:
+    spec = parse_asset_spec({
+        "type": "static_prop",
+        "id": "fitted_shirt",
+        "name": "Fitted Shirt",
+        "dimensions": {"width": 0.5, "depth": 0.4, "height": 0.4},
+        "geometry": {
+            "garment": {
+                "mode": "template",
+                "kind": "shirt",
+                "archetype": "small_animal",
+            },
+        },
+        "materials": {"primary": "cotton"},
+    })
+    style = load_style(project / "styles" / "default.yaml")
+    parts = resolved_parts(spec)
+    assert parts == []
+    bw, bs, r, m = apply_style_defaults(spec, style)
+    script = build_blender_script(
+        spec, style, parts, project / ".mason" / "jobs" / "fitted_shirt",
+        bevel_width=bw, bevel_segments=bs, roughness=r, metallic=m,
+    )
+    assert "def create_small_animal_body" in script
+    assert "def loft_garment" in script
+    assert "def fit_garment" in script
+    assert "def build_garment" in script
+    assert "_mason_body" in script
+    assert "FIT_METRICS" in script
+    assert "payload[\"fit\"] = fit" in script
+    assert "if CONFIG.get(\"garment\"):" in script

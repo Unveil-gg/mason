@@ -1,0 +1,15 @@
+type: image_process
+id: cotton_normal
+name: Cotton Normal
+
+# 2D height_to_normal shader pass. Feed a height PNG, get a
+# tangent-space normal for 3D part.normal_map.
+source:
+  asset: cotton_weave
+  file: output/asset.png
+
+operations:
+  - {op: height_to_normal, strength: 1.6}
+
+export:
+  format: png

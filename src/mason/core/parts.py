@@ -138,6 +138,31 @@ class PartBend(BaseModel):
     origin: Literal["center", "base"] = "center"
 
 
+class PartDrape(BaseModel):
+    """Hem flare: bend the free end away from `origin`.
+
+    `amount` is radians. `origin: top` plants max-Z so the hem
+    moves -- the start of cloth drape, not a sim.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    axis: Literal["x", "y", "z"] = "x"
+    amount: float = 0.08
+    origin: Literal["center", "base", "top"] = "top"
+
+
+class AttachSocket(BaseModel):
+    """Named attach point exported as an EMPTY and in metadata."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    location: tuple[float, float, float]
+    rotation: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    parent: str | None = None
+
+
 class PropPart(BaseModel):
     """One primitive or component instance in a static prop."""
 
@@ -159,12 +184,15 @@ class PropPart(BaseModel):
     profile: list[tuple[float, float]] | None = None
     segments: int = Field(default=24, ge=8, le=64)
     bend: PartBend | None = None
+    drape: PartDrape | None = None
     curve: PartCurve | None = None
     skin: PartSkin | None = None
     outline: PartOutline | None = None
     follow: PartFollow | None = None
     helper: bool = False
     texture: ImageSource | None = None
+    bump_map: ImageSource | None = None
+    normal_map: ImageSource | None = None
     bevel: bool | None = None
     parent: str | None = None
     snap: PartSnap | None = None
@@ -230,6 +258,9 @@ class RecipeParams(BaseModel):
     pool_depth: float = Field(default=1.02, gt=0)
 
 
+from mason.core.garment import GarmentSpec
+
+
 class GeometrySpec(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -244,11 +275,18 @@ class GeometrySpec(BaseModel):
     recipe_params: RecipeParams = Field(default_factory=RecipeParams)
     parts: list[PropPart] = Field(default_factory=list)
     bodies: list[BodySpec] = Field(default_factory=list)
+    garment: GarmentSpec | None = None
 
     @model_validator(mode="after")
     def require_parts_or_recipe(self) -> GeometrySpec:
-        if not self.parts and self.recipe is None:
-            raise ValueError("geometry needs parts or a recipe")
+        if (
+            not self.parts
+            and self.recipe is None
+            and self.garment is None
+        ):
+            raise ValueError(
+                "geometry needs parts, a recipe, or garment",
+            )
         return self
 
 

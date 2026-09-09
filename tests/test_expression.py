@@ -60,6 +60,23 @@ def test_render_alpha_png(tmp_path: Path) -> None:
         assert top > bot
 
 
+def test_render_height_is_gray(tmp_path: Path) -> None:
+    style = load_style(Path("styles/default.yaml"))
+    layer = RasterLayer.model_validate({
+        "name": "weave",
+        "fill": "cream",
+        "rect": {"x": 0, "y": 0, "width": 8, "height": 8},
+        "expression": {"formula": "u", "mode": "height"},
+    })
+    dest = tmp_path / "h.png"
+    render_expression(layer, style, dest)
+    with Image.open(dest) as img:
+        left = img.getpixel((0, 4))
+        right = img.getpixel((7, 4))
+        assert left[0] == left[1] == left[2]
+        assert right[0] > left[0]
+
+
 def test_expression_color_needs_to() -> None:
     with pytest.raises(Exception, match="to"):
         parse_asset_spec({

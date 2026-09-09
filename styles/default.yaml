@@ -52,6 +52,12 @@ materials:
       roughness: 0.85
       metallic: 0.0
       variation: 0.05
+    fabric:
+      roughness: 0.88
+      metallic: 0.0
+      variation: 0.06
+      shader: fabric
+      bump_strength: 0.05
 
 render:
   resolution:

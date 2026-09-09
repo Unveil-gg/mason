@@ -84,6 +84,8 @@ def validate_static_prop(
             metrics["preview_engine"] = data["preview_engine"]
         if data.get("object_bounds"):
             metrics["object_bounds_count"] = len(data["object_bounds"])
+        if data.get("attachments"):
+            metrics["attachments"] = data["attachments"]
     else:
         checks.append(_check("metadata", False, "metadata.json missing"))
 
@@ -100,22 +102,41 @@ def validate_static_prop(
         checks.append(_check("dimensions", ok, ", ".join(detail_parts)))
         metrics["bounds"] = bounds
 
-    snap_ok, snap_detail = touch if touch else (True, "ok")
-    parent_ok, parent_detail = True, "ok"
-    if data.get("object_bounds"):
-        parent_ok, parent_detail = parents_touch_bounds(
-            spec.geometry.parts,
-            data["object_bounds"],
-            bodies=spec.geometry.bodies,
-        )
-    touch_ok = snap_ok and parent_ok
-    if not snap_ok:
-        touch_detail = snap_detail
-    elif not parent_ok:
-        touch_detail = parent_detail
+    if spec.geometry.garment:
+        fit = data.get("fit") or {}
+        pen = float(fit.get("penetration") or 0.0)
+        neck = float(fit.get("opening_neck") or 0.0)
+        cuffs = float(fit.get("opening_cuffs") or 0.0)
+        ok = pen < 0.25 and neck > 0.04
+        if spec.geometry.garment.sleeve == "short":
+            ok = ok and cuffs > 0.02
+        checks.append(_check(
+            "garment_fit",
+            ok,
+            (
+                f"pen={pen:.3f} neck={neck:.3f} "
+                f"cuffs={cuffs:.3f}"
+            ),
+        ))
+        if fit:
+            metrics["fit"] = fit
     else:
-        touch_detail = "ok"
-    checks.append(_check("parts_touch", touch_ok, touch_detail))
+        snap_ok, snap_detail = touch if touch else (True, "ok")
+        parent_ok, parent_detail = True, "ok"
+        if data.get("object_bounds"):
+            parent_ok, parent_detail = parents_touch_bounds(
+                spec.geometry.parts,
+                data["object_bounds"],
+                bodies=spec.geometry.bodies,
+            )
+        touch_ok = snap_ok and parent_ok
+        if not snap_ok:
+            touch_detail = snap_detail
+        elif not parent_ok:
+            touch_detail = parent_detail
+        else:
+            touch_detail = "ok"
+        checks.append(_check("parts_touch", touch_ok, touch_detail))
     if spec.geometry.bodies:
         from mason.pipelines.continuity import preview_continuity
         for name in (

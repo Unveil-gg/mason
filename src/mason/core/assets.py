@@ -16,6 +16,7 @@ from pydantic import (
 
 from mason.core.art import ArtFields
 from mason.core.parts import (  # noqa: F401
+    AttachSocket,
     DecalSpec,
     Dimensions3D,
     GeometrySpec,
@@ -54,6 +55,10 @@ class MaterialsSpec(BaseModel):
     atlas: str | None = None
     entry: str | None = None
     palette_overrides: dict[str, str] = Field(default_factory=dict)
+    shader: Literal["principled", "fabric"] | None = None
+    bump_map: ImageSource | None = None
+    normal_map: ImageSource | None = None
+    bump_strength: float = Field(default=0.04, ge=0, le=1)
 
     @model_validator(mode="after")
     def atlas_needs_ids(self) -> MaterialsSpec:
@@ -89,6 +94,7 @@ class StaticPropSpec(ArtFields):
     decals: list[DecalSpec] = Field(default_factory=list)
     variants: list[MaterialVariant] = Field(default_factory=list)
     export: Export3D = Field(default_factory=Export3D)
+    attachments: list[AttachSocket] = Field(default_factory=list)
     metadata: dict[str, str] = Field(default_factory=dict)
 
 
@@ -113,7 +119,7 @@ class LayerExpression(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     formula: str
-    mode: Literal["alpha", "color"] = "alpha"
+    mode: Literal["alpha", "color", "height", "normal"] = "alpha"
     to: str | None = None
     seed: int = 0
 
@@ -261,8 +267,18 @@ class ConvertOp(BaseModel):
     format: Literal["png", "webp", "jpg"]
 
 
+class HeightToNormalOp(BaseModel):
+    """Turn a grayscale height PNG into a tangent-space normal."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    op: Literal["height_to_normal"]
+    strength: float = Field(default=1.0, gt=0, le=8)
+
+
 ImageOp = Annotated[
-    ResizeOp | CropOp | TrimOp | CompositeOp | QuantizeOp | ConvertOp,
+    ResizeOp | CropOp | TrimOp | CompositeOp | QuantizeOp
+    | ConvertOp | HeightToNormalOp,
     Field(discriminator="op"),
 ]
 

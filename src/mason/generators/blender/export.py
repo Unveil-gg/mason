@@ -2,10 +2,12 @@
 
 EXPORT_SRC = r'''
 def export_glb(path):
-    """Export visible mesh objects as a GLB. Skip _mason_ helpers."""
+    """Export meshes and attach empties. Skip _mason_ helpers."""
     bpy.ops.object.select_all(action="DESELECT")
     for obj in bpy.data.objects:
-        if obj.type != "MESH" or obj.name.startswith("_mason_"):
+        if obj.name.startswith("_mason_"):
+            continue
+        if obj.type not in ("MESH", "EMPTY"):
             continue
         obj.hide_set(False)
         obj.select_set(True)
@@ -14,6 +16,27 @@ def export_glb(path):
         export_format="GLB",
         use_selection=True,
     )
+
+
+def create_attachments():
+    """EMPTY sockets from CONFIG.attachments. Names attach_<id>."""
+    for sock in CONFIG.get("attachments") or []:
+        name = "attach_" + str(sock.get("name") or "socket")
+        empty = bpy.data.objects.new(name, None)
+        empty.empty_display_type = "PLAIN_AXES"
+        empty.empty_display_size = 0.04
+        loc = sock.get("location") or (0.0, 0.0, 0.0)
+        empty.location = loc
+        empty.rotation_euler = sock.get("rotation") or (0.0, 0.0, 0.0)
+        bpy.context.collection.objects.link(empty)
+        parent = sock.get("parent")
+        if parent:
+            target = bpy.data.objects.get(parent)
+            if target is not None:
+                empty.parent = target
+                empty.matrix_parent_inverse = (
+                    target.matrix_world.inverted()
+                )
 
 
 def save_blend(path):
@@ -98,7 +121,19 @@ def write_metadata(path):
             o.name: [float(s) for s in o.scale] for o in meshes
         },
         "preview_engine": CONFIG.get("preview_engine"),
+        "attachments": [
+            {
+                "name": o.name.replace("attach_", "", 1),
+                "location": [float(v) for v in o.matrix_world.translation],
+                "rotation": [float(v) for v in o.rotation_euler],
+            }
+            for o in bpy.data.objects
+            if o.type == "EMPTY" and o.name.startswith("attach_")
+        ],
     }
+    fit = globals().get("FIT_METRICS")
+    if fit:
+        payload["fit"] = fit
     with open(path, "w", encoding="utf-8") as handle:
         json.dump(payload, handle, indent=2)
 '''
