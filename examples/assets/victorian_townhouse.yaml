@@ -139,7 +139,7 @@ geometry:
     family: clapboard
   - name: turret_skirt
     shape: cylinder
-    size: [0.80, 0.80, 0.30]
+    size: [0.92, 0.92, 0.30]
     location: [0.78, -0.42, 2.00]
     material: roof
     family: roofing
@@ -147,7 +147,7 @@ geometry:
   - name: roof
     shape: tapered_box
     taper: [1.0, 0.14]
-    size: [1.32, 1.36, 0.58]
+    size: [1.58, 1.62, 0.58]
     location: [-0.38, 0.18, 1.80]
     material: roof
     family: roofing
@@ -155,14 +155,14 @@ geometry:
   - name: gable
     shape: tapered_box
     taper: [0.14, 1.0]
-    size: [1.04, 1.50, 0.52]
+    size: [1.20, 1.66, 0.52]
     location: [0.52, 0.22, 1.70]
     material: roof
     family: roofing
     snap: {to: wing, "on": top, embed: 0.04}
   - name: hat
     shape: cone
-    size: [0.86, 0.86, 0.62]
+    size: [1.06, 1.06, 0.62]
     location: [0.78, -0.42, 2.28]
     material: roof
     family: roofing
@@ -330,6 +330,62 @@ geometry:
     family: plastic
     snap: {to: turret, "on": right, embed: 0.04}
     array: {count: 2, offset: [0.0, 0.0, 0.58]}
+  - name: frame_f
+    size: [0.26, 0.045, 0.44]
+    location: [-0.62, -0.44, 1.15]
+    material: cream
+    family: plastic
+    snap: {to: body, "on": front}
+    array: {count: 2, offset: [0.48, 0.0, 0.0]}
+  - name: win_cap_f
+    shape: tapered_box
+    taper: [0.1, 1.0]
+    size: [0.32, 0.05, 0.10]
+    location: [-0.62, -0.44, 1.42]
+    material: cream
+    family: plastic
+    snap: {to: body, "on": front}
+    array: {count: 2, offset: [0.48, 0.0, 0.0]}
+  - name: win_sill_f
+    size: [0.32, 0.05, 0.05]
+    location: [-0.62, -0.44, 0.925]
+    material: cream
+    family: plastic
+    snap: {to: body, "on": front}
+    array: {count: 2, offset: [0.48, 0.0, 0.0]}
+  - name: frame_s
+    size: [0.045, 0.26, 0.42]
+    location: [0.98, 0.35, 0.85]
+    material: cream
+    family: plastic
+    snap: {to: wing, "on": right}
+    array: {count: 2, offset: [0.0, 0.0, 0.48]}
+  - name: frame_t
+    size: [0.20, 0.045, 0.38]
+    location: [0.78, -0.80, 0.70]
+    material: cream
+    family: plastic
+    snap: {to: turret, "on": front}
+    array: {count: 2, offset: [0.0, 0.0, 0.62]}
+  - name: frame_tr
+    size: [0.045, 0.20, 0.34]
+    location: [1.16, -0.42, 0.85]
+    material: cream
+    family: plastic
+    snap: {to: turret, "on": right}
+    array: {count: 2, offset: [0.0, 0.0, 0.58]}
+  - name: watertable_body
+    size: [1.26, 1.30, 0.16]
+    location: [-0.38, 0.18, 0.10]
+    material: brownstone
+    family: brownstone
+    snap: {to: lawn, "on": top}
+  - name: watertable_wing
+    size: [1.00, 1.46, 0.16]
+    location: [0.52, 0.22, 0.10]
+    material: brownstone
+    family: brownstone
+    snap: {to: lawn, "on": top}
 materials:
   strategy: family
   primary: clapboard

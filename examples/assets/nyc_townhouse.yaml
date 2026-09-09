@@ -142,24 +142,62 @@ geometry:
   - name: step_cut_a
     size: [0.66, 0.22, 0.48]
     location: [0.0, -1.30, 0.52]
-    material: ink
+    material: stone_dark
     bevel: false
     snap: {to: stair, "on": front, embed: 0.20}
     cutout: {target: stair}
   - name: step_cut_b
     size: [0.66, 0.22, 0.32]
     location: [0.0, -1.12, 0.60]
-    material: ink
+    material: stone_dark
     bevel: false
     snap: {to: stair, "on": front, embed: 0.38}
     cutout: {target: stair}
   - name: step_cut_c
     size: [0.66, 0.22, 0.16]
     location: [0.0, -0.94, 0.68]
-    material: ink
+    material: stone_dark
     bevel: false
     snap: {to: stair, "on": front, embed: 0.56}
     cutout: {target: stair}
+  - name: stair_cap
+    size: [0.62, 0.70, 0.03]
+    location: [0.0, -1.05, 0.72]
+    material: cream
+    family: plastic
+    snap: {to: stair, "on": top}
+  - name: stoop_rail
+    size: [0.03, 0.95, 0.03]
+    location: [-0.34, -1.05, 0.40]
+    rotation: [0.742, 0.0, 0.0]
+    material: ink
+    family: painted_metal
+    mirror: x
+  - name: newel
+    size: [0.04, 0.04, 0.35]
+    location: [-0.58, -0.92, 0.10]
+    material: ink
+    family: painted_metal
+    snap: {to: areaway_floor, "on": front}
+    mirror: x
+  - name: rail_top
+    size: [1.20, 0.03, 0.03]
+    location: [0.0, -0.92, 0.275]
+    material: ink
+    family: painted_metal
+  - name: quoin
+    size: [0.08, 0.08, 0.50]
+    location: [-0.70, -0.68, 0.25]
+    material: stone_dark
+    family: plastic
+    snap: {to: basement, "on": front}
+    mirror: x
+  - name: belt_base
+    size: [1.36, 1.74, 0.05]
+    location: [0.0, 0.15, 0.50]
+    material: stone_dark
+    family: plastic
+    snap: {to: basement, "on": top}
   - name: door
     size: [0.28, 0.06, 0.52]
     location: [0.0, -0.70, 0.90]
@@ -275,6 +313,27 @@ geometry:
     family: plastic
     snap: {to: third, "on": front}
     array: {count: 3, offset: [0.40, 0.0, 0.0]}
+  - name: lintel_b
+    size: [0.28, 0.05, 0.05]
+    location: [-0.38, -0.68, 0.435]
+    material: cream
+    family: plastic
+    snap: {to: basement, "on": front}
+    mirror: x
+  - name: sill_b
+    size: [0.28, 0.04, 0.04]
+    location: [-0.38, -0.68, 0.13]
+    material: cream
+    family: plastic
+    snap: {to: basement, "on": front}
+    mirror: x
+  - name: sill_p
+    size: [0.28, 0.04, 0.04]
+    location: [-0.40, -0.68, 0.76]
+    material: cream
+    family: plastic
+    snap: {to: parlor, "on": front}
+    mirror: x
 materials:
   strategy: family
   primary: stone
