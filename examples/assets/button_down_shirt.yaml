@@ -1,0 +1,256 @@
+type: static_prop
+id: button_down_shirt
+name: Button-Down Shirt
+
+# Wearable-ish T-pose shirt for a ~1 m character. Origin at the
+# feet. Mason Z-up: hem Z 0.22, collar Z 0.60. Face -Y.
+dimensions:
+  width: 0.50
+  depth: 0.30
+  height: 0.40
+
+style: default
+
+geometry:
+  bevel: false
+  parts:
+    - name: body_front
+      shape: box
+      size: [0.40, 0.012, 0.34]
+      location: [0.0, -0.141, 0.39]
+      material: cotton
+      family: cardboard
+    - name: body_back
+      shape: box
+      size: [0.40, 0.012, 0.34]
+      location: [0.0, 0.141, 0.39]
+      material: cotton
+      family: cardboard
+    - name: body_side_l
+      shape: box
+      size: [0.012, 0.270, 0.34]
+      location: [-0.194, 0.0, 0.39]
+      material: cotton
+      family: cardboard
+      snap: {to: body_front, "on": left, embed: 0.012}
+    - name: body_side_r
+      shape: box
+      size: [0.012, 0.270, 0.34]
+      location: [0.194, 0.0, 0.39]
+      material: cotton
+      family: cardboard
+      snap: {to: body_front, "on": right, embed: 0.012}
+    - name: arm_cut_l
+      shape: box
+      size: [0.04, 0.082, 0.082]
+      location: [-0.194, 0.0, 0.51]
+      material: cotton
+      bevel: false
+      snap: {to: body_side_l, "on": left, embed: 0.02}
+      cutout: {target: body_side_l}
+    - name: arm_cut_r
+      shape: box
+      size: [0.04, 0.082, 0.082]
+      location: [0.194, 0.0, 0.51]
+      material: cotton
+      bevel: false
+      snap: {to: body_side_r, "on": right, embed: 0.02}
+      cutout: {target: body_side_r}
+    - name: yoke
+      shape: box
+      size: [0.40, 0.294, 0.012]
+      location: [0.0, 0.0, 0.566]
+      material: cotton
+      family: cardboard
+      snap: {to: body_front, "on": top}
+    - name: neck_cut
+      shape: cylinder
+      size: [0.14, 0.14, 0.04]
+      location: [0.0, 0.0, 0.566]
+      material: cotton
+      bevel: false
+      snap: {to: yoke, "on": top, embed: 0.02}
+      cutout: {target: yoke}
+    - name: neck_front_cut
+      shape: box
+      size: [0.12, 0.12, 0.04]
+      location: [0.0, -0.10, 0.566]
+      material: cotton
+      bevel: false
+      snap: {to: yoke, "on": front, embed: 0.04}
+      cutout: {target: yoke}
+    - name: sleeve_top
+      shape: box
+      size: [0.06, 0.10, 0.010]
+      location: [-0.218, 0.0, 0.555]
+      material: cotton
+      family: cardboard
+      mirror: x
+    - name: sleeve_bot
+      shape: box
+      size: [0.06, 0.10, 0.010]
+      location: [-0.218, 0.0, 0.465]
+      material: cotton
+      family: cardboard
+      mirror: x
+    - name: sleeve_front
+      shape: box
+      size: [0.06, 0.010, 0.08]
+      location: [-0.218, -0.045, 0.51]
+      material: cotton
+      family: cardboard
+      mirror: x
+    - name: sleeve_back
+      shape: box
+      size: [0.06, 0.010, 0.08]
+      location: [-0.218, 0.045, 0.51]
+      material: cotton
+      family: cardboard
+      mirror: x
+    - name: collar_stand
+      shape: box
+      size: [0.16, 0.012, 0.030]
+      location: [0.0, 0.074, 0.587]
+      material: cotton
+      family: cardboard
+      snap: {to: yoke, "on": top}
+    - name: collar_side
+      shape: box
+      size: [0.012, 0.078, 0.030]
+      location: [-0.074, 0.010, 0.587]
+      material: cotton
+      family: cardboard
+      mirror: x
+    - name: collar_point
+      shape: box
+      size: [0.055, 0.052, 0.010]
+      location: [-0.040, -0.096, 0.578]
+      rotation: [0.15, 0.0, 0.45]
+      material: cotton
+      family: cardboard
+      mirror: x
+    - name: placket
+      shape: box
+      size: [0.028, 0.008, 0.30]
+      location: [0.0, -0.151, 0.41]
+      material: cotton
+      family: cardboard
+      snap: {to: body_front, "on": front}
+    - name: button
+      shape: cylinder
+      size: [0.011, 0.011, 0.005]
+      location: [0.0, -0.158, 0.50]
+      rotation: [1.5708, 0.0, 0.0]
+      material: cream
+      family: plastic
+      snap: {to: placket, "on": front}
+      array: {count: 4, offset: [0.0, 0.0, -0.055]}
+
+materials:
+  strategy: palette
+  primary: cotton
+  roughness: 0.85
+  metallic: 0.0
+  palette_overrides:
+    cotton: "#F4F1EA"
+
+art_direction:
+  subject: >
+    Simple low-poly button-down dress shirt for a cute
+    animal character about 1 m tall
+  style:
+    realism: 0.25
+    stylization: 0.75
+    shape_language: [boxy, clean, wearable]
+  usage:
+    importance: standard_prop
+    viewing_distance: medium
+  silhouette: >
+    Short-sleeve T-pose shirt floating at torso height.
+    Collar notch on top, sleeve stubs, hem above the
+    ground. Not a solid crate, not a long tunic.
+  forms:
+    primary: [body tube, sleeves, yoke]
+    secondary: [collar, placket]
+    tertiary: [buttons]
+  materials:
+    - {family: cardboard, palette: cotton}
+    - {family: plastic, palette: cream}
+  detail_density: low
+  constraints:
+    - No logos. No character body in the mesh.
+    - Origin at the feet. Stay below the face at Z 0.75.
+    - Inner cavity clears a 0.37 x 0.32 x 0.25 torso.
+
+geometric_plan:
+  primary_read: short-sleeve button-down worn at torso height
+  recognition: mixed
+  must_survive_small:
+    - floating hem above the ground
+    - neck hole and collar
+    - T-pose short sleeves
+    - front placket
+  masses:
+    - {name: body_front, role: primary, connects_to: [yoke, placket]}
+    - {name: yoke, role: primary, connects_to: [collar_stand]}
+    - {name: sleeve_top, role: primary, connects_to: [body_side_l]}
+    - {name: collar_stand, role: secondary, connects_to: [yoke]}
+    - {name: placket, role: secondary, connects_to: [body_front]}
+  silhouette: >
+    Front: collar notch, placket line, sleeve stubs.
+    Side: shallow chest, open cuff. Shirt sits at Z 0.22-0.60.
+  silhouette_vs_similar: Not a vest. Not a solid torso block.
+  proportions: >
+    About 0.50 wide in T-pose, 0.38 tall, 0.30 deep.
+    Neck hole 0.14. Collar top at Z 0.60.
+  symmetry: bilateral
+  negative_space: neck hole, open cuffs, hollow torso
+  abstraction: thick box panels, no cloth drape
+  stage: secondary
+  landmarks:
+    - {id: yoke, role: neck opening, part: yoke}
+    - {id: sleeve_l, role: left cuff, part: sleeve_top}
+    - {id: collar, role: collar stand, part: collar_stand}
+    - {id: placket, role: front placket, part: placket}
+    - {id: hem, role: shirt hem, part: body_front}
+  critical_views:
+    - {view: front, weight: 3}
+    - {view: side, weight: 2}
+    - {view: three_quarter, weight: 2}
+  notes:
+    - Face -Y. No geometry.bodies. Bevel off.
+    - Keep the cavity clear of the 0.37 x 0.32 x 0.25 torso.
+
+construction_plan:
+  techniques:
+    - {kind: box, purpose: panel tube walls, applies_to: body}
+    - {kind: modular, purpose: snap yoke collar placket, applies_to: trim}
+  primary_forms:
+    - {type: box, purpose: front back and side panels}
+    - {type: box, purpose: sleeve tube}
+    - {type: box, purpose: yoke with neck cutout}
+  secondary_forms:
+    - {type: box, purpose: collar stand and points}
+    - {type: box, purpose: collar points and placket}
+    - {type: cutout, purpose: neck and arm holes}
+  tertiary_details:
+    - {type: cylinder, purpose: buttons, count: 4}
+  materials: [cardboard, plastic]
+  keep_parts:
+    - body_front
+    - body_back
+    - body_side_l
+    - body_side_r
+    - yoke
+    - sleeve_top
+    - sleeve_bot
+    - sleeve_front
+    - sleeve_back
+  rebuild_parts: []
+  notes:
+    - Thick boxes, not planes, so the cavity has inner faces.
+    - Do not remesh. Holes must stay open.
+
+export:
+  format: glb
+  save_blend: true
