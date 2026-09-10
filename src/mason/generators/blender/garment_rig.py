@@ -225,6 +225,11 @@ def build_garment():
     add_garment_details(shirt, marks)
     fit_garment(shirt, body, marks)
     apply_garment_material(shirt)
+    cues = set(cfg.get("details") or []) | set(
+        cfg.get("surface_details") or [],
+    )
+    if "buttons" in cues:
+        shirt = _add_center_buttons(shirt, marks)
     transfer_weights(shirt, body)
     score_garment_fit(shirt, body, marks)
     covered = hide_covered_body(body, marks)

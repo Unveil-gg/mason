@@ -16,22 +16,22 @@ geometry:
     mode: fit
     kind: shirt
     body: {path: examples/refs/mousey.glb}
-    fit: regular
+    fit: fitted
     body_regions: [torso, upper_arms]
     anchors: [neck, shoulder_left, shoulder_right, waist]
     panels: [front, back, sleeve_left, sleeve_right]
     openings: [neck, waist, wrist_left, wrist_right]
-    details: [collar, cuffs, hem]
-    surface_details: [placket, buttons]
-    fabric_weight: medium
+    details: [cuffs, hem, buttons]
+    surface_details: [placket]
+    fabric_weight: thin
     clearance: 0.010
-    thickness: 0.003
+    thickness: 0.002
     hem: 0.22
     sleeve: short
     neck: 0.12
     tail_opening: true
     hide_covered: true
-    stylization: 0.75
+    stylization: 0.55
     stiffness: 0.65
     wrinkle: 0.15
     cloth_frames: 0
@@ -40,17 +40,17 @@ geometry:
 materials:
   strategy: palette
   primary: cotton
-  roughness: 0.85
+  roughness: 0.55
   metallic: 0.0
-  shader: fabric
-  bump_strength: 0.04
+  shader: principled
+  bump_strength: 0.0
   palette_overrides:
-    cotton: "#C4A574"
+    cotton: "#F4F1EA"
 
 art_direction:
   subject: >
-    Simple cartoon short-sleeve shirt on ScrapPaws mousey.
-    Soft extract, not a button-down with tiny cues.
+    Clean white short-sleeve button-down on ScrapPaws mousey.
+    Close fit, small neck, three center buttons.
   style:
     realism: 0.15
     stylization: 0.85

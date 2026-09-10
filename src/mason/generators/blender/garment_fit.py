@@ -56,8 +56,8 @@ def silhouette_pass(shirt, marks, cfg):
     ease = float(cfg.get("ease_offset") or 0.008)
     chest = marks.get("chest")
     mid_x = chest.x if chest else 0.0
-    torso_half = ease * 16.0
-    base = ease * (0.3 + 0.5 * style) * boost
+    torso_half = ease * 14.0
+    base = ease * (0.15 + 0.25 * style) * boost
     for vert in shirt.data.vertices:
         world = shirt.matrix_world @ vert.co
         extra = base * 1.25 if abs(world.x - mid_x) <= torso_half else base * 0.4
@@ -101,8 +101,8 @@ def fit_garment(shirt, body, marks=None):
         _cap_neck(shirt, marks)
     style = float(cfg.get("stylization") or 0.7)
     smooth = shirt.modifiers.new("Relax", "SMOOTH")
-    smooth.iterations = 4 + int(style * 4)
-    smooth.factor = 0.35 + style * 0.2
+    smooth.iterations = 2 + int(style * 2)
+    smooth.factor = 0.22 + style * 0.12
     _apply_mod(shirt, "Relax")
     fit = cfg.get("fit") or "fitted"
     frames = int(cfg.get("cloth_frames") or 0)
@@ -147,23 +147,19 @@ def apply_garment_material(obj):
         hex_color,
         settings["roughness"],
         settings["metallic"],
-        settings.get("variation") or 0.0,
+        0.0,
     )
-    shader = (
-        settings.get("shader")
-        or CONFIG.get("shader")
-        or "principled"
-    )
+    shader = CONFIG.get("shader") or "principled"
     apply_shader(mat, shader, settings.get("shader_params"))
-    apply_bump_and_normal(
-        mat,
-        CONFIG["wrap"],
-        CONFIG.get("bump_image") or None,
-        CONFIG.get("normal_image") or None,
-        settings.get("bump_strength")
-        or CONFIG.get("bump_strength")
-        or 0.04,
-    )
+    bump_s = float(CONFIG.get("bump_strength") or 0.0)
+    if bump_s > 0.01 and CONFIG.get("bump_image"):
+        apply_bump_and_normal(
+            mat,
+            CONFIG["wrap"],
+            CONFIG.get("bump_image") or None,
+            CONFIG.get("normal_image") or None,
+            bump_s,
+        )
     assign_material(obj, mat)
     unwrap_cube(obj, CONFIG.get("tile_size") or 0.25)
 '''

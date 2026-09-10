@@ -69,9 +69,10 @@ def _keep_face_center(center, marks, cfg, height):
             if center.y > marks["hips"].y + height * 0.08 and near_tail:
                 return False
     neck = marks["neck"]
-    if center.z > neck.z - height * 0.07 and center.y < neck.y:
-        if (center - neck).length < height * 0.11:
-            return False
+    if center.z > neck.z - height * 0.02:
+        if abs(center.x - neck.x) < height * 0.028:
+            if center.y < neck.y and (center - neck).length < height * 0.04:
+                return False
     return True
 
 
@@ -101,8 +102,8 @@ def extract_garment_surface(body, marks):
         bpy.data.objects.remove(garment, do_unlink=True)
         return None
     ease = float(cfg.get("ease_offset") or cfg.get("clearance") or 0.008)
-    torso_ease = ease * 1.4
-    sleeve_ease = ease * 0.55
+    torso_ease = ease * 1.1
+    sleeve_ease = ease * 0.45
     for vert in garment.data.vertices:
         world = garment.matrix_world @ vert.co
         amt = sleeve_ease if _is_sleeve_vert(
