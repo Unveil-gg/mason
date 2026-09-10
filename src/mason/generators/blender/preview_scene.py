@@ -356,9 +356,14 @@ def render_worn_preview(preview_dir, resolution, samples, engine, demo):
         center + Vector((dist * 0.55, -dist * 0.75, dist * 0.4)),
         key_size * 1.6, (0.82, 0.86, 1.0),
     )
-    loc = center + Vector((dist * 0.7, -dist * 0.85, dist * 0.4))
     os.makedirs(preview_dir, exist_ok=True)
-    _render_view(preview_dir, "worn", center, loc, clip_end)
+    views = {
+        "worn": center + Vector((dist * 0.7, -dist * 0.85, dist * 0.4)),
+        "worn_front": center + Vector((0.0, -dist, size.z * 0.1)),
+        "worn_side": center + Vector((dist, 0.0, size.z * 0.1)),
+    }
+    for name, loc in views.items():
+        _render_view(preview_dir, name, center, loc, clip_end)
     body.hide_render = True
     return used
 

@@ -266,7 +266,8 @@ def vocab_payload() -> dict[str, Any]:
             "stitching) stay texture. No boxes. Same armature, "
             "pose tests, optional hide_covered. Inspect "
             "preview_roles.primary worn.png first — the "
-            "character wearing the garment."
+            "character wearing the garment. worn_sheet.png "
+            "is front / 3/4 / side together."
         ),
         "run": (
             "Each build writes .mason/jobs/<id>/run.json (copied "

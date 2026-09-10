@@ -62,6 +62,13 @@ def validate_static_prop(
         checks.append(_check(
             "preview_worn", worn_ok, None if worn_ok else "missing",
         ))
+        sheet_w = job.previews / "worn_sheet.png"
+        sheet_ok = sheet_w.is_file() and sheet_w.stat().st_size > 0
+        checks.append(_check(
+            "preview_worn_sheet",
+            sheet_ok,
+            None if sheet_ok else "missing",
+        ))
     sheet = job.previews / "contact_sheet.png"
     if sheet.is_file() and sheet.stat().st_size > 0:
         checks.append(_check("preview_contact_sheet", True))

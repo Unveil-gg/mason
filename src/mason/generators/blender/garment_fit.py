@@ -1,6 +1,9 @@
 """Ease, silhouette push, optional cloth, then solidify."""
 
 CREATE_GARMENT_FIT_SRC = r'''
+from mathutils.bvhtree import BVHTree
+
+
 def _apply_mod(obj, name):
     """Apply one modifier. Object must be active."""
     bpy.ops.object.select_all(action="DESELECT")
@@ -79,13 +82,30 @@ def _clamp_hem(shirt, marks):
 
 def _cap_neck(shirt, marks):
     """Kill ear/head spikes above the neck opening."""
-    top = marks["neck"].z + (marks["neck"] - marks["hem"]).length * 0.12
+    top = marks["neck"].z + (marks["neck"] - marks["hem"]).length * 0.06
     imw = shirt.matrix_world.inverted()
     for vert in shirt.data.vertices:
         world = shirt.matrix_world @ vert.co
         if world.z > top:
             world.z = top
             vert.co = imw @ world
+    shirt.data.update()
+
+
+def _push_off_body(shirt, body, gap):
+    """Move verts that sit inside the body out along the surface."""
+    dg = bpy.context.evaluated_depsgraph_get()
+    tree = BVHTree.FromObject(body, dg)
+    imw = shirt.matrix_world.inverted()
+    for vert in shirt.data.vertices:
+        world = shirt.matrix_world @ vert.co
+        loc, nrm, _idx, _d = tree.find_nearest(world)
+        if loc is None or nrm is None:
+            continue
+        nrm = nrm.normalized()
+        if (world - loc).dot(nrm) >= gap:
+            continue
+        vert.co = imw @ (loc + nrm * gap)
     shirt.data.update()
 
 
@@ -125,6 +145,8 @@ def fit_garment(shirt, body, marks=None):
     if marks is not None:
         _clamp_hem(shirt, marks)
         _cap_neck(shirt, marks)
+    gap = float(cfg.get("ease_offset") or 0.002)
+    _push_off_body(shirt, body, gap)
     shade_smooth(shirt)
     return shirt
 

@@ -20,7 +20,7 @@ from mason.generators.blender.recipes import expand_recipe
 from mason.generators.blender.snap import apply_snaps, snaps_touch
 from mason.generators.blender.script_builder import build_blender_script
 from mason.pipelines.compare import write_compare_plate
-from mason.pipelines.contact_sheet import write_contact_sheet
+from mason.pipelines.contact_sheet import write_contact_sheet, write_worn_sheet
 from mason.pipelines.common import finish_result, tool_failed
 from mason.pipelines.ingest import ensure_reference_silhouette
 from mason.tools.blender.commands import headless_python, preview_from_blend
@@ -324,6 +324,7 @@ def build_static_prop(
         raise tool_failed(job, result.command, result.exit_code, "blender")
 
     write_contact_sheet(job.previews)
+    write_worn_sheet(job.previews)
     write_compare_plate(job)
     report = validate_static_prop(
         job, spec, result.exit_code, touch=touch,
@@ -340,9 +341,10 @@ def build_static_prop(
         for view in ALL_PREVIEW_FILES
         if (job.previews / f"{view}.png").is_file()
     }
-    worn = job.previews / "worn.png"
-    if worn.is_file():
-        previews["worn"] = job.rel(worn)
+    for name in ("worn", "worn_front", "worn_side", "worn_sheet"):
+        path = job.previews / f"{name}.png"
+        if path.is_file():
+            previews[name] = job.rel(path)
     sheet = job.previews / "contact_sheet.png"
     if sheet.is_file():
         previews["contact_sheet"] = job.rel(sheet)

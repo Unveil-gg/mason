@@ -33,7 +33,7 @@ def preview_roles_for(
     if garment:
         return {
             "primary": "worn",
-            "beauty": ["worn", *BEAUTY_VIEWS],
+            "beauty": ["worn", "worn_sheet", *BEAUTY_VIEWS],
             "diagnostic": list(DIAGNOSTIC_VIEWS),
             "silhouette": list(SILHOUETTE_VIEWS),
             "context": "worn",
