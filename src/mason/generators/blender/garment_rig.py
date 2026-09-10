@@ -29,6 +29,7 @@ def transfer_weights(shirt, body):
         bpy.ops.object.modifier_apply(modifier="Weights")
     shirt.parent = arm
     shirt.parent_type = "ARMATURE"
+    shirt.matrix_parent_inverse = arm.matrix_world.inverted()
 
 
 def _signed_gaps(shirt, body):

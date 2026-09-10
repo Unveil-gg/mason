@@ -7,6 +7,10 @@ def export_glb(path):
     for obj in bpy.data.objects:
         if obj.name.startswith("_mason_"):
             continue
+        if obj.type == "ARMATURE" and CONFIG.get("garment"):
+            obj.hide_set(False)
+            obj.select_set(True)
+            continue
         if obj.type not in ("MESH", "EMPTY"):
             continue
         obj.hide_set(False)

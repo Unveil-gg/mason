@@ -76,12 +76,15 @@ def _wrap_group(shirt, marks):
     vg = shirt.vertex_groups.new(name="mason_wrap")
     neck_z = marks["neck"].z if marks else 1e9
     hem_z = marks["hem"].z if marks else -1e9
+    mins, maxs = body_bounds(shirt)
+    span = max(maxs.x - mins.x, 0.01)
+    height = max(maxs.z - mins.z, 0.01)
     for vert in shirt.data.vertices:
         world = shirt.matrix_world @ vert.co
-        sleeve = abs(world.x) > 0.20
+        sleeve = abs(world.x) > span * 0.38
         opening = (
-            abs(world.z - neck_z) < 0.035
-            or abs(world.z - hem_z) < 0.035
+            abs(world.z - neck_z) < height * 0.10
+            or abs(world.z - hem_z) < height * 0.10
         )
         weight = 0.0 if (sleeve or opening) else 1.0
         vg.add([vert.index], weight, "REPLACE")

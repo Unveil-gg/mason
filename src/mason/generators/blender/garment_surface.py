@@ -101,17 +101,41 @@ def _select_sleeve_verts(obj, side, z_mid):
     """Select upper-side verts for a connected sleeve extrude."""
     worlds = [obj.matrix_world @ v.co for v in obj.data.vertices]
     xs = [w.x for w in worlds]
+    zs = [w.z for w in worlds]
     extreme = min(xs) if side < 0 else max(xs)
+    span = max(max(xs) - min(xs), 0.01)
+    height = max(max(zs) - min(zs), 0.01)
+    xband = span * 0.14
+    zband = height * 0.18
     for vert, world in zip(obj.data.vertices, worlds):
         vert.select = (
-            abs(world.z - z_mid) <= 0.07
-            and abs(world.x - extreme) <= 0.05
+            abs(world.z - z_mid) <= zband
+            and abs(world.x - extreme) <= xband
         )
+
+
+def _neck_scoop(obj, marks, depth):
+    """Drop front neck verts so the opening reads from the front."""
+    neck_z = marks["neck"].z
+    mins, maxs = body_bounds(obj)
+    band = max(abs(depth) * 2.2, (maxs.z - mins.z) * 0.08)
+    floor_z = marks["hem"].z
+    for vert in obj.data.vertices:
+        world = obj.matrix_world @ vert.co
+        if abs(world.z - neck_z) > band:
+            continue
+        if world.y >= 0.0:
+            continue
+        vert.co.z -= depth
+        if (obj.matrix_world @ vert.co).z < floor_z:
+            vert.co.z += floor_z - (obj.matrix_world @ vert.co).z
+    obj.data.update()
 
 
 def _add_sleeves(shirt, marks, clearance):
     """Extrude short sleeves from the torso so they stay welded."""
-    length = 0.09 + clearance
+    mins, maxs = body_bounds(shirt)
+    length = (maxs.x - mins.x) * 0.24 + clearance
     z_mid = marks["shoulders"].z
     for side in (-1.0, 1.0):
         bpy.ops.object.mode_set(mode="OBJECT")
@@ -151,10 +175,16 @@ def loft_garment(body, marks):
     ]
     if kind == "tunic":
         zs[0] = min(zs[0], marks["hem"].z - 0.06)
+    torso_r = None
     rings = []
-    for z in zs:
-        ring = slice_ring(body, z, n, clearance)
-        rings.append(_clamp_ring(_stylize_ring(ring, amount), 1.3))
+    for i, z in enumerate(zs):
+        cap = torso_r * 1.2 if (torso_r and i >= 3) else None
+        ring = slice_ring(body, z, n, clearance, max_radius=cap)
+        ring = _clamp_ring(_stylize_ring(ring, amount), 1.3)
+        rings.append(ring)
+        if i == 2:
+            mid = _ring_center(ring)
+            torso_r = max((p - mid).xy.length for p in ring)
     rings[-1] = _fit_ring_width(rings[-1], neck_w)
     if kind == "vest":
         rings[-2] = _stylize_ring(
@@ -162,6 +192,7 @@ def loft_garment(body, marks):
             amount,
         )
     shirt = loft_rings(rings, kind)
+    _neck_scoop(shirt, marks, max(neck_w * 0.28, 0.008))
     if cfg.get("sleeve") == "short" and kind != "vest":
         _add_sleeves(shirt, marks, clearance)
     mins, maxs = body_bounds(shirt)

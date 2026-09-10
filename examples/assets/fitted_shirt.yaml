@@ -2,12 +2,11 @@ type: static_prop
 id: fitted_shirt
 name: Fitted Shirt
 
-# Body-first short-sleeve shirt. Template small_animal cage until
-# a character GLB is dropped in (then mode: fit, body.path).
+# Wearable button-down lofted onto mousey.glb. Body is not exported.
 dimensions:
-  width: 0.46
-  depth: 0.26
-  height: 0.36
+  width: 0.044
+  depth: 0.024
+  height: 0.059
 
 style: default
 
@@ -17,19 +16,19 @@ depends_on:
 geometry:
   bevel: false
   garment:
-    mode: template
+    mode: fit
     kind: shirt
-    archetype: small_animal
+    body: {path: examples/refs/mousey.glb}
     fit: fitted
-    clearance: 0.012
-    thickness: 0.004
+    clearance: 0.008
+    thickness: 0.003
     hem: 0.22
     sleeve: short
-    neck: 0.14
+    neck: 0.10
     tail_opening: false
-    stylization: 0.7
-    stiffness: 0.6
-    wrinkle: 0.2
+    stylization: 0.55
+    stiffness: 0.7
+    wrinkle: 0.15
     cloth_frames: 0
     pose_tests: true
 
@@ -48,8 +47,8 @@ materials:
 
 art_direction:
   subject: >
-    Fitted short-sleeve shirt wrapped on a ~1 m cute animal
-    torso, generated from body loops not boxes
+    Short-sleeve button-down fitted to the ScrapPaws mousey
+    character. Separate wearable shirt, no body in the GLB
   style:
     realism: 0.25
     stylization: 0.75
@@ -58,8 +57,8 @@ art_direction:
     importance: standard_prop
     viewing_distance: medium
   silhouette: >
-    Short-sleeve T-pose shirt at torso height. Open neck and
-    cuffs, hem above the ground. Follows the body, not a crate.
+    Short-sleeve T-pose shirt on a ~1 m mouse torso. Open neck
+    and cuffs, hem above the ground. Follows the body.
   forms:
     primary: [torso loft, short sleeves]
     secondary: [neckline, armholes, hem]
@@ -69,11 +68,11 @@ art_direction:
   detail_density: low
   constraints:
     - No logos. No character body in the exported mesh.
-    - Origin at the feet. Stay below the face at Z 0.75.
-    - Inner cavity clears a 0.37 x 0.32 x 0.25 torso.
+    - Origin at the feet. Stay below the face.
+    - Shirt is a separate wearable, not welded to the mouse.
 
 geometric_plan:
-  primary_read: short-sleeve shirt fitted to a small-animal torso
+  primary_read: short-sleeve shirt fitted to mousey
   recognition: mixed
   must_survive_small:
     - floating hem above the ground
@@ -83,12 +82,11 @@ geometric_plan:
   masses:
     - {name: shirt, role: primary, connects_to: []}
   silhouette: >
-    Front: rounded torso, neck hole, sleeve stubs.
-    Side: chest follow, open cuff. Shirt sits near Z 0.22-0.62.
+    Front: mouse torso follow, neck hole, sleeve stubs.
+    Side: chest follow, open cuff. Hem near Z 0.22.
   silhouette_vs_similar: Not a vest. Not a box tube or crate.
   proportions: >
-    About 0.46 wide in T-pose, 0.36 tall, 0.26 deep.
-    Neck hole 0.14. Hem at Z 0.22.
+    About 0.42 wide in T-pose. Neck hole 0.10. Hem at Z 0.22.
   symmetry: bilateral
   negative_space: neck hole, open cuffs, hollow torso
   abstraction: lofted body loops, shrinkwrap, light cloth
@@ -104,14 +102,13 @@ geometric_plan:
     - {view: three_quarter, weight: 2}
   notes:
     - Face -Y. No geometry.bodies. Openings stay open.
-    - Template body is _mason_body and is not exported.
+    - mousey is _mason_body and is not exported.
 
 construction_plan:
   techniques:
     - {kind: fit, purpose: loft then shrinkwrap, applies_to: shirt}
-    - {kind: remesh, purpose: template cage only, applies_to: body}
   primary_forms:
-    - {type: loft, purpose: torso rings from body slices}
+    - {type: loft, purpose: torso rings from mousey slices}
     - {type: loft, purpose: short sleeve tubes}
   secondary_forms:
     - {type: opening, purpose: neckline and cuffs}
@@ -121,7 +118,7 @@ construction_plan:
   rebuild_parts: []
   notes:
     - Generate from body loops. Do not use a box as primary.
-    - Solidify last. Export without the body.
+    - Solidify last. Export shirt plus weights, not the body.
 
 export:
   format: glb

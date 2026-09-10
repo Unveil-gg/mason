@@ -10,7 +10,7 @@ def _garment_cfg():
 
 
 def import_body_glb(path):
-    """Import a character GLB. Returns the largest mesh."""
+    """Import a character GLB. Returns the character mesh."""
     before = set(bpy.data.objects)
     bpy.ops.import_scene.gltf(filepath=path)
     meshes = [
@@ -19,12 +19,38 @@ def import_body_glb(path):
     ]
     if not meshes:
         return None
-    meshes.sort(key=lambda o: len(o.data.vertices), reverse=True)
-    body = meshes[0]
+    preferred = [
+        o for o in meshes
+        if o.name.lower() in ("mouse", "body", "character")
+    ]
+    if preferred:
+        body = preferred[0]
+    else:
+        meshes.sort(key=lambda o: len(o.data.vertices), reverse=True)
+        body = meshes[0]
     body.name = "_mason_body"
-    for extra in meshes[1:]:
+    for extra in meshes:
+        if extra == body:
+            continue
         extra.name = "_mason_body_" + extra.name
+        extra.hide_set(True)
+        extra.hide_render = True
+    _scale_garment_to_body(body)
     return body
+
+
+def _scale_garment_to_body(body):
+    """If the body is cm-scale, shrink 1 m spec values to match."""
+    cfg = _garment_cfg()
+    mins, maxs = body_bounds(body)
+    height = maxs.z - mins.z
+    if height >= 0.35 or height < 1e-4:
+        return 1.0
+    scale = height / 1.0
+    for key in ("clearance", "thickness", "hem", "neck"):
+        if cfg.get(key) is not None:
+            cfg[key] = float(cfg[key]) * scale
+    return scale
 
 
 def create_small_animal_body():
@@ -81,33 +107,72 @@ def body_bounds(obj):
     return mins, maxs
 
 
+def _bone_head(arm, names):
+    """World location of the first matching pose bone head."""
+    for name in names:
+        bone = arm.pose.bones.get(name)
+        if bone is not None:
+            return arm.matrix_world @ bone.head
+    return None
+
+
 def extract_landmarks(obj):
-    """Named world points from the body AABB and mid-width."""
+    """Named world points from bones when present, else the AABB."""
     mins, maxs = body_bounds(obj)
     mid = (mins + maxs) * 0.5
     h = max(maxs.z - mins.z, 0.001)
     def at(t):
         return mins.z + h * t
     width = maxs.x - mins.x
-    return {
+    marks = {
         "neck": Vector((mid.x, mid.y, at(0.72))),
         "shoulders": Vector((mid.x, mid.y, at(0.62))),
-        "shoulder_l": Vector((mins.x + width * 0.08, mid.y, at(0.60))),
-        "shoulder_r": Vector((maxs.x - width * 0.08, mid.y, at(0.60))),
+        "shoulder_l": Vector((mins.x + width * 0.22, mid.y, at(0.60))),
+        "shoulder_r": Vector((maxs.x - width * 0.22, mid.y, at(0.60))),
         "chest": Vector((mid.x, mid.y, at(0.52))),
         "belly": Vector((mid.x, mid.y, at(0.40))),
         "hips": Vector((mid.x, mid.y, at(0.28))),
         "hem": Vector((mid.x, mid.y, at(0.18))),
         "tail": Vector((mid.x, maxs.y, at(0.30))),
     }
+    arm = None
+    for cand in bpy.data.objects:
+        if cand.type == "ARMATURE":
+            arm = cand
+            break
+    if arm is None:
+        return marks
+    neck = _bone_head(arm, ("neck.x", "c_neck.x", "neck", "Neck"))
+    chest = _bone_head(arm, ("spine_03.x", "spine_02.x", "spine.003"))
+    belly = _bone_head(arm, ("spine_02.x", "spine_01.x", "spine.002"))
+    hips = _bone_head(arm, ("c_root.x", "root.x", "hips", "Hips"))
+    sl = _bone_head(arm, ("shoulder.l", "c_shoulder.l", "shoulder.L"))
+    sr = _bone_head(arm, ("shoulder.r", "c_shoulder.r", "shoulder.R"))
+    if neck:
+        marks["neck"] = neck
+    if chest:
+        marks["chest"] = chest
+    if belly:
+        marks["belly"] = belly
+    if hips:
+        marks["hips"] = hips
+    if sl:
+        marks["shoulder_l"] = sl
+    if sr:
+        marks["shoulder_r"] = sr
+    if sl and sr:
+        marks["shoulders"] = (sl + sr) * 0.5
+    return marks
 
 
-def slice_ring(obj, z, n=16, clearance=0.012):
+def slice_ring(obj, z, n=16, clearance=0.012, max_radius=None):
     """Outward-offset ring at world Z. Returns world Vectors."""
     mins, maxs = body_bounds(obj)
     center = Vector(((mins.x + maxs.x) * 0.5, (mins.y + maxs.y) * 0.5, z))
     imw = obj.matrix_world.inverted()
     radius = max(maxs.x - mins.x, maxs.y - mins.y) * 0.8 + 0.2
+    if max_radius:
+        radius = min(radius, float(max_radius) * 2.4)
     pts = []
     for i in range(n):
         ang = 2.0 * math.pi * i / n
@@ -123,8 +188,27 @@ def slice_ring(obj, z, n=16, clearance=0.012):
             pts.append(world + direc * clearance)
         else:
             fallback = min(maxs.x - mins.x, maxs.y - mins.y) * 0.25
+            if max_radius:
+                fallback = min(fallback, float(max_radius))
             pts.append(center + direc * (fallback + clearance))
-    return _clamp_ring(pts, 1.35)
+    ring = _clamp_ring(pts, 1.35)
+    if max_radius:
+        ring = _clamp_ring(ring, 1.15)
+        cap = float(max_radius)
+        mid = Vector((0.0, 0.0, 0.0))
+        for point in ring:
+            mid += point
+        mid /= float(len(ring))
+        capped = []
+        for point in ring:
+            delta = point - mid
+            span = delta.xy.length
+            if span > cap and span > 1e-6:
+                xy = delta.xy.normalized() * cap
+                point = Vector((mid.x + xy.x, mid.y + xy.y, point.z))
+            capped.append(point)
+        ring = capped
+    return ring
 
 
 def _clamp_ring(ring, max_scale=1.35):
