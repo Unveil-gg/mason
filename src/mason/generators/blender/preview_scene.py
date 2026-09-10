@@ -301,6 +301,18 @@ def _worn_bounds():
     return mins, maxs
 
 
+def _add_area_light(name, energy, loc, size, color):
+    """One area light. Energy is Watts."""
+    light = bpy.data.lights.new(name=name, type="AREA")
+    light.energy = energy
+    light.size = size
+    light.color = color
+    obj = bpy.data.objects.new(name, light)
+    obj.location = loc
+    bpy.context.scene.collection.objects.link(obj)
+    return obj
+
+
 def render_worn_preview(preview_dir, resolution, samples, engine, demo):
     """One three-quarter of the character wearing the garment."""
     body = bpy.data.objects.get("_mason_body")
@@ -318,15 +330,32 @@ def render_worn_preview(preview_dir, resolution, samples, engine, demo):
     radius = max(size.x, size.y, size.z, 0.02)
     dist = radius * 2.2
     clip_end = dist * 8.0
-    set_world((0.62, 0.62, 0.65), 0.14)
+    set_world((0.22, 0.23, 0.26), 0.16)
     setup_studio_plate(center, mins, radius)
-    setup_studio_lights(
-        center, dist, CONFIG.get("lighting_preset") or "neutral_studio",
-        demo=demo,
+    plate = bpy.data.objects.get("_mason_ground")
+    if plate is not None and plate.data.materials:
+        pmat = plate.data.materials[0]
+        if pmat and pmat.use_nodes:
+            pbsdf = next(
+                n for n in pmat.node_tree.nodes
+                if n.type == "BSDF_PRINCIPLED"
+            )
+            pin = (
+                pbsdf.inputs.get("Base Color")
+                or pbsdf.inputs.get("Color")
+            )
+            pin.default_value = (0.30, 0.30, 0.33, 1.0)
+    key_size = max(dist * 0.3, 0.04)
+    _add_area_light(
+        "worn_key", 3.4,
+        center + Vector((-dist * 0.85, dist * 0.35, dist * 0.95)),
+        key_size, (1.0, 0.96, 0.90),
     )
-    for obj in bpy.data.objects:
-        if obj.type == "LIGHT" and hasattr(obj.data, "energy"):
-            obj.data.energy *= 0.22
+    _add_area_light(
+        "worn_fill", 0.85,
+        center + Vector((dist * 0.55, -dist * 0.75, dist * 0.4)),
+        key_size * 1.6, (0.82, 0.86, 1.0),
+    )
     loc = center + Vector((dist * 0.7, -dist * 0.85, dist * 0.4))
     os.makedirs(preview_dir, exist_ok=True)
     _render_view(preview_dir, "worn", center, loc, clip_end)
