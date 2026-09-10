@@ -101,7 +101,9 @@ def setup_studio_lights(
     def add_light(name, energy, loc, color=(1.0, 1.0, 1.0), size=None):
         light = bpy.data.lights.new(name=name, type="AREA")
         light.energy = energy * scale
-        light.size = size if size is not None else max(distance * 0.4, 0.5)
+        light.size = size if size is not None else max(
+            distance * 0.4, min(0.5, distance * 2.0),
+        )
         light.color = color
         obj = bpy.data.objects.new(name, light)
         obj.location = loc
@@ -158,7 +160,7 @@ def setup_studio_plate(center, mins, radius):
     ground_obj = bpy.data.objects.new("_mason_ground", ground)
     bpy.context.scene.collection.objects.link(ground_obj)
     bpy.ops.mesh.primitive_plane_add(
-        size=max(radius * 10.0, 4.0),
+        size=max(radius * 10.0, min(4.0, radius * 12.0)),
         location=(center.x, center.y, mins.z - 0.002),
     )
     plate = bpy.context.active_object
@@ -288,7 +290,7 @@ def render_previews(
     mins, maxs = scene_bounds()
     center = (mins + maxs) * 0.5
     size = maxs - mins
-    radius = max(size.x, size.y, size.z, 0.1)
+    radius = max(size.x, size.y, size.z, 0.02)
     dist = radius * 2.4
     clip_end = dist * 8.0
     preset = CONFIG.get("lighting_preset") or "neutral_studio"
@@ -300,9 +302,14 @@ def render_previews(
         # unless it's kept this dim).
         set_world((0.45, 0.5, 0.58), 0.05)
     else:
-        set_world((0.62, 0.62, 0.65), 0.35)
+        world_s = 0.16 if CONFIG.get("garment") else 0.35
+        set_world((0.62, 0.62, 0.65), world_s)
     setup_studio_plate(center, mins, radius)
     setup_studio_lights(center, dist, preset, demo=demo_lighting)
+    if CONFIG.get("garment"):
+        for obj in bpy.data.objects:
+            if obj.type == "LIGHT" and hasattr(obj.data, "energy"):
+                obj.data.energy *= 0.22
     views = {
         "front": center + Vector((0.0, -dist, size.z * 0.15)),
         "side": center + Vector((dist, 0.0, size.z * 0.15)),

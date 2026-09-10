@@ -51,7 +51,7 @@ def _scale_garment_to_body(body):
             if cfg.get(key) is not None:
                 cfg[key] = float(cfg[key]) * scale
     ease = {
-        "skin_tight": 0.003, "fitted": 0.008, "regular": 0.014,
+        "skin_tight": 0.003, "fitted": 0.008, "regular": 0.018,
         "loose": 0.022, "oversized": 0.035,
     }
     fit = cfg.get("fit") or "fitted"

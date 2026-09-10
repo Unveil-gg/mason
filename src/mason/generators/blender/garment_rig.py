@@ -1,6 +1,8 @@
 """Weight transfer, deformation poses, and garment fit metrics."""
 
 CREATE_GARMENT_RIG_SRC = r'''
+from mathutils.bvhtree import BVHTree
+
 FIT_METRICS = {}
 
 
@@ -26,40 +28,56 @@ def transfer_weights(shirt, body):
 
 
 def hide_covered_body(body, marks):
-    """Mark body faces under the garment. Body is not exported."""
+    """Mark covered body faces and a mason_covered group for Godot."""
     cfg = _garment_cfg()
     if not cfg.get("hide_covered"):
-        return 0
+        return []
     hem_z = marks["hem"].z
     neck_z = marks["neck"].z
-    count = 0
+    vg = body.vertex_groups.get("mason_covered")
+    if vg is None:
+        vg = body.vertex_groups.new(name="mason_covered")
+    indices = []
+    verts = set()
     for poly in body.data.polygons:
         center = body.matrix_world @ poly.center
         if hem_z <= center.z <= neck_z:
             poly.hide = True
-            count += 1
-    return count
+            indices.append(poly.index)
+            verts.update(poly.vertices)
+    if verts:
+        vg.add(list(verts), 1.0, "REPLACE")
+    return indices
 
 
 def _signed_gaps(shirt, body):
-    """Signed distances from outer shirt verts to the body surface."""
-    imw = body.matrix_world.inverted()
-    mins, maxs = body_bounds(shirt)
+    """Signed distances from outer posed shirt verts to the body."""
+    dg = bpy.context.evaluated_depsgraph_get()
+    ev_s = shirt.evaluated_get(dg)
+    smesh = ev_s.to_mesh()
+    rot = ev_s.matrix_world.to_3x3()
+    smesh.transform(ev_s.matrix_world)
+    tree = BVHTree.FromObject(body, dg)
+    mins = Vector((1e9, 1e9, 1e9))
+    maxs = Vector((-1e9, -1e9, -1e9))
+    for vert in smesh.vertices:
+        mins.x = min(mins.x, vert.co.x)
+        mins.y = min(mins.y, vert.co.y)
+        mins.z = min(mins.z, vert.co.z)
+        maxs.x = max(maxs.x, vert.co.x)
+        maxs.y = max(maxs.y, vert.co.y)
+        maxs.z = max(maxs.z, vert.co.z)
     center = (mins + maxs) * 0.5
-    to_world = shirt.matrix_world.to_3x3()
     gaps = []
-    for vert in shirt.data.vertices:
-        world = shirt.matrix_world @ vert.co
-        normal = (to_world @ vert.normal).normalized()
-        if normal.dot(world - center) < 0.0:
+    for vert in smesh.vertices:
+        normal = (rot @ vert.normal).normalized()
+        if normal.dot(vert.co - center) < 0.0:
             continue
-        local = imw @ world
-        hit, loc, nrm, _idx = body.closest_point_on_mesh(local)
-        if not hit:
+        loc, nrm, _idx, _d = tree.find_nearest(vert.co)
+        if loc is None or nrm is None:
             continue
-        world_hit = body.matrix_world @ loc
-        world_nrm = (body.matrix_world.to_3x3() @ nrm).normalized()
-        gaps.append((world - world_hit).dot(world_nrm))
+        gaps.append((vert.co - loc).dot(nrm.normalized()))
+    ev_s.to_mesh_clear()
     return gaps
 
 
@@ -99,26 +117,26 @@ def _rotate_named(arm, names, axis, angle):
 
 
 def _apply_pose(arm, kind):
-    """Deformation poses. Prefer Auto-Rig Pro control bones."""
+    """Rotate deform bones first so posed verts actually move."""
     if kind == "arms_forward":
-        _rotate_named(arm, ("c_arm_fk.l", "arm.l"), 0, -0.7)
-        _rotate_named(arm, ("c_arm_fk.r", "arm.r"), 0, -0.7)
+        _rotate_named(arm, ("arm.l", "c_arm_fk.l"), 0, -0.7)
+        _rotate_named(arm, ("arm.r", "c_arm_fk.r"), 0, -0.7)
     elif kind == "arms_spread":
-        _rotate_named(arm, ("c_arm_fk.l", "arm.l"), 2, 0.8)
-        _rotate_named(arm, ("c_arm_fk.r", "arm.r"), 2, -0.8)
+        _rotate_named(arm, ("arm.l", "c_arm_fk.l"), 2, 0.8)
+        _rotate_named(arm, ("arm.r", "c_arm_fk.r"), 2, -0.8)
     elif kind == "arms_up":
-        _rotate_named(arm, ("c_arm_fk.l", "arm.l"), 0, -1.3)
-        _rotate_named(arm, ("c_arm_fk.r", "arm.r"), 0, -1.3)
+        _rotate_named(arm, ("arm.l", "c_arm_fk.l"), 0, -1.3)
+        _rotate_named(arm, ("arm.r", "c_arm_fk.r"), 0, -1.3)
     elif kind == "elbow_bend":
-        _rotate_named(arm, ("c_forearm_fk.l", "forearm.l"), 0, -1.2)
-        _rotate_named(arm, ("c_forearm_fk.r", "forearm.r"), 0, -1.2)
+        _rotate_named(arm, ("forearm.l", "c_forearm_fk.l"), 0, -1.2)
+        _rotate_named(arm, ("forearm.r", "c_forearm_fk.r"), 0, -1.2)
     elif kind == "crouch":
-        _rotate_named(arm, ("c_thigh_fk.l", "thigh.l"), 0, 0.9)
-        _rotate_named(arm, ("c_thigh_fk.r", "thigh.r"), 0, 0.9)
+        _rotate_named(arm, ("thigh.l", "c_thigh_fk.l"), 0, 0.9)
+        _rotate_named(arm, ("thigh.r", "c_thigh_fk.r"), 0, 0.9)
     elif kind == "twist":
-        _rotate_named(arm, ("c_spine_02.x", "spine_02.x"), 2, 0.55)
+        _rotate_named(arm, ("spine_02.x", "c_spine_02.x"), 2, 0.55)
     elif kind == "leg_raise":
-        _rotate_named(arm, ("c_thigh_fk.l", "thigh.l"), 0, -0.9)
+        _rotate_named(arm, ("thigh.l", "c_thigh_fk.l"), 0, -0.9)
 
 
 def run_pose_tests(shirt, body):
@@ -155,13 +173,18 @@ def score_garment_fit(shirt, body, marks):
     poses = {}
     if cfg.get("pose_tests") and _find_armature():
         poses = run_pose_tests(shirt, body)
+    cuff_z = marks["shoulders"].z
+    if cfg.get("sleeve") == "short":
+        loc = _cuff_point(marks, "l", "short")
+        if loc is not None:
+            cuff_z = loc.z
+    elif cfg.get("sleeve") == "long":
+        cuff_z = marks.get("wrist_l", marks["shoulders"]).z
     FIT_METRICS = {
         "clearance_min": float(min(gaps) if gaps else 0.0),
         "penetration": float(pen),
         "opening_neck": float(_opening_width(shirt, marks["neck"].z)),
-        "opening_cuffs": float(_opening_width(
-            shirt, marks.get("wrist_l", marks["shoulders"]).z,
-        )),
+        "opening_cuffs": float(_opening_width(shirt, cuff_z)),
         "pose_scores": poses,
         "method": "extract",
     }
@@ -176,8 +199,10 @@ def default_garment_attachments(marks):
         ("neck", marks["neck"]),
         ("hem", marks["hem"]),
     ]
-    for key, name in (("wrist_l", "cuff_l"), ("wrist_r", "cuff_r")):
-        sockets.append((name, marks.get(key, marks["shoulder_" + key[-1]])))
+    sleeve = _garment_cfg().get("sleeve")
+    for side, name in (("l", "cuff_l"), ("r", "cuff_r")):
+        loc = _cuff_point(marks, side, sleeve)
+        sockets.append((name, loc or marks.get("wrist_" + side)))
     CONFIG["attachments"] = [
         {"name": n, "location": list(p), "rotation": [0, 0, 0]}
         for n, p in sockets if p is not None
@@ -201,9 +226,18 @@ def build_garment():
     fit_garment(shirt, body, marks)
     apply_garment_material(shirt)
     transfer_weights(shirt, body)
-    hide_covered_body(body, marks)
     score_garment_fit(shirt, body, marks)
+    covered = hide_covered_body(body, marks)
     FIT_METRICS["method"] = method
+    FIT_METRICS["covered_faces"] = len(covered)
+    FIT_METRICS["covered_face_indices"] = covered
+    FIT_METRICS["hide_group"] = "mason_covered"
+    bmins, bmaxs = body_bounds(body)
+    FIT_METRICS["body_height"] = float(bmaxs.z - bmins.z)
+    FIT_METRICS["native_scale"] = True
+    FIT_METRICS["scale_note"] = (
+        "Shirt matches the character GLB. Same units as mousey.glb."
+    )
     default_garment_attachments(marks)
     return shirt
 '''

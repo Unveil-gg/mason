@@ -20,6 +20,19 @@ def _near_segment(point, start, end, radius):
     return (point - (start + span * t)).length <= radius
 
 
+def _is_sleeve_vert(point, marks, height):
+    """True if a world point sits on a short/long sleeve ray."""
+    for side in ("l", "r"):
+        sh = marks.get("shoulder_" + side)
+        wr = marks.get("wrist_" + side)
+        if sh is None or wr is None:
+            continue
+        end = sh.lerp(wr, 0.45)
+        if _near_segment(point, sh, end, height * 0.12):
+            return True
+    return False
+
+
 def _keep_face_center(center, marks, cfg, height):
     """Whether a world-space face center belongs on the garment."""
     hem_z = marks["hem"].z
@@ -33,7 +46,7 @@ def _keep_face_center(center, marks, cfg, height):
             return False
     regions = cfg.get("body_regions") or ["torso"]
     if "upper_arms" in regions or cfg.get("sleeve") in ("short", "long"):
-        reach = 0.45 if cfg.get("sleeve") != "long" else 0.92
+        reach = 0.32 if cfg.get("sleeve") != "long" else 0.92
         for side in ("l", "r"):
             sh = marks.get("shoulder_" + side)
             wr = marks.get("wrist_" + side)
@@ -48,10 +61,17 @@ def _keep_face_center(center, marks, cfg, height):
         if abs(center.x - mid.x) > height * 0.22 and center.z > marks["chest"].z:
             return False
     tail = marks.get("tail")
-    if tail is not None and not cfg.get("tail_opening"):
-        if center.y > marks["hips"].y + height * 0.08:
-            if (center - tail).length < height * 0.18:
+    if tail is not None:
+        near_tail = (center - tail).length < height * 0.11
+        if cfg.get("tail_opening") and near_tail:
+            return False
+        if not cfg.get("tail_opening"):
+            if center.y > marks["hips"].y + height * 0.08 and near_tail:
                 return False
+    neck = marks["neck"]
+    if center.z > neck.z - height * 0.07 and center.y < neck.y:
+        if (center - neck).length < height * 0.11:
+            return False
     return True
 
 
@@ -81,8 +101,14 @@ def extract_garment_surface(body, marks):
         bpy.data.objects.remove(garment, do_unlink=True)
         return None
     ease = float(cfg.get("ease_offset") or cfg.get("clearance") or 0.008)
+    torso_ease = ease * 1.4
+    sleeve_ease = ease * 0.55
     for vert in garment.data.vertices:
-        vert.co += vert.normal * ease
+        world = garment.matrix_world @ vert.co
+        amt = sleeve_ease if _is_sleeve_vert(
+            world, marks, height,
+        ) else torso_ease
+        vert.co += vert.normal * amt
     garment.data.update()
     shade_smooth(garment)
     return garment

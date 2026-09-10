@@ -50,7 +50,7 @@ materials:
     asset: cotton_weave
     file: output/asset.png
   palette_overrides:
-    cotton: "#F4F1EA"
+    cotton: "#A89274"
 
 art_direction:
   subject: >

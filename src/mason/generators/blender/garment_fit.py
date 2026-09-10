@@ -55,13 +55,17 @@ def silhouette_pass(shirt, marks, cfg):
     ease = float(cfg.get("ease_offset") or 0.008)
     shoulders = marks.get("shoulders")
     chest = marks.get("chest")
+    mid_x = chest.x if chest else 0.0
+    torso_half = ease * 18.0
     for vert in shirt.data.vertices:
         world = shirt.matrix_world @ vert.co
+        if abs(world.x - mid_x) > torso_half:
+            continue
         extra = 0.0
         if shoulders and abs(world.z - shoulders.z) < ease * 8:
             extra += ease * 0.6 * boost
         if chest and abs(world.z - chest.z) < ease * 10:
-            extra += ease * 0.35 * boost
+            extra += ease * 0.55 * boost
         if extra:
             vert.co += vert.normal * extra
     shirt.data.update()
