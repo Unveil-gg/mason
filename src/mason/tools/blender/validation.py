@@ -150,10 +150,21 @@ def validate_static_prop(
         )
         n_btn = int(fit.get("buttons") or 0)
         ok = pen < 0.12 and gap > -0.008 and neck > 0.02
-        if spec.geometry.garment.sleeve == "short":
-            ok = ok and cuffs > 0.01 and not wide and not baggy
-            ok = ok and all(0.16 < a < 0.55 for a in alongs)
+        body_h = float(fit.get("body_height") or 0.0)
+        cuff_cap = body_h * 0.42 if body_h > 1e-6 else 0.05
+        tubes = fit.get("sleeve_tubes") or []
+        tube_ok = (
+            len(tubes) >= 2
+            and all(float(t.get("length") or 0) > body_h * 0.08 for t in tubes)
+        ) if body_h > 1e-6 else len(tubes) >= 2
+        if spec.geometry.garment.sleeve in ("short", "long"):
+            ok = ok and cuffs > 0.01 and cuffs < cuff_cap
+            ok = ok and not wide and not baggy
+            ok = ok and all(a > 0.16 for a in alongs)
             ok = ok and flare < 1.65
+            ok = ok and tube_ok
+        if spec.geometry.garment.sleeve == "long":
+            ok = ok and all(a > 0.70 for a in alongs)
         if want_btn:
             ok = ok and n_btn >= 3
         clip_s = ",".join(
@@ -166,7 +177,7 @@ def validate_static_prop(
                 f"pen={pen:.3f} gap={gap:.4f} neck={neck:.3f} "
                 f"cuffs={cuffs:.3f} sleeve={ratios} along={alongs} "
                 f"fat={fats} flare={flare:.2f} buttons={n_btn} "
-                f"clip={clip_s or 'none'}"
+                f"tubes={len(tubes)} clip={clip_s or 'none'}"
             ),
         ))
         if fit:

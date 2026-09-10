@@ -99,11 +99,11 @@ def create_small_animal_body():
 
 
 def body_bounds(obj):
-    """World AABB (mins, maxs) of one mesh."""
+    """World AABB from mesh verts. bound_box is often stale."""
     mins = Vector((1e9, 1e9, 1e9))
     maxs = Vector((-1e9, -1e9, -1e9))
-    for corner in obj.bound_box:
-        world = obj.matrix_world @ Vector(corner)
+    for vert in obj.data.vertices:
+        world = obj.matrix_world @ vert.co
         mins.x = min(mins.x, world.x)
         mins.y = min(mins.y, world.y)
         mins.z = min(mins.z, world.z)
@@ -125,6 +125,92 @@ def _bone_head(arm, names):
 def extract_landmarks(obj):
     """Named world points. Delegates to analyze_anatomy."""
     return analyze_anatomy(obj)
+
+
+def _refine_stacked_body(obj, marks):
+    """Collar at the pinch of two stacked masses; longer hem.
+
+    Mousey is two spheres, not a human neck. Bone neck often sits
+    too low on the body ball, so sleeves root under the arm sockets.
+    """
+    mins, maxs = body_bounds(obj)
+    height = max(maxs.z - mins.z, 0.001)
+    mid = (mins + maxs) * 0.5
+    pinch_z = mins.z + height * 0.62
+    head = marks.get("head")
+    if head is not None:
+        pinch_z = min(pinch_z, head.z - height * 0.14)
+    if pinch_z <= marks["neck"].z + height * 0.01:
+        pinch_z = marks["neck"].z + height * 0.04
+    marks["neck"] = Vector((mid.x, mid.y, pinch_z))
+    marks["shoulders"] = Vector((
+        mid.x, mid.y, pinch_z - height * 0.03,
+    ))
+    ankle = marks.get("ankle_l") or marks.get("ankle_r")
+    floor = ankle.z + height * 0.05 if ankle is not None else mins.z
+    shirt_hem = max(mins.z + height * 0.20, floor)
+    marks["hem"] = Vector((marks["hem"].x, marks["hem"].y, shirt_hem))
+    marks["stacked_spheres"] = True
+
+
+def _measure_torso_half(body, marks):
+    """Body-ball half-width. Ignores hands in the AABB."""
+    mins, maxs = body_bounds(body)
+    chest = marks.get("chest")
+    mid = chest.x if chest is not None else (mins.x + maxs.x) * 0.5
+    aabb_half = max(maxs.x - mins.x, 1e-6) * 0.5
+    z0 = marks["hips"].z
+    z1 = marks["chest"].z
+    xs = []
+    for vert in body.data.vertices:
+        world = body.matrix_world @ vert.co
+        if world.z < z0 or world.z > z1:
+            continue
+        dx = abs(world.x - mid)
+        if dx < aabb_half * 0.70:
+            xs.append(dx)
+    if not xs:
+        return aabb_half * 0.45
+    return max(xs)
+
+
+def _bind_sleeve_axes(body, marks):
+    """Sleeve start/end from arm mesh, not inboard bones."""
+    mins, maxs = body_bounds(body)
+    chest = marks.get("chest")
+    mid = chest.x if chest is not None else (mins.x + maxs.x) * 0.5
+    torso = _measure_torso_half(body, marks)
+    marks["torso_half_x"] = float(torso)
+    hips_z = marks["hips"].z
+    neck_z = marks["neck"].z
+    for side, sign, hand_x in (("l", 1.0, maxs.x), ("r", -1.0, mins.x)):
+        inner_y, inner_z, inner_n = 0.0, 0.0, 0
+        hand = None
+        hand_dx = -1.0
+        for vert in body.data.vertices:
+            world = body.matrix_world @ vert.co
+            if world.z < hips_z or world.z > neck_z:
+                continue
+            dx = (world.x - mid) * sign
+            if dx > torso * 1.06 and dx < torso * 1.40:
+                inner_y += world.y
+                inner_z += world.z
+                inner_n += 1
+            if dx > hand_dx:
+                hand_dx = dx
+                hand = world.copy()
+        bone = marks.get("arm_" + side) or marks.get("shoulder_" + side)
+        mid_y = (mins.y + maxs.y) * 0.5
+        fb_y = bone.y if bone is not None else mid_y
+        fb_z = bone.z if bone is not None else marks["shoulders"].z
+        y0 = (inner_y / inner_n) if inner_n else fb_y
+        z0 = (inner_z / inner_n) if inner_n else fb_z
+        marks["sleeve_start_" + side] = Vector((
+            mid + sign * torso * 0.96, y0, z0,
+        ))
+        if hand is None:
+            hand = Vector((hand_x, fb_y, fb_z))
+        marks["sleeve_end_" + side] = hand
 
 
 def slice_ring(obj, z, n=16, clearance=0.012, max_radius=None):
@@ -205,7 +291,13 @@ def prepare_garment_body():
         body = create_small_animal_body()
         _scale_garment_to_body(body)
     marks = extract_landmarks(body)
-    hem = float(cfg.get("hem") if cfg.get("hem") is not None else marks["hem"].z)
-    marks["hem"] = Vector((marks["hem"].x, marks["hem"].y, hem))
+    _refine_stacked_body(body, marks)
+    _bind_sleeve_axes(body, marks)
+    if cfg.get("hem") is not None:
+        spec_hem = float(cfg["hem"])
+        marks["hem"] = Vector((
+            marks["hem"].x, marks["hem"].y,
+            max(spec_hem, marks["hem"].z),
+        ))
     return body, marks
 '''

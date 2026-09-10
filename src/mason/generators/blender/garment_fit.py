@@ -64,6 +64,8 @@ def silhouette_pass(shirt, marks, cfg):
     for vert in shirt.data.vertices:
         world = shirt.matrix_world @ vert.co
         extra = base * 1.25 if abs(world.x - mid_x) <= torso_half else base * 0.4
+        if chest is not None and world.z > chest.z:
+            extra *= 0.2
         vert.co += vert.normal * extra
     shirt.data.update()
 
@@ -82,7 +84,7 @@ def _clamp_hem(shirt, marks):
 
 def _cap_neck(shirt, marks):
     """Kill ear/head spikes above the neck opening."""
-    top = marks["neck"].z + (marks["neck"] - marks["hem"]).length * 0.06
+    top = marks["neck"].z
     imw = shirt.matrix_world.inverted()
     for vert in shirt.data.vertices:
         world = shirt.matrix_world @ vert.co
@@ -106,20 +108,23 @@ def _push_off_body(shirt, body, gap):
     ]
     dists.sort()
     cutoff = dists[int(len(dists) * 0.45)] if dists else 0.0
+    chest_z = maxs.z - (maxs.z - mins.z) * 0.28
     for vert in shirt.data.vertices:
         world = shirt.matrix_world @ vert.co
-        if (world - center).length < cutoff:
+        high = world.z >= chest_z
+        if not high and (world - center).length < cutoff:
             continue
         normal = (rot @ vert.normal).normalized()
-        if normal.dot(world - center) < 0.0:
+        if not high and normal.dot(world - center) < 0.0:
             continue
         loc, nrm, _idx, _d = tree.find_nearest(world)
         if loc is None or nrm is None:
             continue
         nrm = nrm.normalized()
-        if (world - loc).dot(nrm) >= gap:
+        need = gap * (2.2 if high else 1.0)
+        if (world - loc).dot(nrm) >= need:
             continue
-        vert.co = imw @ (loc + nrm * gap)
+        vert.co = imw @ (loc + nrm * need)
     shirt.data.update()
 
 
@@ -141,8 +146,7 @@ def fit_garment(shirt, body, marks=None):
     if marks is not None:
         bmins, bmaxs = body_bounds(body)
         height = max(bmaxs.z - bmins.z, 0.01)
-        _tighten_sleeves(shirt, marks, height, body)
-        _add_sleeve_tubes(shirt, marks, height)
+        _clip_batwings(shirt, marks, height, body)
     fit = cfg.get("fit") or "fitted"
     frames = int(cfg.get("cloth_frames") or 0)
     if frames > 0 and fit in ("loose", "oversized"):
@@ -166,6 +170,10 @@ def fit_garment(shirt, body, marks=None):
         _cap_neck(shirt, marks)
     gap = float(cfg.get("ease_offset") or 0.002) * 1.8
     _push_off_body(shirt, body, gap)
+    if marks is not None:
+        bmins, bmaxs = body_bounds(body)
+        height = max(bmaxs.z - bmins.z, 0.01)
+        _add_sleeve_tubes(shirt, marks, height, body)
     shade_smooth(shirt)
     return shirt
 

@@ -27,7 +27,32 @@ def _sleeve_reach_t():
         return 0.92
     if sleeve == "none":
         return 0.0
-    return 0.42
+    return 0.88
+
+
+SLEEVE_TUBE_LOG = []
+
+
+def _sleeve_axis(marks, side, body=None):
+    """Arm-head to wrist. Prefers mesh axes bound from the body."""
+    start = marks.get("sleeve_start_" + side)
+    end = marks.get("sleeve_end_" + side)
+    if start is not None and end is not None:
+        return start.copy(), end.copy()
+    start = marks.get("arm_" + side) or marks.get("shoulder_" + side)
+    end = marks.get("wrist_" + side)
+    if start is None or end is None or body is None:
+        return start, end
+    mins, maxs = body_bounds(body)
+    mid = (mins.x + maxs.x) * 0.5
+    sign = 1.0 if side == "l" else -1.0
+    hand_x = maxs.x if side == "l" else mins.x
+    torso = float(marks.get("torso_half_x") or abs(hand_x - mid) * 0.45)
+    start = start.copy()
+    end = end.copy()
+    start.x = mid + sign * torso * 0.96
+    end.x = hand_x
+    return start, end
 
 
 def _is_sleeve_vert(point, marks, height):
@@ -41,8 +66,7 @@ def _is_sleeve_vert(point, marks, height):
         return False
     rad = height * 0.13
     for side in ("l", "r"):
-        sh = marks.get("shoulder_" + side)
-        wr = marks.get("wrist_" + side)
+        sh, wr = _sleeve_axis(marks, side)
         if sh is None or wr is None:
             continue
         end = sh.lerp(wr, reach)
@@ -52,46 +76,75 @@ def _is_sleeve_vert(point, marks, height):
 
 
 def _is_arm_flesh(point, marks, height):
-    """Arm mesh past the shoulder cap. Sleeves are added as tubes."""
+    """Arm mesh past the torso ball. Sleeves are added as tubes."""
     chest = marks.get("chest")
     mid = chest.x if chest is not None else 0.0
-    if abs(point.x - mid) < height * 0.20:
+    torso = float(marks.get("torso_half_x") or height * 0.18)
+    hips = marks.get("hips")
+    if hips is not None and point.z < hips.z:
         return False
-    for side in ("l", "r"):
-        sh = marks.get("shoulder_" + side)
-        wr = marks.get("wrist_" + side)
-        if sh is None or wr is None:
+    neck = marks.get("neck")
+    if neck is not None and point.z > neck.z + height * 0.04:
+        return False
+    return abs(point.x - mid) > torso * 1.08
+
+
+def _arm_radius(body, sh, wr, height):
+    """Median body radius around one shoulder-wrist axis."""
+    span = wr - sh
+    denom = max(span.length_squared, 1e-8)
+    rads = []
+    for vert in body.data.vertices:
+        world = body.matrix_world @ vert.co
+        t = (world - sh).dot(span) / denom
+        if t < 0.35 or t > 0.90:
             continue
-        span = wr - sh
-        denom = max(span.length_squared, 1e-8)
-        t = (point - sh).dot(span) / denom
-        axis = sh + span * max(0.0, min(1.0, t))
-        if t > 0.10 and (point - axis).length < height * 0.11:
-            return True
-    return False
+        axis = sh + span * t
+        rad = (world - axis).length
+        if rad < height * 0.14:
+            rads.append(rad)
+    if not rads:
+        return height * 0.038
+    rads.sort()
+    return rads[len(rads) // 2]
 
 
-def _add_sleeve_tubes(shirt, marks, height):
-    """Join short/long cylinders along each arm. Returns shirt."""
+def _sleeve_radius(body, marks, height):
+    """Fitted tube radius: arm median plus ease."""
+    ease = float(_garment_cfg().get("ease_offset") or 0.002)
+    samples = []
+    if body is not None:
+        for side in ("l", "r"):
+            sh, wr = _sleeve_axis(marks, side, body)
+            if sh is not None and wr is not None:
+                samples.append(_arm_radius(body, sh, wr, height))
+    arm = sum(samples) / len(samples) if samples else height * 0.038
+    rad = min(arm, height * 0.048) + ease * 1.4
+    return max(rad, height * 0.048)
+
+
+def _add_sleeve_tubes(shirt, marks, height, body=None):
+    """Join arm-aligned cylinders to the wrists. Returns shirt."""
+    global SLEEVE_TUBE_LOG
+    SLEEVE_TUBE_LOG = []
     reach = _sleeve_reach_t()
     if reach <= 0.0:
         return shirt
     extras = []
-    rad = height * 0.048
+    rad = _sleeve_radius(body, marks, height)
     for side in ("l", "r"):
-        sh = marks.get("shoulder_" + side)
-        wr = marks.get("wrist_" + side)
+        sh, wr = _sleeve_axis(marks, side, body)
         if sh is None or wr is None:
             continue
         end = sh.lerp(wr, reach)
         delta = end - sh
-        if delta.length < 1e-6:
+        if delta.length < height * 0.05:
             continue
         bpy.ops.mesh.primitive_cylinder_add(
             radius=rad,
             depth=delta.length,
             location=sh.lerp(end, 0.5),
-            vertices=12,
+            vertices=10,
         )
         cyl = bpy.context.active_object
         cyl.rotation_euler = delta.normalized().to_track_quat(
@@ -99,6 +152,13 @@ def _add_sleeve_tubes(shirt, marks, height):
         ).to_euler()
         bpy.ops.object.transform_apply(rotation=True, scale=True)
         extras.append(cyl)
+        SLEEVE_TUBE_LOG.append({
+            "side": side,
+            "start": [float(sh.x), float(sh.y), float(sh.z)],
+            "end": [float(end.x), float(end.y), float(end.z)],
+            "radius": float(rad),
+            "length": float(delta.length),
+        })
     if not extras:
         return shirt
     bpy.ops.object.select_all(action="DESELECT")
@@ -110,31 +170,42 @@ def _add_sleeve_tubes(shirt, marks, height):
     return shirt
 
 
+def _clip_batwings(shirt, marks, height, body):
+    """Delete cape verts past the torso. Sleeves are tubes, not wings."""
+    chest = marks.get("chest")
+    mid = chest.x if chest is not None else 0.0
+    torso = float(marks.get("torso_half_x") or height * 0.18)
+    hips_z = marks["hips"].z
+    bm = bmesh.new()
+    bm.from_mesh(shirt.data)
+    kill = []
+    for vert in bm.verts:
+        world = shirt.matrix_world @ vert.co
+        ax = abs(world.x - mid)
+        if ax < torso * 0.90:
+            continue
+        if ax > torso * 1.10 and world.z > hips_z:
+            kill.append(vert)
+    if kill:
+        bmesh.ops.delete(bm, geom=kill, context="VERTS")
+        bm.to_mesh(shirt.data)
+    bm.free()
+    shirt.data.update()
+
+
 def _keep_face_center(center, marks, cfg, height):
     """Whether a world-space face center belongs on the garment."""
     hem_z = marks["hem"].z
     neck_z = marks["neck"].z
     pad = height * 0.04
-    if center.z < hem_z - pad or center.z > neck_z + pad * 1.4:
+    if center.z < hem_z - pad or center.z > neck_z + pad * 0.55:
         return False
     if _is_arm_flesh(center, marks, height):
         return False
     head = marks.get("head")
-    if head is not None and center.z > marks["shoulders"].z:
-        if (center - head).length < (center - marks["neck"]).length * 0.8:
+    if head is not None and center.z > neck_z:
+        if (center - head).length < (center - marks["neck"]).length * 0.9:
             return False
-    regions = cfg.get("body_regions") or ["torso"]
-    if "upper_arms" in regions or cfg.get("sleeve") in ("short", "long"):
-        reach = _sleeve_reach_t()
-        for side in ("l", "r"):
-            sh = marks.get("shoulder_" + side)
-            wr = marks.get("wrist_" + side)
-            if sh is None or wr is None:
-                continue
-            end = sh.lerp(wr, reach)
-            rad = height * 0.13
-            if _near_segment(center, sh, end, rad):
-                return True
     if cfg.get("kind") == "vest":
         mid = marks["shoulders"]
         if abs(center.x - mid.x) > height * 0.22 and center.z > marks["chest"].z:
@@ -180,7 +251,7 @@ def _tighten_sleeves(garment, marks, height, body=None):
     """Tube-pinch sleeves; cinch underarm cape back to the torso."""
     cfg = _garment_cfg()
     imw = garment.matrix_world.inverted()
-    radius = height * 0.032
+    radius = _sleeve_radius(body, marks, height)
     chest = marks.get("chest")
     mid_x = chest.x if chest is not None else 0.0
     reach = _sleeve_reach_t()
@@ -192,8 +263,7 @@ def _tighten_sleeves(garment, marks, height, body=None):
             body, mid_x, marks["hem"].z, marks["neck"].z, marks, height,
         )
     for side in ("l", "r"):
-        sh = marks.get("shoulder_" + side)
-        wr = marks.get("wrist_" + side)
+        sh, wr = _sleeve_axis(marks, side)
         if sh is None or wr is None or reach <= 0.0:
             continue
         end = sh.lerp(wr, reach)
@@ -201,7 +271,7 @@ def _tighten_sleeves(garment, marks, height, body=None):
         denom = max(axis_span.length_squared, 1e-8)
         for vert in garment.data.vertices:
             world = garment.matrix_world @ vert.co
-            if abs(world.x - mid_x) < height * 0.16:
+            if abs(world.x - mid_x) < height * 0.17:
                 continue
             if not _near_segment(world, sh, end, height * 0.13):
                 continue
@@ -255,7 +325,7 @@ def extract_garment_surface(body, marks):
     if len(garment.data.polygons) < 12:
         bpy.data.objects.remove(garment, do_unlink=True)
         return None
-    _tighten_sleeves(garment, marks, height, body)
+    _clip_batwings(garment, marks, height, body)
     ease = float(cfg.get("ease_offset") or cfg.get("clearance") or 0.008)
     torso_ease = ease * 1.25
     sleeve_ease = ease * 0.7

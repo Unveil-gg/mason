@@ -26,7 +26,7 @@ geometry:
     fabric_weight: thin
     clearance: 0.010
     thickness: 0.002
-    hem: 0.22
+    hem: 0.14
     sleeve: short
     neck: 0.12
     tail_opening: true
@@ -50,7 +50,7 @@ materials:
 art_direction:
   subject: >
     Clean white short-sleeve button-down on ScrapPaws mousey.
-    Close fit, small neck, three center buttons.
+    Collar at the head-body pinch. Longer hem. Three buttons.
   style:
     realism: 0.15
     stylization: 0.85
@@ -59,8 +59,8 @@ art_direction:
     importance: standard_prop
     viewing_distance: medium
   silhouette: >
-    Soft T-pose shirt on the mouse torso and short sleeves.
-    Clean hem and neck opening. No floating trim.
+    Shirt covers the body sphere, not a human torso.
+    Collar in the crease under the head. Hem toward the legs.
   forms:
     primary: [torso surface, short sleeves]
     secondary: [collar rim, hem, cuffs]
@@ -100,6 +100,7 @@ geometric_plan:
     - {view: front, weight: 2}
     - {view: three_quarter, weight: 2}
   notes:
+    - Two stacked spheres. Collar at the pinch, not a bone neck.
     - Extract faces, do not loft a blob. Body is not exported.
 
 construction_plan:

@@ -273,12 +273,18 @@ def test_blender_script_has_garment_pipeline(project: Path) -> None:
     )
     assert "def create_small_animal_body" in script
     assert "def analyze_anatomy" in script
+    assert "def _refine_stacked_body" in script
     assert "def extract_garment_surface" in script
     assert "def loft_garment" in script
     assert "def add_garment_details" in script
     assert "def render_worn_preview" in script
+    assert "def _pale_preview" in script
     assert "worn_front" in script
     assert "def _tighten_sleeves" in script
+    assert "def _clip_batwings" in script
+    assert "def _bind_sleeve_axes" in script
+    assert "def _measure_torso_half" in script
+    assert "SLEEVE_TUBE_LOG" in script
     assert "def _push_off_body" in script
     assert "def _sleeve_report" in script
     assert "def _clip_regions" in script

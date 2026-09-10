@@ -19,8 +19,7 @@ def _band_half_x(obj, mid, zmin, zmax, marks=None, height=None):
 
 def _near_arm(world, marks, side, height):
     """(t, radius, drop) along shoulder-wrist, or None."""
-    sh = marks.get("shoulder_" + side)
-    wr = marks.get("wrist_" + side)
+    sh, wr = _sleeve_axis(marks, side)
     if sh is None or wr is None:
         return None
     span = wr - sh
@@ -58,7 +57,8 @@ def _arm_stats(obj, marks, side, height):
 
 def _sleeve_report(shirt, body, marks):
     """Shirt vs arm tube. Ratio ~1.2 is fitted; along=0 is a vest."""
-    height = max((marks["neck"] - marks["hem"]).length, 0.01)
+    bmins, bmaxs = body_bounds(body)
+    height = max(bmaxs.z - bmins.z, 0.01)
     mid = marks["chest"].x
     body_w = _band_half_x(
         body, mid, marks["hem"].z, marks["chest"].z, marks, height,
@@ -95,7 +95,8 @@ def _sleeve_report(shirt, body, marks):
 
 def _clip_regions(shirt, body, marks):
     """Outer-shell penetrations grouped by landmark region."""
-    height = max((marks["neck"] - marks["hem"]).length, 0.01)
+    bmins, bmaxs = body_bounds(body)
+    height = max(bmaxs.z - bmins.z, 0.01)
     mid = marks["chest"].x
     dg = bpy.context.evaluated_depsgraph_get()
     ev = shirt.evaluated_get(dg)

@@ -24,6 +24,46 @@ def setup_film(resolution, transparent):
         pass
 
 
+def _hex_luma(value):
+    """Rec. 709 luma of a #RRGGBB string, or 0."""
+    text = str(value or "").lstrip("#")
+    if len(text) == 3:
+        text = "".join(c + c for c in text)
+    if len(text) != 6:
+        return 0.0
+    try:
+        r = int(text[0:2], 16) / 255.0
+        g = int(text[2:4], 16) / 255.0
+        b = int(text[4:6], 16) / 255.0
+    except ValueError:
+        return 0.0
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def _pale_preview():
+    """True when the hero color would vanish on a light studio."""
+    pal = CONFIG.get("palette") or {}
+    for value in pal.values():
+        if _hex_luma(value) >= 0.62:
+            return True
+    return bool(CONFIG.get("garment"))
+
+
+def _tint_plate(rgb):
+    """Set the studio ground albedo."""
+    plate = bpy.data.objects.get("_mason_ground")
+    if plate is None or not plate.data.materials:
+        return
+    pmat = plate.data.materials[0]
+    if not pmat or not pmat.use_nodes:
+        return
+    pbsdf = next(
+        n for n in pmat.node_tree.nodes if n.type == "BSDF_PRINCIPLED"
+    )
+    pin = pbsdf.inputs.get("Base Color") or pbsdf.inputs.get("Color")
+    pin.default_value = (rgb[0], rgb[1], rgb[2], 1.0)
+
+
 def set_world(color, strength):
     """Solid world background so dark props read against a plate."""
     scene = bpy.context.scene
@@ -389,6 +429,7 @@ def render_previews(
     dist = radius * 2.4
     clip_end = dist * 8.0
     preset = CONFIG.get("lighting_preset") or "neutral_studio"
+    pale = _pale_preview()
     if demo_lighting:
         # Much lower than neutral on purpose: the world background is
         # an unoccluded ambient dome, so even a modest strength was
@@ -396,12 +437,22 @@ def render_previews(
         # entirely (uniform ambient wins over a single area light
         # unless it's kept this dim).
         set_world((0.45, 0.5, 0.58), 0.05)
+    elif pale:
+        set_world((0.12, 0.13, 0.15), 0.06)
     else:
         world_s = 0.16 if CONFIG.get("garment") else 0.35
         set_world((0.62, 0.62, 0.65), world_s)
     setup_studio_plate(center, mins, radius)
     setup_studio_lights(center, dist, preset, demo=demo_lighting)
-    if CONFIG.get("garment"):
+    if pale:
+        _tint_plate((0.08, 0.08, 0.09))
+        plate = bpy.data.objects.get("_mason_ground")
+        if plate is not None:
+            plate.hide_render = True
+        for obj in bpy.data.objects:
+            if obj.type == "LIGHT" and hasattr(obj.data, "energy"):
+                obj.data.energy *= 0.10
+    elif CONFIG.get("garment"):
         for obj in bpy.data.objects:
             if obj.type == "LIGHT" and hasattr(obj.data, "energy"):
                 obj.data.energy *= 0.22

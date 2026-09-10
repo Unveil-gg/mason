@@ -186,16 +186,25 @@ def score_garment_fit(shirt, body, marks):
     elif cfg.get("sleeve") == "long":
         cuff_z = marks.get("wrist_l", marks["shoulders"]).z
     sleeves = _sleeve_report(shirt, body, marks)
+    cuff_span = 2.0 * max(
+        float((sleeves.get("l") or {}).get("shirt") or 0.0),
+        float((sleeves.get("r") or {}).get("shirt") or 0.0),
+    )
     FIT_METRICS = {
         "clearance_min": float(min(gaps) if gaps else 0.0),
         "penetration": float(pen),
         "opening_neck": float(_opening_width(shirt, marks["neck"].z)),
-        "opening_cuffs": float(_opening_width(shirt, cuff_z)),
+        "opening_cuffs": float(cuff_span or _opening_width(shirt, cuff_z)),
         "sleeves": sleeves,
         "underarm_flare": float(sleeves.pop("underarm_flare", 0.0)),
         "clip_regions": _clip_regions(shirt, body, marks),
         "pose_scores": poses,
         "method": "extract",
+        "collar_z": float(marks["neck"].z),
+        "hem_z": float(marks["hem"].z),
+        "stacked_spheres": bool(marks.get("stacked_spheres")),
+        "torso_half_x": float(marks.get("torso_half_x") or 0.0),
+        "sleeve_tubes": list(SLEEVE_TUBE_LOG),
     }
     return FIT_METRICS
 

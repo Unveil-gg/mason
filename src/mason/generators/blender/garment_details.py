@@ -8,13 +8,16 @@ _GEO_DETAILS = frozenset({
 
 def _cuff_point(marks, side, sleeve):
     """Forearm cuff for short sleeves; wrist for long."""
-    sh = marks.get("shoulder_" + side)
-    wr = marks.get("wrist_" + side)
+    sh, wr = _sleeve_axis(marks, side)
+    if sh is None:
+        sh = marks.get("shoulder_" + side)
+    if wr is None:
+        wr = marks.get("wrist_" + side)
     if sh is None:
         return None
     if wr is None:
         return sh
-    t = 0.40 if sleeve == "short" else 0.92
+    t = 0.82 if sleeve == "short" else 0.92
     return sh.lerp(wr, t)
 
 
