@@ -10,7 +10,13 @@ from mason.core.styles import StyleProfile
 from mason.generators.blender.bodies import CREATE_BODIES_SRC
 from mason.generators.blender.curves import CREATE_CURVE_SRC
 from mason.generators.blender.export import EXPORT_SRC
+from mason.generators.blender.garment_anatomy import (
+    CREATE_GARMENT_ANATOMY_SRC,
+)
 from mason.generators.blender.garment_body import CREATE_GARMENT_BODY_SRC
+from mason.generators.blender.garment_details import (
+    CREATE_GARMENT_DETAILS_SRC,
+)
 from mason.generators.blender.garment_fit import CREATE_GARMENT_FIT_SRC
 from mason.generators.blender.garment_rig import CREATE_GARMENT_RIG_SRC
 from mason.generators.blender.garment_surface import (
@@ -154,7 +160,9 @@ _BODY = (
     + CREATE_BODIES_SRC
     + CREATE_MATERIAL_SRC
     + CREATE_GARMENT_BODY_SRC
+    + CREATE_GARMENT_ANATOMY_SRC
     + CREATE_GARMENT_SURFACE_SRC
+    + CREATE_GARMENT_DETAILS_SRC
     + CREATE_GARMENT_FIT_SRC
     + CREATE_GARMENT_RIG_SRC
     + EXPORT_SRC

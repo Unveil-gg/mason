@@ -1,4 +1,4 @@
-"""Shrinkwrap, relax, optional cloth, then solidify."""
+"""Ease, silhouette push, optional cloth, then solidify."""
 
 CREATE_GARMENT_FIT_SRC = r'''
 def _apply_mod(obj, name):
@@ -17,127 +17,101 @@ def _bbox_span(obj):
 
 
 def _run_cloth(shirt, body, frames, cfg):
-    """Short pinned cloth bake. Drops the modifier if it explodes."""
+    """Pinned cloth bake. Drops the modifier if it explodes."""
     if body.modifiers.get("Collision") is None:
         body.modifiers.new("Collision", "COLLISION")
     pin = shirt.vertex_groups.get("mason_pin")
     if pin is None:
         pin = shirt.vertex_groups.new(name="mason_pin")
-    pin.add([v.index for v in shirt.data.vertices], 0.82, "REPLACE")
+    idxs = [v.index for v in shirt.data.vertices]
+    pin.add(idxs, 0.75, "REPLACE")
     cloth = shirt.modifiers.new("Cloth", "CLOTH")
     stiff = float(cfg.get("stiffness") or 0.6)
-    wrinkle = float(cfg.get("wrinkle") or 0.2)
     cloth.settings.quality = 4
     cloth.settings.mass = 0.15
-    cloth.settings.tension_stiffness = 18.0 * stiff + 6.0
-    cloth.settings.compression_stiffness = 18.0 * stiff + 6.0
-    cloth.settings.bending_stiffness = 1.0 + 12.0 * (1.0 - wrinkle)
+    cloth.settings.tension_stiffness = 14.0 * stiff + 4.0
     cloth.settings.vertex_group_mass = "mason_pin"
-    cloth.collision_settings.distance_min = 0.005
-    before = _bbox_span(shirt)
     scene = bpy.context.scene
     scene.frame_start = 1
     scene.frame_end = frames
+    before = _bbox_span(shirt)
     bpy.context.view_layer.objects.active = shirt
     for frame in range(1, frames + 1):
         scene.frame_set(frame)
-    deps = bpy.context.evaluated_depsgraph_get()
-    ev = shirt.evaluated_get(deps)
-    after = _bbox_span(ev)
-    if after > before * 1.45 or after < before * 0.55:
+    ev = shirt.evaluated_get(bpy.context.evaluated_depsgraph_get())
+    if _bbox_span(ev) > before * 1.45:
         shirt.modifiers.remove(cloth)
         return
     _apply_mod(shirt, "Cloth")
 
 
-def _restore_verts(obj, stored):
-    """Copy stored local coordinates back onto the mesh."""
-    for vert, co in zip(obj.data.vertices, stored):
-        vert.co = co
-    obj.data.update()
-
-
-def _looks_exploded(obj, rest_span):
-    """True if the mesh spiked or grew past the rest size."""
-    if _bbox_span(obj) > rest_span * 1.35:
-        return True
-    mins, maxs = body_bounds(obj)
-    center = (mins + maxs) * 0.5
-    limit = rest_span * 0.8
-    for vert in obj.data.vertices:
-        world = obj.matrix_world @ vert.co
-        if (world - center).length > limit:
-            return True
-    return False
-
-
-def _wrap_group(shirt, marks):
-    """Weight torso verts for shrinkwrap; leave openings and sleeves."""
-    vg = shirt.vertex_groups.new(name="mason_wrap")
-    neck_z = marks["neck"].z if marks else 1e9
-    hem_z = marks["hem"].z if marks else -1e9
-    mins, maxs = body_bounds(shirt)
-    span = max(maxs.x - mins.x, 0.01)
-    height = max(maxs.z - mins.z, 0.01)
+def silhouette_pass(shirt, marks, cfg):
+    """Push garment regions so shrinkwrap cannot vacuum-seal them."""
+    fit = cfg.get("fit") or "fitted"
+    boost = {
+        "skin_tight": 0.2, "fitted": 0.45, "regular": 0.7,
+        "loose": 1.0, "oversized": 1.35,
+    }.get(fit, 0.45)
+    ease = float(cfg.get("ease_offset") or 0.008)
+    shoulders = marks.get("shoulders")
+    chest = marks.get("chest")
     for vert in shirt.data.vertices:
         world = shirt.matrix_world @ vert.co
-        sleeve = abs(world.x) > span * 0.38
-        opening = (
-            abs(world.z - neck_z) < height * 0.10
-            or abs(world.z - hem_z) < height * 0.10
-        )
-        weight = 0.0 if (sleeve or opening) else 1.0
-        vg.add([vert.index], weight, "REPLACE")
-    return vg
+        extra = 0.0
+        if shoulders and abs(world.z - shoulders.z) < ease * 8:
+            extra += ease * 0.6 * boost
+        if chest and abs(world.z - chest.z) < ease * 10:
+            extra += ease * 0.35 * boost
+        if extra:
+            vert.co += vert.normal * extra
+    shirt.data.update()
+
+
+def _clamp_hem(shirt, marks):
+    """Keep every vert at or above the hem plane."""
+    floor_z = marks["hem"].z
+    imw = shirt.matrix_world.inverted()
+    for vert in shirt.data.vertices:
+        world = shirt.matrix_world @ vert.co
+        if world.z < floor_z:
+            world.z = floor_z
+            vert.co = imw @ world
+    shirt.data.update()
 
 
 def fit_garment(shirt, body, marks=None):
-    """Project onto the body, smooth, optional cloth, thicken."""
+    """Silhouette, optional cloth, thicken. No vacuum shrinkwrap."""
     cfg = _garment_cfg()
-    clearance = float(cfg.get("clearance") or 0.012)
     bpy.ops.object.select_all(action="DESELECT")
     shirt.select_set(True)
     bpy.context.view_layer.objects.active = shirt
-    stored = [vert.co.copy() for vert in shirt.data.vertices]
-    rest = _bbox_span(shirt)
-
-    wrap = shirt.modifiers.new("Fit", "SHRINKWRAP")
-    wrap.wrap_method = "NEAREST_SURFACEPOINT"
-    wrap.wrap_mode = "ABOVE_SURFACE"
-    wrap.target = body
-    wrap.offset = clearance
     if marks is not None:
-        _wrap_group(shirt, marks)
-        wrap.vertex_group = "mason_wrap"
-    _apply_mod(shirt, "Fit")
-    gaps = _signed_gaps(shirt, body)
-    total = max(len(shirt.data.vertices), 1)
-    pen = sum(1 for gap in gaps if gap < -0.002) / total
-    if pen > 0.08 or _looks_exploded(shirt, rest):
-        _restore_verts(shirt, stored)
-
+        silhouette_pass(shirt, marks, cfg)
+        _clamp_hem(shirt, marks)
     smooth = shirt.modifiers.new("Relax", "SMOOTH")
-    style = float(cfg.get("stylization") or 0.7)
-    smooth.iterations = 2 + int(3 * style)
-    smooth.factor = 0.35
+    smooth.iterations = 3
+    smooth.factor = 0.3
     _apply_mod(shirt, "Relax")
-    if _looks_exploded(shirt, rest):
-        _restore_verts(shirt, stored)
-
+    fit = cfg.get("fit") or "fitted"
     frames = int(cfg.get("cloth_frames") or 0)
-    if frames > 0:
+    if frames > 0 and fit in ("loose", "oversized"):
         try:
             _run_cloth(shirt, body, frames, cfg)
         except Exception:
             pass
-        if _looks_exploded(shirt, rest):
-            _restore_verts(shirt, stored)
-
-    thick = shirt.modifiers.new("Thick", "SOLIDIFY")
-    thick.thickness = float(cfg.get("thickness") or 0.004)
-    thick.offset = 1.0
-    thick.use_even_offset = True
+    weight = cfg.get("fabric_weight") or "medium"
+    thick = float(cfg.get("thickness") or 0.004)
+    if weight == "thin":
+        thick *= 0.7
+    elif weight == "thick":
+        thick *= 1.6
+    sol = shirt.modifiers.new("Thick", "SOLIDIFY")
+    sol.thickness = thick
+    sol.offset = 1.0
+    sol.use_even_offset = True
     _apply_mod(shirt, "Thick")
+    if marks is not None:
+        _clamp_hem(shirt, marks)
     shade_smooth(shirt)
     return shirt
 

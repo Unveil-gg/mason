@@ -272,9 +272,13 @@ def test_blender_script_has_garment_pipeline(project: Path) -> None:
         bevel_width=bw, bevel_segments=bs, roughness=r, metallic=m,
     )
     assert "def create_small_animal_body" in script
+    assert "def analyze_anatomy" in script
+    assert "def extract_garment_surface" in script
     assert "def loft_garment" in script
+    assert "def add_garment_details" in script
     assert "def fit_garment" in script
     assert "def build_garment" in script
+    assert "def silhouette_pass" in script
     assert "_mason_body" in script
     assert "FIT_METRICS" in script
     assert "payload[\"fit\"] = fit" in script

@@ -257,12 +257,12 @@ def vocab_payload() -> dict[str, Any]:
             "export in the GLB and metadata.json / manifest."
         ),
         "garment": (
-            "geometry.garment builds clothes from a body, "
-            "not boxes. mode template|fit|refit. kind "
-            "shirt|tunic|vest. fit needs body GLB; refit "
-            "needs body + source GLB. template uses "
-            "archetype small_animal. Loops, shrinkwrap, "
-            "optional cloth, solidify last, weight transfer."
+            "geometry.garment builds clothes around a "
+            "character GLB. Analyze anatomy, plan panels / "
+            "openings / details, extract body faces, offset "
+            "for ease (skin_tight|fitted|regular|loose|"
+            "oversized), silhouette pass, construction cues, "
+            "solidify, weight transfer, pose tests. Not boxes."
         ),
         "run": (
             "Each build writes .mason/jobs/<id>/run.json (copied "

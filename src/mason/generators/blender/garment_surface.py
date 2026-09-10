@@ -1,12 +1,108 @@
-"""Loft a shirt, tunic, or vest from body slice rings."""
+"""Extract garment faces from the body; loft only as fallback."""
 
 CREATE_GARMENT_SURFACE_SRC = r'''
+import bmesh
+
+
 def _ring_center(ring):
     """Average of ring points."""
     acc = Vector((0.0, 0.0, 0.0))
     for point in ring:
         acc += point
     return acc / float(len(ring))
+
+
+def _near_segment(point, start, end, radius):
+    """True if point is within radius of the start-end segment."""
+    span = end - start
+    denom = max(span.length_squared, 1e-8)
+    t = max(0.0, min(1.0, (point - start).dot(span) / denom))
+    return (point - (start + span * t)).length <= radius
+
+
+def _keep_face_center(center, marks, cfg, height):
+    """Whether a world-space face center belongs on the garment."""
+    hem_z = marks["hem"].z
+    neck_z = marks["neck"].z
+    pad = height * 0.04
+    if center.z < hem_z - pad or center.z > neck_z + pad * 1.4:
+        return False
+    head = marks.get("head")
+    if head is not None and center.z > marks["shoulders"].z:
+        if (center - head).length < (center - marks["neck"]).length * 0.8:
+            return False
+    regions = cfg.get("body_regions") or ["torso"]
+    if "upper_arms" in regions or cfg.get("sleeve") in ("short", "long"):
+        reach = 0.45 if cfg.get("sleeve") != "long" else 0.92
+        for side in ("l", "r"):
+            sh = marks.get("shoulder_" + side)
+            wr = marks.get("wrist_" + side)
+            if sh is None or wr is None:
+                continue
+            end = sh.lerp(wr, reach)
+            rad = height * 0.12
+            if _near_segment(center, sh, end, rad):
+                return True
+    if cfg.get("kind") == "vest":
+        mid = marks["shoulders"]
+        if abs(center.x - mid.x) > height * 0.22 and center.z > marks["chest"].z:
+            return False
+    tail = marks.get("tail")
+    if tail is not None and not cfg.get("tail_opening"):
+        if center.y > marks["hips"].y + height * 0.08:
+            if (center - tail).length < height * 0.18:
+                return False
+    return True
+
+
+def extract_garment_surface(body, marks):
+    """Duplicate body faces in garment regions and offset them."""
+    cfg = _garment_cfg()
+    mins, maxs = body_bounds(body)
+    height = max(maxs.z - mins.z, 0.001)
+    garment = body.copy()
+    garment.data = body.data.copy()
+    garment.name = cfg.get("kind") or "shirt"
+    bpy.context.collection.objects.link(garment)
+    garment.parent = None
+    garment.matrix_world = body.matrix_world.copy()
+    bm = bmesh.new()
+    bm.from_mesh(garment.data)
+    drop = []
+    for face in bm.faces:
+        center = garment.matrix_world @ face.calc_center_median()
+        if not _keep_face_center(center, marks, cfg, height):
+            drop.append(face)
+    if drop and len(drop) < len(bm.faces):
+        bmesh.ops.delete(bm, geom=drop, context="FACES")
+    bm.to_mesh(garment.data)
+    bm.free()
+    if len(garment.data.polygons) < 12:
+        bpy.data.objects.remove(garment, do_unlink=True)
+        return None
+    ease = float(cfg.get("ease_offset") or cfg.get("clearance") or 0.008)
+    for vert in garment.data.vertices:
+        vert.co += vert.normal * ease
+    garment.data.update()
+    shade_smooth(garment)
+    return garment
+
+
+def import_garment_source(path):
+    """Import a previous garment GLB as the surface mesh."""
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=path)
+    meshes = [
+        o for o in bpy.data.objects
+        if o not in before and o.type == "MESH"
+        and not o.name.startswith("_mason_")
+    ]
+    if not meshes:
+        return None
+    meshes.sort(key=lambda o: len(o.data.vertices), reverse=True)
+    shirt = meshes[0]
+    shirt.name = "shirt"
+    return shirt
 
 
 def _fit_ring_width(ring, width):
@@ -29,28 +125,6 @@ def _fit_ring_width(ring, width):
     return out
 
 
-def _stylize_ring(ring, amount):
-    """Blend a slice toward a smooth ellipse."""
-    if amount <= 0.0:
-        return ring
-    center = _ring_center(ring)
-    xs = [abs(p.x - center.x) for p in ring]
-    ys = [abs(p.y - center.y) for p in ring]
-    rx = max(xs) if xs else 0.1
-    ry = max(ys) if ys else 0.1
-    n = len(ring)
-    out = []
-    for i, point in enumerate(ring):
-        ang = 2.0 * math.pi * i / n
-        ellipse = Vector((
-            center.x + math.cos(ang) * rx,
-            center.y + math.sin(ang) * ry,
-            point.z,
-        ))
-        out.append(point.lerp(ellipse, amount))
-    return out
-
-
 def loft_rings(rings, name):
     """Bridge equal-length rings with quads. Returns the object."""
     mesh = bpy.data.meshes.new(name)
@@ -68,139 +142,23 @@ def loft_rings(rings, name):
             faces.append((a, b, c, d))
     mesh.from_pydata(verts, [], faces)
     mesh.update()
-    mesh.validate()
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(obj)
-    bpy.ops.object.select_all(action="DESELECT")
-    obj.select_set(True)
-    bpy.context.view_layer.objects.active = obj
-    bpy.ops.object.mode_set(mode="EDIT")
-    bpy.ops.mesh.normals_make_consistent(inside=False)
-    bpy.ops.object.mode_set(mode="OBJECT")
     return obj
 
 
-def import_garment_source(path):
-    """Import a previous garment GLB as the surface mesh."""
-    before = set(bpy.data.objects)
-    bpy.ops.import_scene.gltf(filepath=path)
-    meshes = [
-        o for o in bpy.data.objects
-        if o not in before and o.type == "MESH"
-        and not o.name.startswith("_mason_")
-    ]
-    if not meshes:
-        return None
-    meshes.sort(key=lambda o: len(o.data.vertices), reverse=True)
-    shirt = meshes[0]
-    shirt.name = "shirt"
-    return shirt
-
-
-def _select_sleeve_verts(obj, side, z_mid):
-    """Select upper-side verts for a connected sleeve extrude."""
-    worlds = [obj.matrix_world @ v.co for v in obj.data.vertices]
-    xs = [w.x for w in worlds]
-    zs = [w.z for w in worlds]
-    extreme = min(xs) if side < 0 else max(xs)
-    span = max(max(xs) - min(xs), 0.01)
-    height = max(max(zs) - min(zs), 0.01)
-    xband = span * 0.14
-    zband = height * 0.18
-    for vert, world in zip(obj.data.vertices, worlds):
-        vert.select = (
-            abs(world.z - z_mid) <= zband
-            and abs(world.x - extreme) <= xband
-        )
-
-
-def _neck_scoop(obj, marks, depth):
-    """Drop front neck verts so the opening reads from the front."""
-    neck_z = marks["neck"].z
-    mins, maxs = body_bounds(obj)
-    band = max(abs(depth) * 2.2, (maxs.z - mins.z) * 0.08)
-    floor_z = marks["hem"].z
-    for vert in obj.data.vertices:
-        world = obj.matrix_world @ vert.co
-        if abs(world.z - neck_z) > band:
-            continue
-        if world.y >= 0.0:
-            continue
-        vert.co.z -= depth
-        if (obj.matrix_world @ vert.co).z < floor_z:
-            vert.co.z += floor_z - (obj.matrix_world @ vert.co).z
-    obj.data.update()
-
-
-def _add_sleeves(shirt, marks, clearance):
-    """Extrude short sleeves from the torso so they stay welded."""
-    mins, maxs = body_bounds(shirt)
-    length = (maxs.x - mins.x) * 0.24 + clearance
-    z_mid = marks["shoulders"].z
-    for side in (-1.0, 1.0):
-        bpy.ops.object.mode_set(mode="OBJECT")
-        bpy.ops.object.select_all(action="DESELECT")
-        shirt.select_set(True)
-        bpy.context.view_layer.objects.active = shirt
-        for vert in shirt.data.vertices:
-            vert.select = False
-        _select_sleeve_verts(shirt, side, z_mid)
-        if sum(1 for v in shirt.data.vertices if v.select) < 2:
-            continue
-        bpy.ops.object.mode_set(mode="EDIT")
-        bpy.ops.mesh.extrude_region_move(
-            TRANSFORM_OT_translate={
-                "value": (side * length, 0.0, -0.015),
-            },
-        )
-        bpy.ops.object.mode_set(mode="OBJECT")
-    return shirt
-
-
 def loft_garment(body, marks):
-    """Build the cloth surface from cleared body loops."""
+    """Fallback tube from body slices when extract yields too little."""
     cfg = _garment_cfg()
-    clearance = float(cfg.get("clearance") or 0.012)
-    kind = cfg.get("kind") or "shirt"
-    amount = float(cfg.get("stylization") or 0.7)
-    neck_w = float(cfg.get("neck") or 0.14)
+    clearance = float(cfg.get("ease_offset") or cfg.get("clearance") or 0.012)
     n = 16
     zs = [
-        marks["hem"].z,
-        marks["hips"].z,
-        marks["belly"].z,
-        marks["chest"].z,
-        marks["shoulders"].z,
-        marks["neck"].z,
+        marks["hem"].z, marks["hips"].z, marks["belly"].z,
+        marks["chest"].z, marks["shoulders"].z, marks["neck"].z,
     ]
-    if kind == "tunic":
-        zs[0] = min(zs[0], marks["hem"].z - 0.06)
-    torso_r = None
-    rings = []
-    for i, z in enumerate(zs):
-        cap = torso_r * 1.2 if (torso_r and i >= 3) else None
-        ring = slice_ring(body, z, n, clearance, max_radius=cap)
-        ring = _clamp_ring(_stylize_ring(ring, amount), 1.3)
-        rings.append(ring)
-        if i == 2:
-            mid = _ring_center(ring)
-            torso_r = max((p - mid).xy.length for p in ring)
-    rings[-1] = _fit_ring_width(rings[-1], neck_w)
-    if kind == "vest":
-        rings[-2] = _stylize_ring(
-            slice_ring(body, marks["shoulders"].z, n, clearance + 0.01),
-            amount,
-        )
-    shirt = loft_rings(rings, kind)
-    _neck_scoop(shirt, marks, max(neck_w * 0.28, 0.008))
-    if cfg.get("sleeve") == "short" and kind != "vest":
-        _add_sleeves(shirt, marks, clearance)
-    mins, maxs = body_bounds(shirt)
-    shirt.location.x -= (mins.x + maxs.x) * 0.5
-    bpy.ops.object.select_all(action="DESELECT")
-    shirt.select_set(True)
-    bpy.context.view_layer.objects.active = shirt
-    bpy.ops.object.transform_apply(location=True)
+    rings = [slice_ring(body, z, n, clearance) for z in zs]
+    rings[-1] = _fit_ring_width(rings[-1], float(cfg.get("neck") or 0.14))
+    shirt = loft_rings(rings, cfg.get("kind") or "shirt")
     shade_smooth(shirt)
     return shirt
 '''

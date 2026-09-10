@@ -317,6 +317,18 @@ def test_static_prop_garment_modes() -> None:
         "geometry": {"garment": {"kind": "vest", "sleeve": "short"}},
     })
     assert vest.geometry.garment.sleeve == "none"
+    assert "torso" in vest.geometry.garment.body_regions
+    hoodie = parse_asset_spec({
+        "type": "static_prop",
+        "id": "hoodie",
+        "name": "Hoodie",
+        "dimensions": {"width": 0.5, "depth": 0.4, "height": 0.4},
+        "geometry": {
+            "garment": {"kind": "hoodie", "fit": "loose"},
+        },
+    })
+    assert hoodie.geometry.garment.sleeve == "long"
+    assert "hood" in hoodie.geometry.garment.details
     with pytest.raises(MasonError):
         parse_asset_spec({
             "type": "static_prop",

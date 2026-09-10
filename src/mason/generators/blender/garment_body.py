@@ -40,16 +40,22 @@ def import_body_glb(path):
 
 
 def _scale_garment_to_body(body):
-    """If the body is cm-scale, shrink 1 m spec values to match."""
+    """Scale 1 m spec values to the body. Sets ease_offset."""
     cfg = _garment_cfg()
     mins, maxs = body_bounds(body)
     height = maxs.z - mins.z
-    if height >= 0.35 or height < 1e-4:
-        return 1.0
-    scale = height / 1.0
-    for key in ("clearance", "thickness", "hem", "neck"):
-        if cfg.get(key) is not None:
-            cfg[key] = float(cfg[key]) * scale
+    scale = 1.0
+    if 1e-4 < height < 0.35:
+        scale = height / 1.0
+        for key in ("clearance", "thickness", "hem", "neck"):
+            if cfg.get(key) is not None:
+                cfg[key] = float(cfg[key]) * scale
+    ease = {
+        "skin_tight": 0.003, "fitted": 0.008, "regular": 0.014,
+        "loose": 0.022, "oversized": 0.035,
+    }
+    fit = cfg.get("fit") or "fitted"
+    cfg["ease_offset"] = ease.get(fit, 0.008) * scale
     return scale
 
 
@@ -117,52 +123,8 @@ def _bone_head(arm, names):
 
 
 def extract_landmarks(obj):
-    """Named world points from bones when present, else the AABB."""
-    mins, maxs = body_bounds(obj)
-    mid = (mins + maxs) * 0.5
-    h = max(maxs.z - mins.z, 0.001)
-    def at(t):
-        return mins.z + h * t
-    width = maxs.x - mins.x
-    marks = {
-        "neck": Vector((mid.x, mid.y, at(0.72))),
-        "shoulders": Vector((mid.x, mid.y, at(0.62))),
-        "shoulder_l": Vector((mins.x + width * 0.22, mid.y, at(0.60))),
-        "shoulder_r": Vector((maxs.x - width * 0.22, mid.y, at(0.60))),
-        "chest": Vector((mid.x, mid.y, at(0.52))),
-        "belly": Vector((mid.x, mid.y, at(0.40))),
-        "hips": Vector((mid.x, mid.y, at(0.28))),
-        "hem": Vector((mid.x, mid.y, at(0.18))),
-        "tail": Vector((mid.x, maxs.y, at(0.30))),
-    }
-    arm = None
-    for cand in bpy.data.objects:
-        if cand.type == "ARMATURE":
-            arm = cand
-            break
-    if arm is None:
-        return marks
-    neck = _bone_head(arm, ("neck.x", "c_neck.x", "neck", "Neck"))
-    chest = _bone_head(arm, ("spine_03.x", "spine_02.x", "spine.003"))
-    belly = _bone_head(arm, ("spine_02.x", "spine_01.x", "spine.002"))
-    hips = _bone_head(arm, ("c_root.x", "root.x", "hips", "Hips"))
-    sl = _bone_head(arm, ("shoulder.l", "c_shoulder.l", "shoulder.L"))
-    sr = _bone_head(arm, ("shoulder.r", "c_shoulder.r", "shoulder.R"))
-    if neck:
-        marks["neck"] = neck
-    if chest:
-        marks["chest"] = chest
-    if belly:
-        marks["belly"] = belly
-    if hips:
-        marks["hips"] = hips
-    if sl:
-        marks["shoulder_l"] = sl
-    if sr:
-        marks["shoulder_r"] = sr
-    if sl and sr:
-        marks["shoulders"] = (sl + sr) * 0.5
-    return marks
+    """Named world points. Delegates to analyze_anatomy."""
+    return analyze_anatomy(obj)
 
 
 def slice_ring(obj, z, n=16, clearance=0.012, max_radius=None):
@@ -241,6 +203,7 @@ def prepare_garment_body():
         body = import_body_glb(cfg["body_path"])
     if body is None:
         body = create_small_animal_body()
+        _scale_garment_to_body(body)
     marks = extract_landmarks(body)
     hem = float(cfg.get("hem") if cfg.get("hem") is not None else marks["hem"].z)
     marks["hem"] = Vector((marks["hem"].x, marks["hem"].y, hem))
