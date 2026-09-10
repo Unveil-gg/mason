@@ -267,7 +267,11 @@ def vocab_payload() -> dict[str, Any]:
             "pose tests, optional hide_covered. Inspect "
             "preview_roles.primary worn.png first — the "
             "character wearing the garment. worn_sheet.png "
-            "is front / 3/4 / side together."
+            "is front / 3/4 / side together. Read "
+            "metadata fit.penetration, fit.clearance_min, "
+            "fit.sleeves.*.ratio, and fit.buttons before "
+            "guessing from PNGs — those numbers are the "
+            "clipping / sleeve / cue measurements."
         ),
         "run": (
             "Each build writes .mason/jobs/<id>/run.json (copied "

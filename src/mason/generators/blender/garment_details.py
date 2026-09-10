@@ -39,51 +39,49 @@ def _offset_near(shirt, point, radius, amount):
 def _front_on_shirt(shirt, z):
     """World point on the front centerline near Z."""
     best = None
-    best_y = 1e9
-    mins, maxs = body_bounds(shirt)
-    pad = max((maxs.z - mins.z) * 0.04, 0.002)
+    best_n = None
+    best_s = 1e9
+    rot = shirt.matrix_world.to_3x3()
     for vert in shirt.data.vertices:
         world = shirt.matrix_world @ vert.co
-        if abs(world.z - z) <= pad and abs(world.x) <= pad * 1.6:
-            if world.y < best_y:
-                best_y = world.y
-                best = world.copy()
+        nrm = (rot @ vert.normal).normalized()
+        if nrm.y > -0.05:
+            continue
+        score = abs(world.z - z) * 2.0 + abs(world.x) * 3.5
+        if score < best_s:
+            best_s = score
+            best = world.copy()
+            best_n = nrm
     if best is None:
         return None
-    imw = shirt.matrix_world.inverted()
-    hit, loc, nrm, _idx = shirt.closest_point_on_mesh(imw @ best)
-    if not hit:
-        return best
-    world = shirt.matrix_world @ loc
-    wn = (shirt.matrix_world.to_3x3() @ nrm).normalized()
-    return world + wn * 0.0005
+    return best + best_n * 0.0014
 
 
 def _add_center_buttons(shirt, marks):
-    """Three small buttons snapped to the chest midline."""
+    """Three buttons snapped to the chest midline. Returns (shirt, n)."""
     mins, maxs = body_bounds(shirt)
     height = max(maxs.z - mins.z, 0.01)
     extras = []
     for i in range(3):
-        loc = _front_on_shirt(shirt, mins.z + height * (0.30 + 0.18 * i))
+        loc = _front_on_shirt(shirt, mins.z + height * (0.28 + 0.20 * i))
         if loc is None:
             continue
         bpy.ops.mesh.primitive_uv_sphere_add(
-            radius=height * 0.038, location=loc, segments=8, ring_count=6,
+            radius=height * 0.055, location=loc, segments=8, ring_count=6,
         )
         btn = bpy.context.active_object
-        mat = create_material("button", "#8B7355", 0.45, 0.0, 0.0)
+        mat = create_material("button", "#6B5344", 0.45, 0.0, 0.0)
         assign_material(btn, mat)
         extras.append(btn)
     if not extras:
-        return shirt
+        return shirt, 0
     bpy.ops.object.select_all(action="DESELECT")
     shirt.select_set(True)
     for extra in extras:
         extra.select_set(True)
     bpy.context.view_layer.objects.active = shirt
     bpy.ops.object.join()
-    return shirt
+    return shirt, len(extras)
 
 
 def add_garment_details(shirt, marks):

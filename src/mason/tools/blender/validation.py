@@ -124,17 +124,49 @@ def validate_static_prop(
     if spec.geometry.garment:
         fit = data.get("fit") or {}
         pen = float(fit.get("penetration") or 0.0)
+        gap = float(fit.get("clearance_min") or 0.0)
         neck = float(fit.get("opening_neck") or 0.0)
         cuffs = float(fit.get("opening_cuffs") or 0.0)
-        ok = pen < 0.25 and neck > 0.04
+        sleeves = fit.get("sleeves") or {}
+        ratios = [
+            float((sleeves.get(s) or {}).get("ratio") or 0.0)
+            for s in ("l", "r")
+        ]
+        alongs = [
+            float((sleeves.get(s) or {}).get("along") or 0.0)
+            for s in ("l", "r")
+        ]
+        fats = [
+            float((sleeves.get(s) or {}).get("fat") or 0.0)
+            for s in ("l", "r")
+        ]
+        wide = [r for r in ratios if r > 2.2]
+        baggy = [f for f in fats if f > 2.4]
+        flare = float(fit.get("underarm_flare") or 0.0)
+        clips = fit.get("clip_regions") or {}
+        want_btn = "buttons" in (
+            spec.geometry.garment.details
+            + spec.geometry.garment.surface_details
+        )
+        n_btn = int(fit.get("buttons") or 0)
+        ok = pen < 0.12 and gap > -0.008 and neck > 0.02
         if spec.geometry.garment.sleeve == "short":
-            ok = ok and cuffs > 0.02
+            ok = ok and cuffs > 0.01 and not wide and not baggy
+            ok = ok and all(0.16 < a < 0.55 for a in alongs)
+            ok = ok and flare < 1.65
+        if want_btn:
+            ok = ok and n_btn >= 3
+        clip_s = ",".join(
+            f"{k}:{v.get('count', 0)}" for k, v in sorted(clips.items())
+        )
         checks.append(_check(
             "garment_fit",
             ok,
             (
-                f"pen={pen:.3f} neck={neck:.3f} "
-                f"cuffs={cuffs:.3f}"
+                f"pen={pen:.3f} gap={gap:.4f} neck={neck:.3f} "
+                f"cuffs={cuffs:.3f} sleeve={ratios} along={alongs} "
+                f"fat={fats} flare={flare:.2f} buttons={n_btn} "
+                f"clip={clip_s or 'none'}"
             ),
         ))
         if fit:

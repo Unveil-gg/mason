@@ -18,6 +18,9 @@ from mason.generators.blender.garment_details import (
     CREATE_GARMENT_DETAILS_SRC,
 )
 from mason.generators.blender.garment_fit import CREATE_GARMENT_FIT_SRC
+from mason.generators.blender.garment_metrics import (
+    CREATE_GARMENT_METRICS_SRC,
+)
 from mason.generators.blender.garment_rig import CREATE_GARMENT_RIG_SRC
 from mason.generators.blender.garment_surface import (
     CREATE_GARMENT_SURFACE_SRC,
@@ -164,6 +167,7 @@ _BODY = (
     + CREATE_GARMENT_SURFACE_SRC
     + CREATE_GARMENT_DETAILS_SRC
     + CREATE_GARMENT_FIT_SRC
+    + CREATE_GARMENT_METRICS_SRC
     + CREATE_GARMENT_RIG_SRC
     + EXPORT_SRC
     + PREVIEW_SCENE_SRC

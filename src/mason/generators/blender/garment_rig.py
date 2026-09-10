@@ -68,8 +68,13 @@ def _signed_gaps(shirt, body):
         maxs.y = max(maxs.y, vert.co.y)
         maxs.z = max(maxs.z, vert.co.z)
     center = (mins + maxs) * 0.5
+    dists = [(vert.co - center).length for vert in smesh.vertices]
+    dists.sort()
+    cutoff = dists[int(len(dists) * 0.45)] if dists else 0.0
     gaps = []
     for vert in smesh.vertices:
+        if (vert.co - center).length < cutoff:
+            continue
         normal = (rot @ vert.normal).normalized()
         if normal.dot(vert.co - center) < 0.0:
             continue
@@ -180,11 +185,15 @@ def score_garment_fit(shirt, body, marks):
             cuff_z = loc.z
     elif cfg.get("sleeve") == "long":
         cuff_z = marks.get("wrist_l", marks["shoulders"]).z
+    sleeves = _sleeve_report(shirt, body, marks)
     FIT_METRICS = {
         "clearance_min": float(min(gaps) if gaps else 0.0),
         "penetration": float(pen),
         "opening_neck": float(_opening_width(shirt, marks["neck"].z)),
         "opening_cuffs": float(_opening_width(shirt, cuff_z)),
+        "sleeves": sleeves,
+        "underarm_flare": float(sleeves.pop("underarm_flare", 0.0)),
+        "clip_regions": _clip_regions(shirt, body, marks),
         "pose_scores": poses,
         "method": "extract",
     }
@@ -228,10 +237,12 @@ def build_garment():
     cues = set(cfg.get("details") or []) | set(
         cfg.get("surface_details") or [],
     )
+    n_btn = 0
     if "buttons" in cues:
-        shirt = _add_center_buttons(shirt, marks)
+        shirt, n_btn = _add_center_buttons(shirt, marks)
     transfer_weights(shirt, body)
     score_garment_fit(shirt, body, marks)
+    FIT_METRICS["buttons"] = n_btn
     covered = hide_covered_body(body, marks)
     FIT_METRICS["method"] = method
     FIT_METRICS["covered_faces"] = len(covered)

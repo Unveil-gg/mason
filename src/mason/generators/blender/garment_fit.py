@@ -93,12 +93,26 @@ def _cap_neck(shirt, marks):
 
 
 def _push_off_body(shirt, body, gap):
-    """Move verts that sit inside the body out along the surface."""
+    """Move outer verts that sit inside the body out along the surface."""
     dg = bpy.context.evaluated_depsgraph_get()
     tree = BVHTree.FromObject(body, dg)
     imw = shirt.matrix_world.inverted()
+    rot = shirt.matrix_world.to_3x3()
+    mins, maxs = body_bounds(shirt)
+    center = (mins + maxs) * 0.5
+    dists = [
+        (shirt.matrix_world @ v.co - center).length
+        for v in shirt.data.vertices
+    ]
+    dists.sort()
+    cutoff = dists[int(len(dists) * 0.45)] if dists else 0.0
     for vert in shirt.data.vertices:
         world = shirt.matrix_world @ vert.co
+        if (world - center).length < cutoff:
+            continue
+        normal = (rot @ vert.normal).normalized()
+        if normal.dot(world - center) < 0.0:
+            continue
         loc, nrm, _idx, _d = tree.find_nearest(world)
         if loc is None or nrm is None:
             continue
@@ -124,6 +138,11 @@ def fit_garment(shirt, body, marks=None):
     smooth.iterations = 2 + int(style * 2)
     smooth.factor = 0.22 + style * 0.12
     _apply_mod(shirt, "Relax")
+    if marks is not None:
+        bmins, bmaxs = body_bounds(body)
+        height = max(bmaxs.z - bmins.z, 0.01)
+        _tighten_sleeves(shirt, marks, height, body)
+        _add_sleeve_tubes(shirt, marks, height)
     fit = cfg.get("fit") or "fitted"
     frames = int(cfg.get("cloth_frames") or 0)
     if frames > 0 and fit in ("loose", "oversized"):
@@ -145,7 +164,7 @@ def fit_garment(shirt, body, marks=None):
     if marks is not None:
         _clamp_hem(shirt, marks)
         _cap_neck(shirt, marks)
-    gap = float(cfg.get("ease_offset") or 0.002)
+    gap = float(cfg.get("ease_offset") or 0.002) * 1.8
     _push_off_body(shirt, body, gap)
     shade_smooth(shirt)
     return shirt
