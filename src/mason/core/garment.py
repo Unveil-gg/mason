@@ -25,7 +25,8 @@ _KIND_DEFAULTS: dict[str, dict[str, list[str]]] = {
         "openings": [
             "neck", "waist", "wrist_left", "wrist_right",
         ],
-        "details": ["collar", "cuffs", "hem", "placket", "buttons"],
+        "details": ["collar", "cuffs", "hem"],
+        "surface_details": ["placket", "buttons"],
     },
     "tunic": {
         "body_regions": ["torso", "upper_arms"],
@@ -33,6 +34,7 @@ _KIND_DEFAULTS: dict[str, dict[str, list[str]]] = {
         "panels": ["front", "back", "sleeve_left", "sleeve_right"],
         "openings": ["neck", "waist", "wrist_left", "wrist_right"],
         "details": ["collar", "cuffs", "hem"],
+        "surface_details": [],
     },
     "vest": {
         "body_regions": ["torso"],
@@ -40,6 +42,7 @@ _KIND_DEFAULTS: dict[str, dict[str, list[str]]] = {
         "panels": ["front", "back"],
         "openings": ["neck", "waist", "arm_left", "arm_right"],
         "details": ["hem", "armholes"],
+        "surface_details": [],
     },
     "hoodie": {
         "body_regions": ["torso", "upper_arms"],
@@ -54,6 +57,7 @@ _KIND_DEFAULTS: dict[str, dict[str, list[str]]] = {
             "neck", "waist", "wrist_left", "wrist_right",
         ],
         "details": ["hood", "cuffs", "waistband"],
+        "surface_details": [],
     },
 }
 
@@ -74,6 +78,7 @@ class GarmentSpec(BaseModel):
     panels: list[str] = Field(default_factory=list)
     openings: list[str] = Field(default_factory=list)
     details: list[str] = Field(default_factory=list)
+    surface_details: list[str] = Field(default_factory=list)
     fabric_weight: Literal["thin", "medium", "thick"] = "medium"
     clearance: float = Field(default=0.012, ge=0.0, le=0.08)
     thickness: float = Field(default=0.004, gt=0.0, le=0.03)

@@ -340,6 +340,9 @@ def build_static_prop(
         for view in ALL_PREVIEW_FILES
         if (job.previews / f"{view}.png").is_file()
     }
+    worn = job.previews / "worn.png"
+    if worn.is_file():
+        previews["worn"] = job.rel(worn)
     sheet = job.previews / "contact_sheet.png"
     if sheet.is_file():
         previews["contact_sheet"] = job.rel(sheet)

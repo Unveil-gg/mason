@@ -257,12 +257,16 @@ def vocab_payload() -> dict[str, Any]:
             "export in the GLB and metadata.json / manifest."
         ),
         "garment": (
-            "geometry.garment builds clothes around a "
-            "character GLB. Analyze anatomy, plan panels / "
-            "openings / details, extract body faces, offset "
-            "for ease (skin_tight|fitted|regular|loose|"
-            "oversized), silhouette pass, construction cues, "
-            "solidify, weight transfer, pose tests. Not boxes."
+            "geometry.garment builds cartoon clothes around a "
+            "character GLB. Extract the covered body surface, "
+            "offset, open neck/arms/hem, then a silhouette pass "
+            "so it is not vacuum-sealed. details are silhouette "
+            "geometry (collar, cuffs, hem, hood). "
+            "surface_details (placket, buttons, logos, "
+            "stitching) stay texture. No boxes. Same armature, "
+            "pose tests, optional hide_covered. Inspect "
+            "preview_roles.primary worn.png first — the "
+            "character wearing the garment."
         ),
         "run": (
             "Each build writes .mason/jobs/<id>/run.json (copied "

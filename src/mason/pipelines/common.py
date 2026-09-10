@@ -8,7 +8,7 @@ from pathlib import Path
 from mason.core.assets import AssetSpec, load_asset_spec
 from mason.core.config import load_project_config
 from mason.core.jobs import AssetJob
-from mason.core.preview_roles import preview_roles_for
+from mason.core.preview_roles import preview_roles_for, spec_is_garment
 from mason.core.results import BuildResult, ValidationReport
 from mason.core.runs import record_build_run
 from mason.core.styles import StyleProfile, resolve_style
@@ -74,7 +74,9 @@ def finish_result(
         built_at=datetime.now(timezone.utc).isoformat(),
         source_spec=source_spec,
         style=spec.style,
-        preview_roles=preview_roles_for(spec.type),
+        preview_roles=preview_roles_for(
+            spec.type, garment=spec_is_garment(spec),
+        ),
     )
     job.write_art_sidecars(spec)
     job.write_validation(report)

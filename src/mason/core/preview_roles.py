@@ -12,7 +12,15 @@ from mason.tools.blender.preview import (
 )
 
 
-def preview_roles_for(asset_type: str) -> dict[str, Any]:
+def spec_is_garment(spec: Any) -> bool:
+    """True when the spec builds clothes around a character."""
+    geom = getattr(spec, "geometry", None)
+    return bool(getattr(geom, "garment", None))
+
+
+def preview_roles_for(
+    asset_type: str, *, garment: bool = False,
+) -> dict[str, Any]:
     """Return primary / beauty / diagnostic roles for one asset type."""
     if asset_type in ("layered_raster", "sprite_sheet", "image_process"):
         return {
@@ -21,6 +29,14 @@ def preview_roles_for(asset_type: str) -> dict[str, Any]:
             "diagnostic": ["compare"],
             "silhouette": [],
             "context": None,
+        }
+    if garment:
+        return {
+            "primary": "worn",
+            "beauty": ["worn", *BEAUTY_VIEWS],
+            "diagnostic": list(DIAGNOSTIC_VIEWS),
+            "silhouette": list(SILHOUETTE_VIEWS),
+            "context": "worn",
         }
     return {
         "primary": PRIMARY_VIEW,

@@ -46,28 +46,22 @@ def _run_cloth(shirt, body, frames, cfg):
 
 
 def silhouette_pass(shirt, marks, cfg):
-    """Push garment regions so shrinkwrap cannot vacuum-seal them."""
+    """Round the extract so it is not a vacuum-sealed body copy."""
     fit = cfg.get("fit") or "fitted"
     boost = {
         "skin_tight": 0.2, "fitted": 0.45, "regular": 0.7,
         "loose": 1.0, "oversized": 1.35,
     }.get(fit, 0.45)
+    style = float(cfg.get("stylization") or 0.7)
     ease = float(cfg.get("ease_offset") or 0.008)
-    shoulders = marks.get("shoulders")
     chest = marks.get("chest")
     mid_x = chest.x if chest else 0.0
-    torso_half = ease * 18.0
+    torso_half = ease * 16.0
+    base = ease * (0.3 + 0.5 * style) * boost
     for vert in shirt.data.vertices:
         world = shirt.matrix_world @ vert.co
-        if abs(world.x - mid_x) > torso_half:
-            continue
-        extra = 0.0
-        if shoulders and abs(world.z - shoulders.z) < ease * 8:
-            extra += ease * 0.6 * boost
-        if chest and abs(world.z - chest.z) < ease * 10:
-            extra += ease * 0.55 * boost
-        if extra:
-            vert.co += vert.normal * extra
+        extra = base * 1.25 if abs(world.x - mid_x) <= torso_half else base * 0.4
+        vert.co += vert.normal * extra
     shirt.data.update()
 
 
@@ -83,6 +77,18 @@ def _clamp_hem(shirt, marks):
     shirt.data.update()
 
 
+def _cap_neck(shirt, marks):
+    """Kill ear/head spikes above the neck opening."""
+    top = marks["neck"].z + (marks["neck"] - marks["hem"]).length * 0.12
+    imw = shirt.matrix_world.inverted()
+    for vert in shirt.data.vertices:
+        world = shirt.matrix_world @ vert.co
+        if world.z > top:
+            world.z = top
+            vert.co = imw @ world
+    shirt.data.update()
+
+
 def fit_garment(shirt, body, marks=None):
     """Silhouette, optional cloth, thicken. No vacuum shrinkwrap."""
     cfg = _garment_cfg()
@@ -92,9 +98,11 @@ def fit_garment(shirt, body, marks=None):
     if marks is not None:
         silhouette_pass(shirt, marks, cfg)
         _clamp_hem(shirt, marks)
+        _cap_neck(shirt, marks)
+    style = float(cfg.get("stylization") or 0.7)
     smooth = shirt.modifiers.new("Relax", "SMOOTH")
-    smooth.iterations = 3
-    smooth.factor = 0.3
+    smooth.iterations = 4 + int(style * 4)
+    smooth.factor = 0.35 + style * 0.2
     _apply_mod(shirt, "Relax")
     fit = cfg.get("fit") or "fitted"
     frames = int(cfg.get("cloth_frames") or 0)
@@ -116,6 +124,7 @@ def fit_garment(shirt, body, marks=None):
     _apply_mod(shirt, "Thick")
     if marks is not None:
         _clamp_hem(shirt, marks)
+        _cap_neck(shirt, marks)
     shade_smooth(shirt)
     return shirt
 

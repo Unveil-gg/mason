@@ -277,12 +277,73 @@ def apply_silhouette_override():
         obj.data.materials.append(mat)
 
 
+def _worn_bounds():
+    """AABB of the garment plus the fit body."""
+    mins = Vector((1e9, 1e9, 1e9))
+    maxs = Vector((-1e9, -1e9, -1e9))
+    count = 0
+    for obj in bpy.data.objects:
+        if obj.type != "MESH":
+            continue
+        if obj.name.startswith("_mason_") and obj.name != "_mason_body":
+            continue
+        count += 1
+        for corner in obj.bound_box:
+            world = obj.matrix_world @ Vector(corner)
+            mins.x = min(mins.x, world.x)
+            mins.y = min(mins.y, world.y)
+            mins.z = min(mins.z, world.z)
+            maxs.x = max(maxs.x, world.x)
+            maxs.y = max(maxs.y, world.y)
+            maxs.z = max(maxs.z, world.z)
+    if count == 0:
+        return Vector((0, 0, 0)), Vector((0, 0, 0))
+    return mins, maxs
+
+
+def render_worn_preview(preview_dir, resolution, samples, engine, demo):
+    """One three-quarter of the character wearing the garment."""
+    body = bpy.data.objects.get("_mason_body")
+    if body is None:
+        return
+    body.hide_set(False)
+    body.hide_render = False
+    for obj in bpy.data.objects:
+        if obj.name.startswith("_mason_body_"):
+            obj.hide_render = True
+    used = setup_renderer(resolution, samples, engine, transparent=False)
+    mins, maxs = _worn_bounds()
+    center = (mins + maxs) * 0.5
+    size = maxs - mins
+    radius = max(size.x, size.y, size.z, 0.02)
+    dist = radius * 2.2
+    clip_end = dist * 8.0
+    set_world((0.62, 0.62, 0.65), 0.14)
+    setup_studio_plate(center, mins, radius)
+    setup_studio_lights(
+        center, dist, CONFIG.get("lighting_preset") or "neutral_studio",
+        demo=demo,
+    )
+    for obj in bpy.data.objects:
+        if obj.type == "LIGHT" and hasattr(obj.data, "energy"):
+            obj.data.energy *= 0.22
+    loc = center + Vector((dist * 0.7, -dist * 0.85, dist * 0.4))
+    os.makedirs(preview_dir, exist_ok=True)
+    _render_view(preview_dir, "worn", center, loc, clip_end)
+    body.hide_render = True
+    return used
+
+
 def render_previews(
     preview_dir, resolution, samples, engine="eevee", demo_lighting=False,
 ):
     """Render beauty, clay, and silhouette views. `demo_lighting` is
     an opt-in, prettier rig for one-off demo/comparison screenshots;
     it does not change the stored spec or style, only this render."""
+    if CONFIG.get("garment"):
+        render_worn_preview(
+            preview_dir, resolution, samples, engine, demo_lighting,
+        )
     clear_non_mesh()
     used = setup_renderer(resolution, samples, engine, transparent=False)
     if demo_lighting and used == "eevee":

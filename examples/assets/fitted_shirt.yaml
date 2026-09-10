@@ -2,16 +2,13 @@ type: static_prop
 id: fitted_shirt
 name: Fitted Shirt
 
-# Button-down extracted from mousey.glb, not a box tube.
+# Cartoon shirt extracted from mousey.glb, not a box tube.
 dimensions:
   width: 0.083
   depth: 0.033
   height: 0.050
 
 style: default
-
-depends_on:
-  - cotton_weave
 
 geometry:
   bevel: false
@@ -24,7 +21,8 @@ geometry:
     anchors: [neck, shoulder_left, shoulder_right, waist]
     panels: [front, back, sleeve_left, sleeve_right]
     openings: [neck, waist, wrist_left, wrist_right]
-    details: [collar, cuffs, hem, placket, buttons]
+    details: [collar, cuffs, hem]
+    surface_details: [placket, buttons]
     fabric_weight: medium
     clearance: 0.010
     thickness: 0.003
@@ -33,7 +31,7 @@ geometry:
     neck: 0.12
     tail_opening: true
     hide_covered: true
-    stylization: 0.5
+    stylization: 0.75
     stiffness: 0.65
     wrinkle: 0.15
     cloth_frames: 0
@@ -45,31 +43,28 @@ materials:
   roughness: 0.85
   metallic: 0.0
   shader: fabric
-  bump_strength: 0.12
-  bump_map:
-    asset: cotton_weave
-    file: output/asset.png
+  bump_strength: 0.04
   palette_overrides:
-    cotton: "#A89274"
+    cotton: "#C4A574"
 
 art_direction:
   subject: >
-    Short-sleeve button-down fitted to ScrapPaws mousey.
-    Separate wearable shirt. No body in the GLB.
+    Simple cartoon short-sleeve shirt on ScrapPaws mousey.
+    Soft extract, not a button-down with tiny cues.
   style:
-    realism: 0.25
-    stylization: 0.75
+    realism: 0.15
+    stylization: 0.85
     shape_language: [soft, clean, wearable]
   usage:
     importance: standard_prop
     viewing_distance: medium
   silhouette: >
-    Shirt extracted from the mouse torso and upper arms.
-    Collar, placket, short sleeves, hem above the feet.
+    Soft T-pose shirt on the mouse torso and short sleeves.
+    Clean hem and neck opening. No floating trim.
   forms:
     primary: [torso surface, short sleeves]
-    secondary: [collar, placket, cuffs, hem]
-    tertiary: [buttons]
+    secondary: [collar rim, hem, cuffs]
+    tertiary: []
   materials:
     - {family: fabric, palette: cotton}
   detail_density: low
@@ -78,18 +73,17 @@ art_direction:
     - Native mousey scale. Same skeleton if rigged.
 
 geometric_plan:
-  primary_read: button-down extracted from mousey
+  primary_read: simple cartoon shirt on mousey
   recognition: mixed
   must_survive_small:
-    - collar and neck opening
+    - neck opening
     - short sleeves
     - hem above the ground
-    - placket
   masses:
     - {name: shirt, role: primary, connects_to: []}
   silhouette: >
-    Front: collar, placket, sleeve stubs.
-    Side: chest ease, open cuff. Hem near scaled Z 0.22.
+    Front: soft T-pose sleeves and a neck hole.
+    Side: rounded chest ease. Hem above the feet.
   silhouette_vs_similar: Not a vest. Not a potato or crate.
   proportions: Derived from mousey, not a human mannequin.
   symmetry: bilateral
@@ -102,8 +96,8 @@ geometric_plan:
     - {id: cuff_l, role: left cuff, part: shirt}
     - {id: cuff_r, role: right cuff, part: shirt}
   critical_views:
-    - {view: front, weight: 3}
-    - {view: side, weight: 2}
+    - {view: worn, weight: 4}
+    - {view: front, weight: 2}
     - {view: three_quarter, weight: 2}
   notes:
     - Extract faces, do not loft a blob. Body is not exported.
@@ -114,10 +108,8 @@ construction_plan:
   primary_forms:
     - {type: extract, purpose: torso and upper-arm faces}
   secondary_forms:
-    - {type: collar, purpose: neck ring}
-    - {type: placket, purpose: front buttons}
-  tertiary_details:
-    - {type: cylinder, purpose: buttons, count: 3}
+    - {type: collar, purpose: neck rim offset}
+  tertiary_details: []
   materials: [fabric]
   keep_parts: []
   rebuild_parts: []

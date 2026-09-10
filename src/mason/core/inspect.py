@@ -8,7 +8,7 @@ from typing import Any
 from mason.core.jobs import AssetJob
 from mason.core.results import SLIM_METRICS_KEYS
 from mason.core.styles import QualityGuidance, StyleProfile, load_style
-from mason.core.preview_roles import preview_roles_for
+from mason.core.preview_roles import preview_roles_for, spec_is_garment
 from mason.pipelines.checkpoint import checkpoint_status
 from mason.pipelines.compare import reference_iou, silhouette_regressed
 
@@ -65,7 +65,9 @@ def inspect_payload(job: AssetJob, *, full: bool = False) -> dict[str, Any]:
         "evaluations": evaluations,
         "compare": _compare_path(job, result),
         "silhouette_regressed": _silhouette_regressed(job),
-        "preview_roles": preview_roles_for(spec.type),
+        "preview_roles": preview_roles_for(
+            spec.type, garment=spec_is_garment(spec),
+        ),
         "critics": {
             "art": "evaluation (likeness, silhouette, style)",
             "technical": "validation (manifold, UVs, budget)",

@@ -50,6 +50,18 @@ def validate_static_prop(
             except OSError as exc:
                 detail = str(exc)
         checks.append(_check(f"preview_{view}", ok, detail))
+    if spec.geometry.garment:
+        worn = job.previews / "worn.png"
+        worn_ok = worn.is_file() and worn.stat().st_size > 0
+        if worn_ok:
+            try:
+                with Image.open(worn) as img:
+                    img.verify()
+            except OSError:
+                worn_ok = False
+        checks.append(_check(
+            "preview_worn", worn_ok, None if worn_ok else "missing",
+        ))
     sheet = job.previews / "contact_sheet.png"
     if sheet.is_file() and sheet.stat().st_size > 0:
         checks.append(_check("preview_contact_sheet", True))

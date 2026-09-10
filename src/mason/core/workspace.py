@@ -32,7 +32,8 @@ Separate creator and critic even if you are one model.
 10. Check technical validation. Do not ignore failures.
 11. If recognition is silhouette, inspect preview_roles.silhouette
     first. Ignore materials and tiny details.
-12. Inspect beauty three_quarter.png after the silhouette holds.
+12. Inspect preview_roles.primary after the silhouette holds
+    (worn.png for garments, else three_quarter).
 13. Inspect clay_three_quarter.png if geometry needs review.
 14. Evaluate vs current_best (view_scores + silhouette_metrics
     + compare verdict). Reject if identity, a critical view,

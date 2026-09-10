@@ -46,7 +46,7 @@ def _keep_face_center(center, marks, cfg, height):
             return False
     regions = cfg.get("body_regions") or ["torso"]
     if "upper_arms" in regions or cfg.get("sleeve") in ("short", "long"):
-        reach = 0.32 if cfg.get("sleeve") != "long" else 0.92
+        reach = 0.28 if cfg.get("sleeve") != "long" else 0.92
         for side in ("l", "r"):
             sh = marks.get("shoulder_" + side)
             wr = marks.get("wrist_" + side)
