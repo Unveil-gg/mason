@@ -118,9 +118,42 @@ def _sleeve_radius(body, marks, height):
             sh, wr = _sleeve_axis(marks, side, body)
             if sh is not None and wr is not None:
                 samples.append(_arm_radius(body, sh, wr, height))
-    arm = sum(samples) / len(samples) if samples else height * 0.038
-    rad = min(arm, height * 0.048) + ease * 1.4
-    return max(rad, height * 0.048)
+    arm = sum(samples) / len(samples) if samples else height * 0.032
+    return min(arm + ease, height * 0.040)
+
+
+def _append_tube(shirt, start, end, rad, segs=10):
+    """Write a tube into the shirt mesh in local space."""
+    imw = shirt.matrix_world.inverted()
+    a = imw @ start
+    b = imw @ end
+    axis = b - a
+    if axis.length < 1e-8:
+        return
+    z = axis.normalized()
+    x = z.cross(Vector((0.0, 0.0, 1.0)))
+    if x.length < 0.1:
+        x = z.cross(Vector((0.0, 1.0, 0.0)))
+    x.normalize()
+    y = z.cross(x).normalized()
+    bm = bmesh.new()
+    bm.from_mesh(shirt.data)
+    rings = []
+    for center in (a, b):
+        ring = []
+        for i in range(segs):
+            ang = 6.28318530718 * i / segs
+            off = x * (math.cos(ang) * rad) + y * (math.sin(ang) * rad)
+            ring.append(bm.verts.new(center + off))
+        rings.append(ring)
+    for i in range(segs):
+        j = (i + 1) % segs
+        bm.faces.new((
+            rings[0][i], rings[0][j], rings[1][j], rings[1][i],
+        ))
+    bm.to_mesh(shirt.data)
+    bm.free()
+    shirt.data.update()
 
 
 def _add_sleeve_tubes(shirt, marks, height, body=None):
@@ -198,7 +231,7 @@ def _keep_face_center(center, marks, cfg, height):
     hem_z = marks["hem"].z
     neck_z = marks["neck"].z
     pad = height * 0.04
-    if center.z < hem_z - pad or center.z > neck_z + pad * 0.55:
+    if center.z < hem_z - pad or center.z > neck_z + pad * 0.20:
         return False
     if _is_arm_flesh(center, marks, height):
         return False

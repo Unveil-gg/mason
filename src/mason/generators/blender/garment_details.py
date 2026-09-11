@@ -17,7 +17,7 @@ def _cuff_point(marks, side, sleeve):
         return None
     if wr is None:
         return sh
-    t = 0.82 if sleeve == "short" else 0.92
+    t = 0.88 if sleeve == "short" else 0.92
     return sh.lerp(wr, t)
 
 

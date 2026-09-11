@@ -55,6 +55,100 @@ def _arm_stats(obj, marks, side, height):
     }
 
 
+def _flap_stats(obj, marks, side, height):
+    """Off-axis cape verts the tube sample ignores."""
+    sh, wr = _sleeve_axis(marks, side)
+    chest = marks.get("chest")
+    mid = chest.x if chest is not None else 0.0
+    sign = 1.0 if side == "l" else -1.0
+    torso = float(marks.get("torso_half_x") or height * 0.18)
+    far = 0
+    off_max = 0.0
+    extent = 0.0
+    if sh is None or wr is None:
+        return {"off_axis": 0, "off_max": 0.0, "extent": 0.0}
+    span = wr - sh
+    denom = max(span.length_squared, 1e-8)
+    for vert in obj.data.vertices:
+        world = obj.matrix_world @ vert.co
+        dx = (world.x - mid) * sign
+        if dx < torso * 0.45:
+            continue
+        extent = max(extent, dx)
+        t = (world - sh).dot(span) / denom
+        axis = sh + span * max(0.0, min(1.0, t))
+        rad = (world - axis).length
+        if t < -0.1 or t > 1.15:
+            continue
+        hang = max(0.0, axis.z - world.z)
+        if rad > height * 0.055 or hang > height * 0.06:
+            far += 1
+            off_max = max(off_max, rad, hang)
+    return {
+        "off_axis": int(far),
+        "off_max": float(off_max),
+        "extent": float(extent),
+    }
+
+
+def _side_face_span(obj, marks, side):
+    """Max world span of an outboard face. Paper flaps are long."""
+    chest = marks.get("chest")
+    mid = chest.x if chest is not None else 0.0
+    sign = 1.0 if side == "l" else -1.0
+    torso = float(marks.get("torso_half_x") or 0.02)
+    mw = obj.matrix_world
+    best = 0.0
+    for poly in obj.data.polygons:
+        pts = [mw @ obj.data.vertices[i].co for i in poly.vertices]
+        if len(pts) < 3:
+            continue
+        acc = Vector((0.0, 0.0, 0.0))
+        for point in pts:
+            acc += point
+        center = acc / float(len(pts))
+        if (center.x - mid) * sign < torso * 0.35:
+            continue
+        xs = [p.x for p in pts]
+        ys = [p.y for p in pts]
+        zs = [p.z for p in pts]
+        span = max(
+            max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs),
+        )
+        best = max(best, float(span))
+    return best
+
+
+def _neck_opening(obj, marks):
+    """Hole vs brim at the neck plane. Span is shoulder width."""
+    neck = marks["neck"]
+    mins, maxs = body_bounds(obj)
+    band = max((maxs.z - mins.z) * 0.05, 0.0015)
+    rot = obj.matrix_world.to_3x3()
+    ring, up = [], []
+    for vert in obj.data.vertices:
+        world = obj.matrix_world @ vert.co
+        if abs(world.z - neck.z) > band:
+            continue
+        r = (world - neck).xy.length
+        nrm = (rot @ vert.normal).normalized()
+        if nrm.z > 0.35:
+            up.append(r)
+        if abs(nrm.z) < 0.60 and r > band:
+            ring.append(r)
+    ring.sort()
+    hole = ring[int(len(ring) * 0.70)] if ring else 0.0
+    brim = max(up) if up else hole
+    span = _opening_width(obj, neck.z)
+    ratio = brim / hole if hole > 1e-6 else 0.0
+    return {
+        "hole": float(hole),
+        "brim": float(brim),
+        "brim_ratio": float(ratio),
+        "span": float(span),
+    }
+
+
 def _sleeve_report(shirt, body, marks):
     """Shirt vs arm tube. Ratio ~1.2 is fitted; along=0 is a vest."""
     bmins, bmaxs = body_bounds(body)
@@ -82,6 +176,7 @@ def _sleeve_report(shirt, body, marks):
             s_st["radius_max"] / a_st["radius"]
             if a_st["radius"] > 1e-6 else 0.0
         )
+        flap = _flap_stats(shirt, marks, side, height)
         out[side] = {
             "shirt": s_st["radius"],
             "arm": a_st["radius"],
@@ -89,7 +184,16 @@ def _sleeve_report(shirt, body, marks):
             "fat": float(fat),
             "along": s_st["along"],
             "drop": s_st["drop"],
+            "off_axis": flap["off_axis"],
+            "off_max": flap["off_max"],
+            "extent": flap["extent"],
+            "side_span": float(_side_face_span(shirt, marks, side)),
         }
+    ext_l = float((out.get("l") or {}).get("extent") or 0.0)
+    ext_r = float((out.get("r") or {}).get("extent") or 0.0)
+    out["asymmetry"] = float(
+        abs(ext_l - ext_r) / max(ext_l, ext_r, 1e-6)
+    )
     return out
 
 

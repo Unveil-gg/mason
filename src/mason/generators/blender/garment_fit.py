@@ -83,14 +83,24 @@ def _clamp_hem(shirt, marks):
 
 
 def _cap_neck(shirt, marks):
-    """Kill ear/head spikes above the neck opening."""
-    top = marks["neck"].z
+    """Flatten above the pinch, then shrink a platter to a hole."""
+    neck = marks["neck"]
+    top = neck.z
+    mins, maxs = body_bounds(shirt)
+    height = max(maxs.z - mins.z, 0.01)
+    cap_r = height * 0.28
     imw = shirt.matrix_world.inverted()
     for vert in shirt.data.vertices:
         world = shirt.matrix_world @ vert.co
-        if world.z > top:
-            world.z = top
-            vert.co = imw @ world
+        if world.z <= top:
+            continue
+        world.z = top
+        delta = Vector((world.x - neck.x, world.y - neck.y, 0.0))
+        if delta.length > cap_r:
+            xy = delta.normalized() * cap_r
+            world.x = neck.x + xy.x
+            world.y = neck.y + xy.y
+        vert.co = imw @ world
     shirt.data.update()
 
 

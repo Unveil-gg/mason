@@ -5,9 +5,9 @@ name: Button-Down Shirt
 # Wearable-ish T-pose shirt for a ~1 m character. Origin at the
 # feet. Mason Z-up: hem Z 0.22, collar Z 0.60. Face -Y.
 dimensions:
-  width: 0.50
-  depth: 0.30
-  height: 0.40
+  width: 0.55
+  depth: 0.37
+  height: 0.38
 
 style: default
 
@@ -22,29 +22,31 @@ geometry:
     - name: body_front
       shape: tapered_box
       size: [0.40, 0.012, 0.34]
-      taper: [0.92, 0.96]
+      taper: [0.88, 0.94]
       location: [0.0, -0.141, 0.39]
       material: cotton
       family: fabric
-      drape: {axis: x, amount: -0.16, origin: top}
+      drape: {axis: x, amount: -0.22, origin: top}
     - name: body_back
       shape: tapered_box
       size: [0.40, 0.012, 0.34]
-      taper: [0.92, 0.96]
+      taper: [0.88, 0.94]
       location: [0.0, 0.141, 0.39]
       material: cotton
       family: fabric
-      drape: {axis: x, amount: 0.16, origin: top}
+      drape: {axis: x, amount: 0.22, origin: top}
     - name: body_side_l
-      shape: box
+      shape: tapered_box
       size: [0.012, 0.270, 0.34]
+      taper: [1.0, 0.88]
       location: [-0.194, 0.0, 0.39]
       material: cotton
       family: fabric
       snap: {to: body_front, "on": left, embed: 0.012}
     - name: body_side_r
-      shape: box
+      shape: tapered_box
       size: [0.012, 0.270, 0.34]
+      taper: [1.0, 0.88]
       location: [0.194, 0.0, 0.39]
       material: cotton
       family: fabric
@@ -88,31 +90,11 @@ geometry:
       bevel: false
       snap: {to: yoke, "on": front, embed: 0.04}
       cutout: {target: yoke}
-    - name: sleeve_top
-      shape: box
-      size: [0.06, 0.10, 0.010]
-      location: [-0.218, 0.0, 0.555]
-      material: cotton
-      family: fabric
-      mirror: x
-    - name: sleeve_bot
-      shape: box
-      size: [0.06, 0.10, 0.010]
-      location: [-0.218, 0.0, 0.465]
-      material: cotton
-      family: fabric
-      mirror: x
-    - name: sleeve_front
-      shape: box
-      size: [0.06, 0.010, 0.08]
-      location: [-0.218, -0.045, 0.51]
-      material: cotton
-      family: fabric
-      mirror: x
-    - name: sleeve_back
-      shape: box
-      size: [0.06, 0.010, 0.08]
-      location: [-0.218, 0.045, 0.51]
+    - name: sleeve
+      shape: cylinder
+      size: [0.072, 0.088, 0.088]
+      location: [-0.230, 0.0, 0.51]
+      rotation: [0.0, 1.5708, 0.0]
       material: cotton
       family: fabric
       mirror: x
@@ -132,9 +114,9 @@ geometry:
       mirror: x
     - name: collar_point
       shape: box
-      size: [0.055, 0.052, 0.010]
-      location: [-0.040, -0.096, 0.578]
-      rotation: [0.15, 0.0, 0.45]
+      size: [0.048, 0.046, 0.010]
+      location: [-0.038, -0.092, 0.578]
+      rotation: [0.12, 0.0, 0.38]
       material: cotton
       family: fabric
       mirror: x
@@ -172,8 +154,8 @@ attachments:
   - {name: neck, location: [0.0, 0.0, 0.60], parent: yoke}
   - {name: chest, location: [0.0, -0.14, 0.42], parent: body_front}
   - {name: hem, location: [0.0, 0.0, 0.22]}
-  - {name: cuff_l, location: [-0.248, 0.0, 0.51], parent: sleeve_top}
-  - {name: cuff_r, location: [0.248, 0.0, 0.51], parent: sleeve_top_m}
+  - {name: cuff_l, location: [-0.266, 0.0, 0.51], parent: sleeve}
+  - {name: cuff_r, location: [0.266, 0.0, 0.51], parent: sleeve_m}
 
 art_direction:
   subject: >
@@ -214,7 +196,7 @@ geometric_plan:
   masses:
     - {name: body_front, role: primary, connects_to: [yoke, placket]}
     - {name: yoke, role: primary, connects_to: [collar_stand]}
-    - {name: sleeve_top, role: primary, connects_to: [body_side_l]}
+    - {name: sleeve, role: primary, connects_to: [body_side_l]}
     - {name: collar_stand, role: secondary, connects_to: [yoke]}
     - {name: placket, role: secondary, connects_to: [body_front]}
   silhouette: >
@@ -230,7 +212,7 @@ geometric_plan:
   stage: secondary
   landmarks:
     - {id: yoke, role: neck opening, part: yoke}
-    - {id: sleeve_l, role: left cuff, part: sleeve_top}
+    - {id: sleeve_l, role: left cuff, part: sleeve}
     - {id: collar, role: collar stand, part: collar_stand}
     - {id: placket, role: front placket, part: placket}
     - {id: hem, role: shirt hem, part: body_front}
@@ -248,7 +230,7 @@ construction_plan:
     - {kind: modular, purpose: snap yoke collar placket, applies_to: trim}
   primary_forms:
     - {type: box, purpose: front back and side panels}
-    - {type: box, purpose: sleeve tube}
+    - {type: cylinder, purpose: sleeve tube}
     - {type: box, purpose: yoke with neck cutout}
   secondary_forms:
     - {type: box, purpose: collar stand and points}
@@ -263,10 +245,7 @@ construction_plan:
     - body_side_l
     - body_side_r
     - yoke
-    - sleeve_top
-    - sleeve_bot
-    - sleeve_front
-    - sleeve_back
+    - sleeve
   rebuild_parts: []
   notes:
     - Thick boxes, not planes, so the cavity has inner faces.

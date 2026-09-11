@@ -41,12 +41,14 @@ def _hex_luma(value):
 
 
 def _pale_preview():
-    """True when the hero color would vanish on a light studio."""
+    """True when a garment hero would vanish on a light studio."""
+    if not CONFIG.get("garment"):
+        return False
     pal = CONFIG.get("palette") or {}
     for value in pal.values():
         if _hex_luma(value) >= 0.62:
             return True
-    return bool(CONFIG.get("garment"))
+    return True
 
 
 def _tint_plate(rgb):
