@@ -390,6 +390,8 @@ def dump_asset_spec(spec: AssetSpec, path: Path) -> None:
     data = spec.model_dump(mode="json", exclude_none=True)
     if not data.get("depends_on"):
         data.pop("depends_on", None)
+    if not data.get("decomposition"):
+        data.pop("decomposition", None)
     if not data.get("decals"):
         data.pop("decals", None)
     path.write_text(

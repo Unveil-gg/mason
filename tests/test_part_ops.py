@@ -8,6 +8,23 @@ from mason.generators.blender.part_ops import expand_part_ops
 from mason.pipelines.static_prop import resolved_parts
 
 
+def test_instance_keeps_mirror_without_twin() -> None:
+    from mason.core.parts import ImageSource
+    parts = expand_part_ops([
+        PropPart(
+            name="wheel_r",
+            shape="instance",
+            source=ImageSource(
+                asset="axle_cart__wheel", file="output/asset.glb",
+            ),
+            location=(0.22, 0.0, 0.0),
+            mirror="x",
+        ),
+    ])
+    assert [p.name for p in parts] == ["wheel_r"]
+    assert parts[0].mirror == "x"
+
+
 def test_array_keeps_first_name() -> None:
     parts = expand_part_ops([
         PropPart(

@@ -241,6 +241,7 @@ def _view_iou(payload: dict, view: str) -> float | None:
 
 
 def _reference_map(job: AssetJob) -> dict[str, Path]:
+    """Whole-object refs only. Component isolates use scoped names."""
     found: dict[str, Path] = {}
     default = job.previews / "reference_silhouette.png"
     if default.is_file():

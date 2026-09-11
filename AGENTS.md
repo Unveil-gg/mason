@@ -32,6 +32,21 @@ previews in a fresh pass and looks for reasons not to ship.
    If `--asset` has no spec yet, ingest writes a minimal
    buildable scaffold -- edit `art_analysis`, `parts`, or
    `layers` from there. Ingest does not compile a mesh.
+   For a complex reference (car, character, multi-mass
+   sculpture with reusable parts), do not model a monolith.
+   Write `decomposition` (`mason decompose <id> <graph>`):
+   `parts` mode stays in one spec; `assets` mode gives each
+   unique component its own job. Produce isolated 2D refs
+   (component only, blank background, prefer 3/4, reconstruct
+   hidden sides) and `mason ingest <isolate> --asset <id>
+   --component <name> --view three_quarter`. Model and
+   evaluate each unique component against its isolate. Then
+   `mason assemble <parent>` instances accepted
+   `current_best` GLBs. Parent evaluate uses whole-object
+   refs only; a better component does not auto-replace the
+   assembled best. Skip this loop when
+   `geometric_plan.masses` has 1–2 primary masses, no
+   repetition, and the silhouette is one blob.
 5. Write `art_direction`: subject, usage, silhouette goal, primary /
    secondary / tertiary forms, material families, detail density.
 6. Write `geometric_plan` (intent): primary read, recognition
@@ -92,8 +107,9 @@ previews in a fresh pass and looks for reasons not to ship.
 17. Repeat until validation passes, no critical discrepancies,
     beauty looks production-ready, and `ship` is true.
 18. Treat `asset.yaml`, `art_direction.yaml`,
-    `construction_plan.yaml`, `geometric_plan.yaml`, and
-    `build.py` as reproducible source.
+    `construction_plan.yaml`, `geometric_plan.yaml`,
+    `decomposition.yaml`, and `build.py` as reproducible
+    source.
 19. Export with `mason export <id> --to <dir>` when needed. Only
     finished glb/png (and sprite `frames.json`) are copied. For a
     multi-asset pack, write `kits/<id>.yaml` ({id, name, members})
@@ -136,14 +152,17 @@ Asset types:
 
 - `static_prop` — Blender parts (`box`, `cylinder`, `plane`, `cone`,
   `torus`, `tapered_box`, `sphere`, `lathe`, `curve`, `skin`,
-  `outline`) with optional `parent`, `snap` (`{to, on, embed}`),
+  `outline`, `instance`) with optional `parent`, `snap` (`{to, on, embed}`),
   `inset`, `array` (linear or `radial`), `mirror`, `component`,
   `family`, `texture` (`{asset, file}`), `profile` (`[[radius, z],
   ...]` on `lathe`, spun about +Z), `curve` (Bezier path + bevel),
   `skin` (optional; `mode: skeleton` pipes or `blob` spheres),
   `outline` (XZ silhouette + depth),
   `follow` (`{curve, stretch}`), `helper` (deform path, not
-  exported), and `bend` (`{axis, angle, origin: center|base}`).
+  exported), `bend` (`{axis, angle, origin: center|base}`),
+  and `instance` (`source: {asset, file}` of another job's
+  `current_best` GLB). Do not auto-join instanced children
+  into `geometry.bodies`.
   Prefer primitives + `snap` + `geometry.bodies` remesh
   (`inflate` closes gaps). Bodies fail validation on enclosed
   silhouette holes.

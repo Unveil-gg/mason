@@ -302,12 +302,14 @@ image-to-mesh compiler, so you write the real `parts`/`layers`.
 | `mason stats [id]` | Triangle / mesh / material counts |
 | `mason validate <asset-id>` | Re-read stored validation |
 | `mason evaluate <id> <json>` | Store a critic visual evaluation |
+| `mason decompose <id> <graph>` | Store a semantic assembly graph |
+| `mason assemble <id>` | Instance accepted component GLBs and rebuild |
 | `mason history <asset-id>` | Iteration snapshots and evaluations |
 | `mason style [name]` | Slim style profile (palette, families, quality) |
 | `mason export <asset-id>` | Copy finished outputs into another project |
 | `mason export --kit <id>` | Copy every already-built member of a kit |
 | `mason vocab` | Shapes, components, recipes, stamps, families |
-| `mason ingest <image>` | OpenCV measurement (ratio, palette, regions) from concept art |
+| `mason ingest <image>` | OpenCV measurement (ratio, palette, regions) from concept art. `--component` scopes an isolate. |
 | `mason compare <id>` | Write `previews/compare.png` |
 | `mason clean [id]` | Delete stored jobs (all, or one id) |
 | `mason list` | Jobs in this project |

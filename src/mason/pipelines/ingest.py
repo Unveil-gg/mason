@@ -335,6 +335,7 @@ def run_ingest(
     out: Path | None = None,
     fetch_url: str | None = None,
     view: str | None = None,
+    component: str | None = None,
 ) -> dict:
     """CLI entry: measure a reference image and hand it to Mason.
 
@@ -399,9 +400,9 @@ def run_ingest(
         assert root is not None
         job = AssetJob(root, asset_id)
         if job.exists():
-            spec = _apply_analysis(job.load_spec(), ratio, analysis)
-            spec = _apply_reference_view(
-                spec, analysis, ratio, view, image,
+            spec = _merge_ingest(
+                job.load_spec(), ratio, analysis, view, image,
+                component,
             )
             job.write_spec(spec)
             job.write_art_sidecars(spec)
@@ -409,11 +410,9 @@ def run_ingest(
             if meta and meta.source_spec:
                 original = root / meta.source_spec
                 if original.is_file():
-                    updated = _apply_analysis(
+                    updated = _merge_ingest(
                         load_asset_spec(original), ratio, analysis,
-                    )
-                    updated = _apply_reference_view(
-                        updated, analysis, ratio, view, image,
+                        view, image, component,
                     )
                     dump_asset_spec(updated, original)
         else:
@@ -426,18 +425,21 @@ def run_ingest(
             job.write_meta(_rel(root, scaffold_path))
             job.write_art_sidecars(_spec)
             payload["scaffold"] = _rel(root, scaffold_path)
-        dest = job.previews / "reference_silhouette.png"
-        if view:
-            dest = job.previews / f"reference_silhouette_{view}.png"
+        dest = _silhouette_dest(job, view, component)
         regions_dest = job.previews / "reference_regions.png"
         payload["asset_id"] = asset_id
         payload["view"] = view
+        payload["component"] = component
     dest.parent.mkdir(parents=True, exist_ok=True)
     sil.save(dest)
-    if asset_id and view:
+    if asset_id and _write_whole_object_silhouette(job, component):
         primary = job.previews / "reference_silhouette.png"
         if dest.resolve() != primary.resolve():
             sil.save(primary)
+        if view:
+            named = job.previews / f"reference_silhouette_{view}.png"
+            if dest.resolve() != named.resolve():
+                sil.save(named)
     payload["path"] = str(dest)
     if fetched_from:
         payload["source_url"] = fetched_from
@@ -479,12 +481,93 @@ def _silhouette_sources(job: AssetJob, spec: AssetSpec) -> dict[str, Path]:
         return {}
     found: dict[str, Path] = {}
     for ref in direction.references:
-        if ref.purpose != "silhouette":
+        if ref.purpose != "silhouette" or ref.component:
             continue
         path = resolve_project_path(job.project_root, ref.path)
         key = ref.view or "default"
         found[key] = path
     return found
+
+
+def _merge_ingest(
+    spec: AssetSpec,
+    ratio: float,
+    analysis: ImageAnalysis,
+    view: str | None,
+    image: Path,
+    component: str | None,
+) -> AssetSpec:
+    """Merge CV facts. Component isolates skip parent art_analysis."""
+    if not component or _is_component_job(spec, component):
+        spec = _apply_analysis(spec, ratio, analysis)
+    spec = _apply_reference_view(
+        spec, analysis, ratio, view, image, component,
+    )
+    spec = _bind_component_reference(spec, image, view, component)
+    return spec
+
+
+def _is_component_job(spec: AssetSpec, component: str) -> bool:
+    """True when this job is the named component, not the parent."""
+    if spec.id == component:
+        return True
+    return spec.id.endswith("__" + component)
+
+
+def _silhouette_dest(
+    job, view: str | None, component: str | None,
+) -> Path:
+    """Preview path for an ingested silhouette."""
+    if component:
+        suffix = view or "default"
+        return job.previews / (
+            f"reference_silhouette_{component}_{suffix}.png"
+        )
+    if view:
+        return job.previews / f"reference_silhouette_{view}.png"
+    return job.previews / "reference_silhouette.png"
+
+
+def _write_whole_object_silhouette(job, component: str | None) -> bool:
+    """Also write unscoped silhouettes on component jobs."""
+    if not component:
+        return True
+    try:
+        spec = job.load_spec()
+    except Exception:
+        return False
+    return _is_component_job(spec, component)
+
+
+def _bind_component_reference(
+    spec: AssetSpec,
+    image: Path,
+    view: str | None,
+    component: str | None,
+) -> AssetSpec:
+    """Record a purpose=component reference on art_direction."""
+    if not component:
+        return spec
+    direction = spec.art_direction or ArtDirection()
+    refs = list(direction.references)
+    path = str(image)
+    already = any(
+        row.path == path
+        and row.purpose == "component"
+        and row.component == component
+        for row in refs
+    )
+    if not already:
+        refs.append(ReferenceImage(
+            path=path,
+            purpose="component",
+            view=view,
+            component=component,
+        ))
+        spec.art_direction = direction.model_copy(
+            update={"references": refs},
+        )
+    return spec
 
 
 def _apply_reference_view(
@@ -493,10 +576,12 @@ def _apply_reference_view(
     ratio: float,
     view: str | None,
     image: Path,
+    component: str | None = None,
 ) -> AssetSpec:
     """Merge one measured view into reference_analysis. No parts."""
-    if not view:
+    if not view and not component:
         return spec
+    view_name = view or "default"
     profile = [
         (round(u, 4), round(1.0 - v, 4)) for u, v in analysis.contour
     ]
@@ -504,9 +589,10 @@ def _apply_reference_view(
         np.array(Image.open(image).convert("L")),
     )
     entry = ReferenceView(
-        view=view,
+        view=view_name,
         path=str(image),
-        purpose="silhouette",
+        purpose="component" if component else "silhouette",
+        component=component,
         height_width_ratio=round(ratio, 4),
         contour=list(analysis.contour),
         profile=profile,
@@ -515,7 +601,10 @@ def _apply_reference_view(
         landmarks=mask_extrema(mask),
     )
     current = spec.reference_analysis or ReferenceAnalysis()
-    views = [row for row in current.views if row.view != view]
+    views = [
+        row for row in current.views
+        if not (row.view == view_name and row.component == component)
+    ]
     views.append(entry)
     spec.reference_analysis = current.model_copy(update={"views": views})
     return spec

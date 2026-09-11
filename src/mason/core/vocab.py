@@ -10,7 +10,7 @@ from mason.generators.krita.stamps import STAMPS
 SHAPES = (
     "box", "cylinder", "plane", "cone", "torus",
     "tapered_box", "sphere", "lathe",
-    "curve", "skin", "outline",
+    "curve", "skin", "outline", "instance",
 )
 TECHNIQUES = (
     "lathe", "box", "curve", "outline", "skin",
@@ -150,7 +150,25 @@ def vocab_payload() -> dict[str, Any]:
             "silhouette-dominant objects: profile -> coarse "
             "outline/lathe/skin volume -> ortho compare -> "
             "only then secondary forms. Multiple views must "
-            "all hold; a better front cannot hide a worse side."
+            "all hold; a better front cannot hide a worse side. "
+            "mason ingest --component name writes a scoped "
+            "isolate (reference_silhouette_<component>_<view>.png) "
+            "and does not overwrite whole-object refs."
+        ),
+        "decompose": (
+            "Complex refs: decompose before modeling a monolith. "
+            "Skip when geometric_plan.masses has 1-2 primary "
+            "masses, no repetition, one blob. mode parts = "
+            "named parts in one spec + restart --keep/--rebuild. "
+            "mode assets = one job per unique component; parent "
+            "instances current_best GLBs. Isolate: component "
+            "only, blank bg, prefer 3/4, reconstruct hidden "
+            "sides, no extra props. instance_of reuses one "
+            "asset (wheels). mason decompose <id> <graph> "
+            "stores the graph. mason assemble compiles joints "
+            "to shape:instance. Parent current_best is "
+            "independent: a better wheel that worsens the car "
+            "reverts the parent, keeps the wheel."
         ),
         "stages": (
             "Coarse-to-fine: blockout -> silhouette -> "

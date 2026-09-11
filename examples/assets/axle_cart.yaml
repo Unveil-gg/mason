@@ -1,0 +1,73 @@
+type: static_prop
+id: axle_cart
+name: Axle Cart
+dimensions:
+  width: 0.6
+  depth: 0.36
+  height: 0.12
+style: default
+depends_on:
+- axle_cart__deck
+- axle_cart__wheel
+decomposition:
+  mode: assets
+  source_views: [three_quarter]
+  components:
+  - id: deck
+    role: primary
+    technique: box
+    asset: axle_cart__deck
+    dimensions: {width: 0.6, depth: 0.36, height: 0.04}
+  - id: wheel
+    role: secondary
+    technique: lathe
+    asset: axle_cart__wheel
+    instance_of: wheel
+    dimensions: {width: 0.16, depth: 0.16, height: 0.04}
+  joints:
+  - child: deck
+  - child: wheel
+    parent: deck
+    socket: hub
+    parent_socket: wheel_l
+    location: [-0.22, 0.0, 0.0]
+    copies:
+    - {parent_socket: wheel_r, location: [0.22, 0.0, 0.0], mirror: x}
+geometry:
+  bevel: false
+  parts:
+  - name: deck
+    shape: instance
+    source: {asset: axle_cart__deck, file: output/asset.glb}
+    size: [0.6, 0.36, 0.04]
+    location: [0.0, 0.0, 0.0]
+  - name: wheel_l
+    shape: instance
+    source: {asset: axle_cart__wheel, file: output/asset.glb}
+    size: [0.16, 0.16, 0.04]
+    location: [-0.22, 0.0, 0.0]
+    parent: deck
+  - name: wheel_r
+    shape: instance
+    source: {asset: axle_cart__wheel, file: output/asset.glb}
+    size: [0.16, 0.16, 0.04]
+    location: [0.22, 0.0, 0.0]
+    parent: deck
+    mirror: x
+materials:
+  strategy: family
+  primary: wood_dark
+export:
+  format: glb
+  save_blend: true
+art_direction:
+  subject: two-wheel axle cart
+  silhouette: flat deck on two reused wheels
+  forms:
+    primary: [deck, wheel]
+geometric_plan:
+  recognition: proportion
+  stage: blockout
+  masses:
+  - {name: deck, role: primary, connects_to: [wheel]}
+  - {name: wheel, role: secondary, connects_to: [deck]}

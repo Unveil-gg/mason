@@ -22,6 +22,10 @@ from mason.generators.blender.script_builder import build_blender_script
 from mason.pipelines.compare import write_compare_plate
 from mason.pipelines.contact_sheet import write_contact_sheet, write_worn_sheet
 from mason.pipelines.common import finish_result, tool_failed
+from mason.pipelines.assemble import (
+    assert_assembly_deps,
+    resolve_instance_paths,
+)
 from mason.pipelines.ingest import ensure_reference_silhouette
 from mason.tools.blender.commands import headless_python, preview_from_blend
 from mason.tools.blender.preview import ALL_PREVIEW_FILES
@@ -252,6 +256,7 @@ def build_static_prop(
     default off); it never touches the stored spec/style.
     """
     info = require_tool("blender")
+    assert_assembly_deps(spec, job.project_root)
     if spec.materials.palette_overrides:
         style = style.model_copy(update={
             "palette": {
@@ -274,6 +279,7 @@ def build_static_prop(
         resolve_part_maps(job, parts, style)
     )
     surface = prepare_surface_maps(job, spec, style)
+    instance_paths = resolve_instance_paths(job, parts)
     bump_image = _optional_image(spec.materials.bump_map, job)
     normal_image = _optional_image(spec.materials.normal_map, job)
     script = build_blender_script(
@@ -294,6 +300,7 @@ def build_static_prop(
         bump_strength=spec.materials.bump_strength,
         shader=spec.materials.shader or "principled",
         demo_lighting=demo_lighting,
+        instance_paths=instance_paths,
         **surface,
     )
     job.build_py.write_text(script, encoding="utf-8")

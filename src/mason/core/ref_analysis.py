@@ -32,6 +32,7 @@ class ReferenceView(BaseModel):
     view: str
     path: str = ""
     purpose: str = "silhouette"
+    component: str | None = None
     height_width_ratio: float = 1.0
     contour: list[tuple[float, float]] = Field(default_factory=list)
     profile: list[tuple[float, float]] = Field(default_factory=list)

@@ -1,0 +1,28 @@
+type: static_prop
+id: axle_cart__wheel
+name: Axle Cart Wheel
+dimensions:
+  width: 0.16
+  depth: 0.16
+  height: 0.04
+style: default
+geometry:
+  bevel: false
+  parts:
+  - name: wheel
+    shape: lathe
+    profile:
+    - [0.08, 0.0]
+    - [0.08, 0.04]
+    location: [0.0, 0.0, 0.0]
+    material: charcoal
+    family: rubber
+attachments:
+- name: hub
+  location: [0.0, 0.0, 0.02]
+materials:
+  strategy: family
+  primary: charcoal
+export:
+  format: glb
+  save_blend: true

@@ -10,6 +10,7 @@ from mason.core.styles import StyleProfile
 from mason.generators.blender.bodies import CREATE_BODIES_SRC
 from mason.generators.blender.curves import CREATE_CURVE_SRC
 from mason.generators.blender.export import EXPORT_SRC
+from mason.generators.blender.instance import CREATE_INSTANCE_SRC
 from mason.generators.blender.garment_anatomy import (
     CREATE_GARMENT_ANATOMY_SRC,
 )
@@ -55,6 +56,7 @@ def build_blender_script(
     atlas_image: str | None = None,
     atlas_rect: list[float] | None = None,
     demo_lighting: bool = False,
+    instance_paths: dict[str, str] | None = None,
 ) -> str:
     """Return a self-contained Blender Python script."""
     palette = {part.material: style.color(part.material) for part in parts}
@@ -112,6 +114,7 @@ def build_blender_script(
         "decimate": spec.geometry.decimate,
         "bodies": [b.model_dump(mode="json") for b in spec.geometry.bodies],
         "parts": [p.model_dump(mode="json") for p in parts],
+        "instance_paths": instance_paths or {},
         "garment": _garment_payload(spec, job_dir),
     }
     return (
@@ -156,7 +159,8 @@ CONFIG = json.loads(r\'\'\'
 '''
 
 _BODY = (
-    CREATE_BOX_SRC
+    CREATE_INSTANCE_SRC
+    + CREATE_BOX_SRC
     + CREATE_LATHE_SRC
     + CREATE_CURVE_SRC
     + CREATE_SKIN_SRC

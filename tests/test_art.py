@@ -50,6 +50,10 @@ def test_spec_with_art_loop_roundtrip(tmp_path: Path) -> None:
             ],
         },
         "depends_on": ["plank_texture"],
+        "decomposition": {
+            "mode": "parts",
+            "components": [{"id": "seat", "technique": "box"}],
+        },
     })
     assert spec.art_direction.subject == "wooden chair"
     assert spec.construction_plan.notes == ["taper legs"]
@@ -57,6 +61,8 @@ def test_spec_with_art_loop_roundtrip(tmp_path: Path) -> None:
     assert spec.geometric_plan.stage == "blockout"
     assert spec.geometric_plan.landmarks[0].id == "seat_front"
     assert spec.depends_on == ["plank_texture"]
+    assert spec.decomposition.mode == "parts"
+    assert spec.decomposition.components[0].id == "seat"
     dest = tmp_path / "chair.yaml"
     dump_asset_spec(spec, dest)
     loaded = parse_asset_spec(
@@ -76,6 +82,7 @@ def test_old_spec_has_no_art_fields() -> None:
     assert spec.art_direction is None
     assert spec.construction_plan is None
     assert spec.geometric_plan is None
+    assert spec.decomposition is None
     assert spec.depends_on == []
 
 

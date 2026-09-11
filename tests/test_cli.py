@@ -70,6 +70,8 @@ def test_vocab_json() -> None:
     assert "curve" in data["shapes"]
     assert "skin" in data["shapes"]
     assert "outline" in data["shapes"]
+    assert "instance" in data["shapes"]
+    assert "mason assemble" in data["decompose"]
     assert "modeling" in data
     assert "construction_plan.techniques" in data["modeling"]
     assert "geometric_plan" in data

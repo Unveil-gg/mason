@@ -17,8 +17,8 @@ from mason.core.forms import (
 
 
 class ImageSource(BaseModel):
-    """A reference to a PNG: either a literal project path, or another
-    asset's built output (asset id + file, e.g. "output/asset.png")."""
+    """A reference to a built file: a project path, or another
+    asset's output (asset id + file, e.g. "output/asset.glb")."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -172,7 +172,7 @@ class PropPart(BaseModel):
     shape: Literal[
         "box", "cylinder", "plane", "cone", "torus",
         "tapered_box", "sphere", "lathe",
-        "curve", "skin", "outline",
+        "curve", "skin", "outline", "instance",
     ] = "box"
     size: tuple[float, float, float] | None = None
     location: tuple[float, float, float]
@@ -190,6 +190,7 @@ class PropPart(BaseModel):
     outline: PartOutline | None = None
     follow: PartFollow | None = None
     helper: bool = False
+    source: ImageSource | None = None
     texture: ImageSource | None = None
     bump_map: ImageSource | None = None
     normal_map: ImageSource | None = None
@@ -209,6 +210,14 @@ class PropPart(BaseModel):
     @model_validator(mode="after")
     def size_or_lathe(self) -> PropPart:
         if finalize_form_part(self):
+            return self
+        if self.source is not None and self.shape != "instance":
+            raise ValueError("source is only valid on shape: instance")
+        if self.shape == "instance":
+            if self.source is None:
+                raise ValueError("instance needs source")
+            if self.size is None:
+                self.size = (1.0, 1.0, 1.0)
             return self
         if self.profile is not None and self.shape != "lathe":
             raise ValueError("profile is only valid on shape: lathe")

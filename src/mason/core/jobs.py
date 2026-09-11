@@ -96,6 +96,10 @@ class AssetJob:
         return self.dir / "reference_analysis.yaml"
 
     @property
+    def decomposition_yaml(self) -> Path:
+        return self.dir / "decomposition.yaml"
+
+    @property
     def run_json(self) -> Path:
         return self.dir / "run.json"
 
@@ -205,6 +209,7 @@ class AssetJob:
             (spec.geometric_plan, self.geometric_plan_yaml),
             (spec.art_analysis, self.art_analysis_yaml),
             (spec.reference_analysis, self.reference_analysis_yaml),
+            (spec.decomposition, self.decomposition_yaml),
         )
         for value, dest in mapping:
             if value is None:
@@ -266,6 +271,7 @@ class AssetJob:
             self.geometric_plan_yaml,
             self.art_analysis_yaml,
             self.reference_analysis_yaml,
+            self.decomposition_yaml,
             self.run_json,
             self.result_json,
             self.dir / "silhouette_metrics.json",

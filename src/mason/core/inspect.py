@@ -56,6 +56,14 @@ def inspect_payload(job: AssetJob, *, full: bool = False) -> dict[str, Any]:
             } if direction else None
         ),
         "depends_on": list(spec.depends_on),
+        "decomposition": (
+            {
+                "mode": spec.decomposition.mode,
+                "components": [
+                    row.id for row in spec.decomposition.components
+                ],
+            } if spec.decomposition else None
+        ),
         "iteration": latest_iter,
         "current_best": meta.current_best if meta else None,
         "checkpoint": checkpoint_status(job),
@@ -112,6 +120,10 @@ def inspect_payload(job: AssetJob, *, full: bool = False) -> dict[str, Any]:
         payload["reference_analysis"] = (
             spec.reference_analysis.model_dump(mode="json")
             if spec.reference_analysis else None
+        )
+        payload["decomposition"] = (
+            spec.decomposition.model_dump(mode="json")
+            if spec.decomposition else None
         )
         payload["references"] = (
             [ref.model_dump(mode="json") for ref in direction.references]

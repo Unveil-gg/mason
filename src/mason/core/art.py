@@ -6,6 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from mason.core.decompose import Decomposition
 from mason.core.form_plan import GeometricPlan, QualityStage
 from mason.core.ref_analysis import ReferenceAnalysis
 
@@ -32,8 +33,10 @@ class ReferenceImage(BaseModel):
         "style",
         "detail",
         "composition",
+        "component",
     ]
     view: str | None = None
+    component: str | None = None
 
 
 class ArtStyleNotes(BaseModel):
@@ -333,4 +336,5 @@ class ArtFields(BaseModel):
     geometric_plan: GeometricPlan | None = None
     art_analysis: ArtAnalysis | None = None
     reference_analysis: ReferenceAnalysis | None = None
+    decomposition: Decomposition | None = None
     depends_on: list[str] = Field(default_factory=list)

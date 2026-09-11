@@ -45,6 +45,7 @@ def test_blender_script_has_helpers(project: Path) -> None:
     assert "def create_skin" in script
     assert "def create_blob" in script
     assert "def create_outline" in script
+    assert "def import_instance" in script
     assert "def apply_bodies" in script
     assert "def apply_follow" in script
     assert "def finish_geometry" in script

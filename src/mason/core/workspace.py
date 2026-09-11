@@ -18,6 +18,8 @@ Separate creator and critic even if you are one model.
 3. Run `mason vocab --json` and read the style profile.
 4. If references exist, ingest them with --view and write
    reference_analysis (silhouettes, profile, landmarks).
+   Complex objects: decompose, isolate components, model
+   each, assemble, then evaluate the whole.
 5. Write `art_direction` (forms, usage, silhouette, materials).
 6. Write geometric_plan (masses, silhouette, landmarks+uv,
    critical_views, stage). Intent only. Recognition is not

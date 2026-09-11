@@ -32,6 +32,7 @@ from mason.core.jobs import clean_jobs, list_jobs, require_job
 from mason.core.workspace import find_project_root, init_project
 from mason.errors import MasonError
 from mason.pipelines.common import project_context
+from mason.pipelines.assemble import run_assemble
 from mason.pipelines.dispatch import run_build, run_rebuild
 from mason.pipelines.evaluate import evaluate_payload, history_payload
 from mason.pipelines.stats import run_stats
@@ -148,6 +149,27 @@ def build(
 
     def _run():
         result = run_build(spec, prompt=prompt)
+        _emit(
+            json_mode, _build_payload(result, full),
+            lambda: print_build(result),
+        )
+        if not result.success:
+            raise typer.Exit(code=1)
+
+    _guard(json_mode, _run)
+
+
+@app.command()
+def assemble(
+    asset_id: Annotated[str, typer.Argument()],
+    json_mode: JsonFlag = False,
+    full: FullFlag = False,
+    prompt: PromptFlag = None,
+) -> None:
+    """Compile a decomposition graph and rebuild the parent asset."""
+
+    def _run():
+        result = run_assemble(asset_id)
         _emit(
             json_mode, _build_payload(result, full),
             lambda: print_build(result),
@@ -325,6 +347,7 @@ def _print_vocab(payload: dict[str, Any]) -> None:
     for key in (
         "raster", "sprites", "style_tune", "recipes_note", "inspect",
         "variants", "demo_lighting", "ingest", "kits",
+        "decompose",
     ):
         typer.echo(f"{key}: {payload[key]}")
 
@@ -606,6 +629,29 @@ def compare(
 
 
 @app.command()
+def decompose(
+    asset_id: Annotated[str, typer.Argument()],
+    graph: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
+    json_mode: JsonFlag = False,
+) -> None:
+    """Store an agent-authored decomposition graph on a job."""
+
+    def _run():
+        from mason.pipelines.decompose import decompose_payload
+        payload = decompose_payload(asset_id, graph)
+        _emit(
+            json_mode,
+            payload,
+            lambda: typer.echo(
+                f"decompose {asset_id}: {payload.get('mode')} "
+                f"({len(payload.get('components') or [])} components)",
+            ),
+        )
+
+    _guard(json_mode, _run)
+
+
+@app.command()
 def ingest(
     image: Annotated[
         Path | None,
@@ -651,6 +697,13 @@ def ingest(
             help="Bind this image as a critical view: side|front|...",
         ),
     ] = None,
+    component: Annotated[
+        str | None,
+        typer.Option(
+            "--component",
+            help="Bind this image as an isolated component reference.",
+        ),
+    ] = None,
 ) -> None:
     """Measure a reference image: silhouette ratio, palette, color
     regions, contour, and edge character. Not an image-to-mesh
@@ -662,7 +715,7 @@ def ingest(
         payload = run_ingest(
             image, asset,
             style_name=style, spec_type=spec_type, out=out,
-            fetch_url=fetch, view=view,
+            fetch_url=fetch, view=view, component=component,
         )
         _emit(
             json_mode,

@@ -170,6 +170,8 @@ def create_primitive(part):
         return create_skin(*args, part.get("skin") or {})
     if shape == "outline":
         return create_outline(*args, part.get("outline") or {})
+    if shape == "instance":
+        return import_instance(part)
     return create_box(*args)
 
 

@@ -11,6 +11,9 @@ def expand_part_ops(parts: list[PropPart]) -> list[PropPart]:
     """Apply inset, linear/radial arrays, and mirror copies."""
     expanded: list[PropPart] = []
     for part in parts:
+        if part.shape == "instance":
+            expanded.append(part)
+            continue
         size = _inset_size(part.size, part.inset)
         base = part.model_copy(update={
             "size": size,

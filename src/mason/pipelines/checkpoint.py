@@ -21,6 +21,7 @@ _SIDECARS = (
     "geometric_plan.yaml",
     "art_analysis.yaml",
     "reference_analysis.yaml",
+    "decomposition.yaml",
     "validation.json",
     "result.json",
     "silhouette_metrics.json",
@@ -271,6 +272,8 @@ def restore_checkpoint(
             spec.construction_plan = live.construction_plan
         if spec.art_direction is None and live.art_direction:
             spec.art_direction = live.art_direction
+        if spec.decomposition is None and live.decomposition:
+            spec.decomposition = live.decomposition
     job.write_spec(spec)
     job.write_art_sidecars(spec)
     for name in _SIDECARS:
