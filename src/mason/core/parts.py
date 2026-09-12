@@ -197,6 +197,7 @@ class PropPart(BaseModel):
     bevel: bool | None = None
     parent: str | None = None
     snap: PartSnap | None = None
+    flush: PartSnap | None = None
     cutout: PartCutout | None = None
     inset: float = Field(default=0.0, ge=0)
     array: PartArray | None = None
@@ -265,6 +266,7 @@ class RecipeParams(BaseModel):
     tree_height: float = Field(default=1.0, gt=0)
     pool_width: float = Field(default=1.78, gt=0)
     pool_depth: float = Field(default=1.02, gt=0)
+    include_casters: bool = True
 
 
 from mason.core.garment import GarmentSpec

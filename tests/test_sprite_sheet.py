@@ -16,6 +16,7 @@ def _spec():
         "id": "hero",
         "name": "Hero",
         "canvas": {"width": 16, "height": 16},
+        "master_frame": "idle",
         "animations": [
             {
                 "name": "idle",
@@ -37,6 +38,10 @@ def _spec():
             },
         ],
     })
+
+
+def test_master_frame_is_idle() -> None:
+    assert _spec().master_frame == "idle"
 
 
 def test_sheet_layout_is_row_per_animation() -> None:

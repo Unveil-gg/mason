@@ -20,8 +20,11 @@ previews in a fresh pass and looks for reasons not to ship.
 
 1. Run `mason doctor --json`.
 2. Confirm the required capabilities are available.
-3. Run `mason vocab --json` and read the style profile
-   (`mason style <name> --json`, or `styles/*.yaml`).
+3. Run `mason route <subject-or-id> --json`, then
+   `mason vocab --workflow <kind> --json` (and
+   `mason style <name> --json`, or `styles/*.yaml`).
+   Write `workflow` on the spec. Do not force buildings,
+   clothes, knights, or illustrations through one grammar.
 4. Understand the request. If `references` exist, run
    `mason ingest <image> --asset <id> [--style <name>] --json`
    or `mason ingest --fetch <url> --asset <id> --json` (caches
@@ -47,8 +50,10 @@ previews in a fresh pass and looks for reasons not to ship.
    assembled best. Skip this loop when
    `geometric_plan.masses` has 1–2 primary masses, no
    repetition, and the silhouette is one blob.
-5. Write `art_direction`: subject, usage, silhouette goal, primary /
-   secondary / tertiary forms, material families, detail density.
+5. Write `art_direction`: subject, usage, silhouette, focal_point,
+   value_hierarchy, gameplay read, recognition_details, forms,
+   materials. Run `mason plan <id> --json` before parts.
+   A barista is posture, weight, and read — not head + torso.
 6. Write `geometric_plan` (intent): primary read, recognition
    driver, masses, silhouette vs similar objects, proportions,
    symmetry, negative space, abstraction, landmarks bound to
@@ -86,9 +91,11 @@ previews in a fresh pass and looks for reasons not to ship.
     Set `mode` (beauty|silhouette), `represents_object`,
     `represents_style`, `stage`, `view_scores`, and `compare`
     versus `current_best` (`improves` / `worsens` / verdict
-    accept|reject|try_again). Ranked `discrepancies`
+    accept|reject|try_again).     Ranked `discrepancies`
     (critical / major / minor) with `geometric_intent` and a
-    landmark. Recognition alone is not success. Do not advance
+    landmark. Failed reviews need `primary_failure` and one
+    `correction_targets` list. Inspect `previews/gameplay.png`.
+    Recognition alone is not success. Do not advance
     `stage` while any critical discrepancy remains.
     Newest is never automatically best: accept only if the
     candidate is meaningfully better and no critical view
@@ -153,6 +160,7 @@ Asset types:
 - `static_prop` — Blender parts (`box`, `cylinder`, `plane`, `cone`,
   `torus`, `tapered_box`, `sphere`, `lathe`, `curve`, `skin`,
   `outline`, `instance`) with optional `parent`, `snap` (`{to, on, embed}`),
+  `flush` (second-axis snap for a wall after a pad),
   `inset`, `array` (linear or `radial`), `mirror`, `component`,
   `family`, `texture` (`{asset, file}`), `profile` (`[[radius, z],
   ...]` on `lathe`, spun about +Z), `curve` (Bezier path + bevel),

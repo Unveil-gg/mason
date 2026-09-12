@@ -76,7 +76,7 @@ def test_vocab_json() -> None:
     assert "construction_plan.techniques" in data["modeling"]
     assert "geometric_plan" in data
     assert "landmarks" in data["geometric_plan"]
-    assert "critical|" in data["critique"]
+    assert "primary_failure" in data["critique"]
     assert "current_best" in data["iteration"]
     assert "view_scores" in data["critique"]
     assert "critical_views" in data["geometric_plan"]
@@ -87,6 +87,10 @@ def test_vocab_json() -> None:
     assert "origin: center|base" in data["bend"]
     assert "--fetch" in data["ingest"]
     assert "run.json" in data["run"]
+    assert "turned" in data["workflows"]
+    assert "mason route" in data["workflow"]
+    assert "primary_failure" in data["critique"]
+    assert "mason paint" in data["paint"]
 
 
 def test_clean_removes_jobs(project: Path, monkeypatch) -> None:

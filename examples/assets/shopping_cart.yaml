@@ -2,27 +2,56 @@ type: static_prop
 id: shopping_cart
 name: Shopping Cart
 
-# Grocery cart via the cart recipe: flared rim, snapped walls, handle.
+# Basket and casters are separate jobs. Assemble instances them.
 dimensions:
   width: 0.60
   depth: 0.50
-  height: 0.78
+  height: 0.73
 
 style: iron
 
+depends_on:
+  - shopping_cart__basket
+  - shopping_cart__caster
+
 geometry:
   bevel: true
-  recipe: cart
-  recipe_params:
-    flare: 0.18
-    basket_height: 0.42
-    handle_rise: 0.16
+  parts:
+  - name: basket
+    shape: instance
+    source: {asset: shopping_cart__basket, file: output/asset.glb}
+    size: [0.60, 0.50, 0.70]
+    location: [0.0, 0.0, 0.0]
+  - name: wheel_fl
+    shape: instance
+    source: {asset: shopping_cart__caster, file: output/asset.glb}
+    size: [0.08, 0.12, 0.12]
+    location: [-0.197, -0.156, 0.0]
+    parent: basket
+  - name: wheel_fr
+    shape: instance
+    source: {asset: shopping_cart__caster, file: output/asset.glb}
+    size: [0.08, 0.12, 0.12]
+    location: [0.197, -0.156, 0.0]
+    parent: basket
+    mirror: x
+  - name: wheel_bl
+    shape: instance
+    source: {asset: shopping_cart__caster, file: output/asset.glb}
+    size: [0.08, 0.12, 0.12]
+    location: [-0.197, 0.156, 0.0]
+    parent: basket
+  - name: wheel_br
+    shape: instance
+    source: {asset: shopping_cart__caster, file: output/asset.glb}
+    size: [0.08, 0.12, 0.12]
+    location: [0.197, 0.156, 0.0]
+    parent: basket
+    mirror: x
 
 materials:
   primary: steel
 
-# One extra sibling job (shopping_cart_black) built automatically
-# from this same geometry, with the steel palette swapped darker.
 variants:
   - suffix: black
     palette_overrides:
@@ -53,30 +82,36 @@ art_direction:
 
 construction_plan:
   primary_forms:
-    - {type: rail, purpose: flared rim}
-    - {type: cylinder, purpose: short aft handle}
-  secondary_forms:
-    - {type: wire_wall, purpose: basket sides}
-    - {type: caster, purpose: wheels, count: 4}
-    - {type: box, purpose: child-seat flap}
-  tertiary_details:
-    - {type: cylinder, purpose: red grip}
-  materials: [bare_metal, rubber]
+    - {type: instance, purpose: basket job}
+    - {type: instance, purpose: reused caster, count: 4}
   notes:
-    - rim wider than floor so the front reads nestable
-    - walls snap to the floor; handle posts snap to the rim
+    - assets mode. Evaluate basket and caster, then assemble.
 
 decomposition:
-  mode: parts
+  mode: assets
   source_views: [three_quarter, side]
   components:
-  - {id: basket, role: primary, technique: modular}
-  - {id: handle, role: secondary, technique: box}
-  - {id: caster, role: secondary, technique: modular, instance_of: caster}
+  - id: basket
+    role: primary
+    technique: modular
+    asset: shopping_cart__basket
+    dimensions: {width: 0.60, depth: 0.50, height: 0.73}
+  - id: caster
+    role: secondary
+    technique: modular
+    asset: shopping_cart__caster
+    instance_of: caster
+    dimensions: {width: 0.08, depth: 0.12, height: 0.12}
   joints:
   - {child: basket}
-  - {child: handle, parent: basket}
-  - {child: caster, parent: basket}
+  - child: caster
+    parent: basket
+    parent_socket: wheel_fl
+    location: [-0.197, -0.156, 0.0]
+    copies:
+    - {parent_socket: wheel_fr, location: [0.197, -0.156, 0.0], mirror: x}
+    - {parent_socket: wheel_bl, location: [-0.197, 0.156, 0.0]}
+    - {parent_socket: wheel_br, location: [0.197, 0.156, 0.0], mirror: x}
 
 export:
   format: glb

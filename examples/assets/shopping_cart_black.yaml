@@ -39,31 +39,20 @@ art_direction:
 construction_plan:
   techniques: []
   primary_forms:
-  - type: rail
-    purpose: flared rim
-  - type: cylinder
-    purpose: short aft handle
-  secondary_forms:
-  - type: wire_wall
-    purpose: basket sides
-  - type: caster
-    purpose: wheels
+  - type: instance
+    purpose: basket job
+  - type: instance
+    purpose: reused caster
     count: 4
-  - type: box
-    purpose: child-seat flap
-  tertiary_details:
-  - type: cylinder
-    purpose: red grip
-  materials:
-  - bare_metal
-  - rubber
+  secondary_forms: []
+  tertiary_details: []
+  materials: []
   keep_parts: []
   rebuild_parts: []
   notes:
-  - rim wider than floor so the front reads nestable
-  - walls snap to the floor; handle posts snap to the rim
+  - assets mode. Evaluate basket and caster, then assemble.
 decomposition:
-  mode: parts
+  mode: assets
   source_views:
   - three_quarter
   - side
@@ -71,13 +60,20 @@ decomposition:
   - id: basket
     role: primary
     technique: modular
-  - id: handle
-    role: secondary
-    technique: box
+    asset: shopping_cart__basket
+    dimensions:
+      width: 0.6
+      depth: 0.5
+      height: 0.73
   - id: caster
     role: secondary
     technique: modular
+    asset: shopping_cart__caster
     instance_of: caster
+    dimensions:
+      width: 0.08
+      depth: 0.12
+      height: 0.12
   joints:
   - child: basket
     location:
@@ -89,39 +85,48 @@ decomposition:
     - 0.0
     - 0.0
     copies: []
-  - child: handle
-    parent: basket
-    location:
-    - 0.0
-    - 0.0
-    - 0.0
-    rotation:
-    - 0.0
-    - 0.0
-    - 0.0
-    copies: []
   - child: caster
     parent: basket
+    parent_socket: wheel_fl
     location:
-    - 0.0
-    - 0.0
+    - -0.197
+    - -0.156
     - 0.0
     rotation:
     - 0.0
     - 0.0
     - 0.0
-    copies: []
+    copies:
+    - parent_socket: wheel_fr
+      location:
+      - 0.197
+      - -0.156
+      - 0.0
+      mirror: x
+    - parent_socket: wheel_bl
+      location:
+      - -0.197
+      - 0.156
+      - 0.0
+    - parent_socket: wheel_br
+      location:
+      - 0.197
+      - 0.156
+      - 0.0
+      mirror: x
+depends_on:
+- shopping_cart__basket
+- shopping_cart__caster
 type: static_prop
 id: shopping_cart_black
 name: Shopping Cart (black)
 dimensions:
   width: 0.6
   depth: 0.5
-  height: 0.78
+  height: 0.73
 style: iron
 geometry:
   bevel: true
-  recipe: cart
   recipe_params:
     board_thickness: 0.03
     shelf_count: 4
@@ -139,7 +144,129 @@ geometry:
     tree_height: 1.0
     pool_width: 1.78
     pool_depth: 1.02
-  parts: []
+    include_casters: true
+  parts:
+  - name: basket
+    shape: instance
+    size:
+    - 0.6
+    - 0.5
+    - 0.7
+    location:
+    - 0.0
+    - 0.0
+    - 0.0
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    material: primary
+    wear: 0.0
+    segments: 24
+    helper: false
+    source:
+      asset: shopping_cart__basket
+      file: output/asset.glb
+    inset: 0.0
+    component_params: {}
+  - name: wheel_fl
+    shape: instance
+    size:
+    - 0.08
+    - 0.12
+    - 0.12
+    location:
+    - -0.197
+    - -0.156
+    - 0.0
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    material: primary
+    wear: 0.0
+    segments: 24
+    helper: false
+    source:
+      asset: shopping_cart__caster
+      file: output/asset.glb
+    parent: basket
+    inset: 0.0
+    component_params: {}
+  - name: wheel_fr
+    shape: instance
+    size:
+    - 0.08
+    - 0.12
+    - 0.12
+    location:
+    - 0.197
+    - -0.156
+    - 0.0
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    material: primary
+    wear: 0.0
+    segments: 24
+    helper: false
+    source:
+      asset: shopping_cart__caster
+      file: output/asset.glb
+    parent: basket
+    inset: 0.0
+    mirror: x
+    component_params: {}
+  - name: wheel_bl
+    shape: instance
+    size:
+    - 0.08
+    - 0.12
+    - 0.12
+    location:
+    - -0.197
+    - 0.156
+    - 0.0
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    material: primary
+    wear: 0.0
+    segments: 24
+    helper: false
+    source:
+      asset: shopping_cart__caster
+      file: output/asset.glb
+    parent: basket
+    inset: 0.0
+    component_params: {}
+  - name: wheel_br
+    shape: instance
+    size:
+    - 0.08
+    - 0.12
+    - 0.12
+    location:
+    - 0.197
+    - 0.156
+    - 0.0
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    material: primary
+    wear: 0.0
+    segments: 24
+    helper: false
+    source:
+      asset: shopping_cart__caster
+      file: output/asset.glb
+    parent: basket
+    inset: 0.0
+    mirror: x
+    component_params: {}
   bodies: []
 materials:
   strategy: family

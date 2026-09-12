@@ -225,6 +225,9 @@ def main():
                     )
                     bits.setsize(nbytes)
                 paint.setPixelData(bytes(bits), x, y, scaled.width(), scaled.height())
+            if layer.get("role") == "underlay":
+                node.setLocked(True)
+                paint.setLocked(True)
         else:
             node = doc.createNode(layer["name"], "paintlayer")
             root.addChildNode(node, None)

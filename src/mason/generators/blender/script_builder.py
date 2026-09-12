@@ -395,6 +395,7 @@ def main():
         if CONFIG["save_blend"]:
             save_blend(blend)
         export_glb(os.path.join(output, "asset.glb"))
+        export_uv_layout(os.path.join(output, "uv_layout.png"))
     if mode in ("all", "preview"):
         if mode == "preview" and os.path.isfile(blend):
             bpy.ops.wm.open_mainfile(filepath=blend)

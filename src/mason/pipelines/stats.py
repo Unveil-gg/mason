@@ -9,9 +9,15 @@ from mason.core.workspace import find_project_root
 from mason.errors import MasonError
 
 
-def run_stats(asset_id: str | None = None) -> dict[str, Any]:
-    """Return poly counts for one job, or every job with metrics."""
+def run_stats(
+    asset_id: str | None = None,
+    *,
+    accepted: bool = False,
+) -> dict[str, Any]:
+    """Return poly counts, or accept-rollup metrics."""
     root = find_project_root()
+    if accepted:
+        return accepted_stats(root, asset_id)
     if asset_id:
         return job_stats(require_job(root, asset_id))
     assets = []
@@ -21,6 +27,31 @@ def run_stats(asset_id: str | None = None) -> dict[str, Any]:
         except MasonError:
             continue
     return {"assets": assets}
+
+
+def accepted_stats(root, asset_id: str | None = None) -> dict[str, Any]:
+    """Time-to-accept and workflow rollup for promoted jobs."""
+    jobs = (
+        [require_job(root, asset_id)] if asset_id else list_jobs(root)
+    )
+    rows = []
+    for job in jobs:
+        meta = job.load_meta()
+        if meta is None or meta.current_best is None:
+            continue
+        spec = job.load_spec()
+        rows.append({
+            "asset_id": job.asset_id,
+            "type": spec.type,
+            "workflow": meta.workflow or getattr(spec, "workflow", None),
+            "current_best": meta.current_best,
+            "iterations_to_accept": meta.iterations_to_accept,
+            "time_to_accept_ms": meta.time_to_accept_ms,
+            "visual_reasoning": meta.visual_reasoning,
+            "approved_preserved": meta.approved_preserved,
+            "approved_master": meta.approved_master,
+        })
+    return {"accepted": rows}
 
 
 def job_stats(job: AssetJob) -> dict[str, Any]:

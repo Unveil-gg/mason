@@ -25,6 +25,12 @@ class JobMeta(BaseModel):
     updated_at: str = ""
     iteration: int = 0
     current_best: int | None = None
+    approved_master: bool = False
+    workflow: str | None = None
+    iterations_to_accept: int | None = None
+    time_to_accept_ms: int | None = None
+    visual_reasoning: bool | None = None
+    approved_preserved: bool | None = None
 
 
 class AssetJob:
@@ -138,6 +144,7 @@ class AssetJob:
             iteration = existing.iteration if existing else 0
         if not set_best:
             current_best = existing.current_best if existing else None
+        extra = existing.model_dump() if existing else {}
         meta = JobMeta(
             asset_id=self.asset_id,
             source_spec=source_spec,
@@ -145,6 +152,12 @@ class AssetJob:
             updated_at=now,
             iteration=iteration,
             current_best=current_best,
+            approved_master=extra.get("approved_master", False),
+            workflow=extra.get("workflow"),
+            iterations_to_accept=extra.get("iterations_to_accept"),
+            time_to_accept_ms=extra.get("time_to_accept_ms"),
+            visual_reasoning=extra.get("visual_reasoning"),
+            approved_preserved=extra.get("approved_preserved"),
         )
         self.meta_yaml.write_text(
             yaml.safe_dump(meta.model_dump(), sort_keys=False),
@@ -159,6 +172,52 @@ class AssetJob:
             iteration=existing.iteration if existing else 0,
             current_best=iteration,
             set_best=True,
+        )
+
+    def set_approved_master(
+        self,
+        approved: bool,
+        *,
+        workflow: str | None = None,
+    ) -> None:
+        """Flag this job as an approved visual master."""
+        existing = self.load_meta()
+        if existing is None:
+            self.write_meta(None)
+            existing = self.load_meta()
+        assert existing is not None
+        existing.approved_master = approved
+        if workflow:
+            existing.workflow = workflow
+        self.meta_yaml.write_text(
+            yaml.safe_dump(existing.model_dump(), sort_keys=False),
+            encoding="utf-8",
+        )
+
+    def record_accept_metrics(
+        self,
+        *,
+        workflow: str | None,
+        iterations: int,
+        time_ms: int,
+        visual_reasoning: bool | None,
+        approved_preserved: bool | None,
+    ) -> None:
+        """Store time-to-accept rollup on the first promote."""
+        existing = self.load_meta()
+        if existing is None:
+            return
+        if existing.iterations_to_accept is not None:
+            return
+        existing.workflow = workflow or existing.workflow
+        existing.iterations_to_accept = iterations
+        existing.time_to_accept_ms = time_ms
+        existing.visual_reasoning = visual_reasoning
+        existing.approved_preserved = approved_preserved
+        existing.updated_at = datetime.now(timezone.utc).isoformat()
+        self.meta_yaml.write_text(
+            yaml.safe_dump(existing.model_dump(), sort_keys=False),
+            encoding="utf-8",
         )
 
     def bump_iteration(self) -> int:
@@ -275,6 +334,7 @@ class AssetJob:
             self.run_json,
             self.result_json,
             self.dir / "silhouette_metrics.json",
+            self.dir / "approvals.yaml",
         ):
             if src.is_file():
                 (dest / src.name).write_bytes(src.read_bytes())

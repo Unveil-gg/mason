@@ -17,8 +17,28 @@ from mason.core.workspace import find_project_root
 from mason.errors import MasonError
 
 INSTALLABLE_KEYS = {"glb", "png", "frames"}
+_OUTPUT_NAMES = {"glb": "asset.glb", "png": "asset.png", "frames": "frames.json"}
 GODOT_SUBDIRS = {"glb": "models", "png": "textures", "frames": "textures"}
 INSTALL_NAMES = {"frames": "{id}_frames.json"}
+
+
+def _export_source(
+    root: Path,
+    job: AssetJob,
+    key: str,
+    rel_path: str,
+) -> Path | None:
+    """Prefer current_best snapshot outputs over the live result."""
+    meta = job.load_meta()
+    name = _OUTPUT_NAMES.get(key)
+    if meta and meta.current_best and name:
+        snap = (
+            job.iterations / f"{meta.current_best:03d}" / "output" / name
+        )
+        if snap.is_file():
+            return snap
+    src = root / rel_path
+    return src if src.is_file() else None
 
 
 def _resolve_dest(root: Path, raw: str | Path) -> Path:
@@ -125,8 +145,8 @@ def run_export(
     for key, rel_path in result.outputs.items():
         if key not in INSTALLABLE_KEYS:
             continue
-        src = root / rel_path
-        if not src.is_file():
+        src = _export_source(root, job, key, rel_path)
+        if src is None or not src.is_file():
             continue
         sub = GODOT_SUBDIRS.get(key, "") if engine == "godot" else ""
         target_dir = (dest_dir / sub) if sub else dest_dir

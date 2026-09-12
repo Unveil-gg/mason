@@ -304,10 +304,23 @@ def inspect(
 
 
 @app.command()
-def vocab(json_mode: JsonFlag = False) -> None:
+def vocab(
+    json_mode: JsonFlag = False,
+    workflow: Annotated[
+        str | None,
+        typer.Option("--workflow", help="Scope the card to one workflow."),
+    ] = None,
+) -> None:
     """Print shapes, components, recipes, stamps, and families."""
-    payload = vocab_payload()
-    _emit(json_mode, payload, lambda: _print_vocab(payload))
+
+    def _run():
+        try:
+            payload = vocab_payload(workflow)
+        except ValueError as exc:
+            raise MasonError(str(exc), code="unknown_workflow") from exc
+        _emit(json_mode, payload, lambda: _print_vocab(payload))
+
+    _guard(json_mode, _run)
 
 
 @app.command()
@@ -347,9 +360,10 @@ def _print_vocab(payload: dict[str, Any]) -> None:
     for key in (
         "raster", "sprites", "style_tune", "recipes_note", "inspect",
         "variants", "demo_lighting", "ingest", "kits",
-        "decompose",
+        "decompose", "workflow", "plan", "paint",
     ):
-        typer.echo(f"{key}: {payload[key]}")
+        if key in payload:
+            typer.echo(f"{key}: {payload[key]}")
 
 
 @app.command()
@@ -554,11 +568,18 @@ def stats(
         typer.Argument(help="One job id, or every job if omitted."),
     ] = None,
     json_mode: JsonFlag = False,
+    accepted: Annotated[
+        bool,
+        typer.Option(
+            "--accepted",
+            help="Roll up time-to-accept and workflow metrics.",
+        ),
+    ] = False,
 ) -> None:
     """Print triangle, mesh, and material counts from a built job."""
 
     def _run():
-        payload = run_stats(asset_id)
+        payload = run_stats(asset_id, accepted=accepted)
         _emit(
             json_mode,
             payload,
@@ -569,6 +590,14 @@ def stats(
 
 
 def _print_stats(payload: dict[str, Any]) -> None:
+    if "accepted" in payload:
+        for row in payload["accepted"]:
+            typer.echo(
+                f"{row['asset_id']}: workflow={row.get('workflow')} "
+                f"iters={row.get('iterations_to_accept')} "
+                f"ms={row.get('time_to_accept_ms')}",
+            )
+        return
     if "assets" in payload:
         for row in payload["assets"]:
             typer.echo(
@@ -704,6 +733,13 @@ def ingest(
             help="Bind this image as an isolated component reference.",
         ),
     ] = None,
+    purpose: Annotated[
+        str | None,
+        typer.Option(
+            "--purpose",
+            help="silhouette (default) or correction paintover.",
+        ),
+    ] = None,
 ) -> None:
     """Measure a reference image: silhouette ratio, palette, color
     regions, contour, and edge character. Not an image-to-mesh
@@ -716,6 +752,7 @@ def ingest(
             image, asset,
             style_name=style, spec_type=spec_type, out=out,
             fetch_url=fetch, view=view, component=component,
+            purpose=purpose,
         )
         _emit(
             json_mode,
@@ -748,6 +785,123 @@ def clean(
             lambda: typer.echo(
                 f"removed {len(removed)} job(s)",
             ),
+        )
+
+    _guard(json_mode, _run)
+
+
+@app.command()
+def route(
+    query: Annotated[
+        str,
+        typer.Argument(help="Subject text or an existing asset id."),
+    ],
+    json_mode: JsonFlag = False,
+) -> None:
+    """Recommend a production workflow before authoring parts."""
+
+    def _run():
+        from mason.pipelines.route import run_route
+        payload = run_route(query)
+        _emit(
+            json_mode,
+            payload,
+            lambda: typer.echo(
+                f"{payload['workflow']} -> {payload['type']}",
+            ),
+        )
+
+    _guard(json_mode, _run)
+
+
+@app.command("plan")
+def plan_cmd(
+    asset_id: Annotated[str, typer.Argument()],
+    json_mode: JsonFlag = False,
+) -> None:
+    """Check art-direction completeness for the job's workflow."""
+
+    def _run():
+        from mason.core.plan_gate import plan_payload
+        root = find_project_root()
+        job = require_job(root, asset_id)
+        payload = plan_payload(job.load_spec())
+        _emit(
+            json_mode,
+            payload,
+            lambda: typer.echo(
+                "plan ok" if payload["passed"] else (
+                    "missing: " + ", ".join(payload["missing"])
+                ),
+            ),
+        )
+        if not payload["passed"]:
+            raise MasonError(
+                "Art-direction plan is incomplete.",
+                code="plan_incomplete",
+                context={"missing": payload["missing"]},
+            )
+
+    _guard(json_mode, _run)
+
+
+@app.command()
+def paint(
+    asset_id: Annotated[str, typer.Argument()],
+    source: Annotated[
+        str,
+        typer.Option(
+            "--from",
+            help="Underlay: render, uv, or raster.",
+        ),
+    ] = "render",
+    view: Annotated[
+        str | None,
+        typer.Option("--view", help="Preview name for a render underlay."),
+    ] = None,
+    component: Annotated[
+        str | None,
+        typer.Option("--component", help="Named part for a UV/paint pass."),
+    ] = None,
+    json_mode: JsonFlag = False,
+) -> None:
+    """Prepare a Krita paint document from a render, UV, or raster."""
+
+    def _run():
+        from mason.pipelines.paint import run_paint
+        if source not in ("render", "uv", "raster"):
+            raise MasonError(
+                "paint --from must be render, uv, or raster.",
+                code="paint_from_invalid",
+            )
+        payload = run_paint(
+            asset_id, source=source, view=view, component=component,
+        )
+        _emit(
+            json_mode,
+            payload,
+            lambda: typer.echo(payload["spec"]),
+        )
+
+    _guard(json_mode, _run)
+
+
+@app.command()
+def approve(
+    asset_id: Annotated[str, typer.Argument()],
+    json_mode: JsonFlag = False,
+) -> None:
+    """Mark current_best as an approved reusable master."""
+
+    def _run():
+        from mason.core.masters import approve_master
+        root = find_project_root()
+        job = require_job(root, asset_id)
+        payload = approve_master(job)
+        _emit(
+            json_mode,
+            payload,
+            lambda: typer.echo(f"approved master {payload['id']}"),
         )
 
     _guard(json_mode, _run)

@@ -79,6 +79,29 @@ def scene_bounds():
     return mins, maxs
 
 
+def export_uv_layout(path):
+    """Export the first mesh UV layout for the Krita paint desk."""
+    mesh = next(
+        (
+            o for o in bpy.data.objects
+            if o.type == "MESH" and not o.name.startswith("_mason_")
+        ),
+        None,
+    )
+    if mesh is None:
+        return
+    bpy.ops.object.select_all(action="DESELECT")
+    mesh.select_set(True)
+    bpy.context.view_layer.objects.active = mesh
+    try:
+        bpy.ops.uv.export_layout(
+            filepath=path, export_all=False, modified=False,
+            mode="PNG", size=(1024, 1024), opacity=0.25,
+        )
+    except Exception:
+        pass
+
+
 def write_metadata(path):
     """Write mesh stats JSON next to outputs."""
     meshes = [

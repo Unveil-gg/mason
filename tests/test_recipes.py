@@ -62,6 +62,24 @@ def test_cart_snaps_to_floor_and_rim() -> None:
     assert all(p.snap is not None for p in walls)
 
 
+def test_cart_reserves_caster_well_without_wheels() -> None:
+    parts = expand_recipe(
+        "cart",
+        Dimensions3D(width=0.60, depth=0.50, height=0.66),
+        RecipeParams(
+            flare=0.18,
+            basket_height=0.42,
+            handle_rise=0.16,
+            include_casters=False,
+        ),
+        "steel",
+    )
+    names = [p.name for p in parts]
+    assert not any(n.startswith("wheel_") for n in names)
+    floor = next(p for p in parts if p.name == "floor")
+    assert floor.location[2] >= 0.12
+
+
 def test_house_tree_pool_estate() -> None:
     house = expand_recipe(
         "house",

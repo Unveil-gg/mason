@@ -32,7 +32,7 @@ def cart_parts(
     natural = caster_h + floor_t + basket_h + rim_t + handle_rise
     if natural <= h:
         basket_h = basket_h + (h - natural)
-    else:
+    elif params.include_casters:
         caster_h = max(h - (floor_t + basket_h + rim_t + handle_rise), 0.05)
 
     rim_w, rim_d = w, d
@@ -67,7 +67,7 @@ def cart_parts(
     wall_y_len = math.hypot(dy, basket_h)
     wall_y_center = (floor_d + rim_d) / 4.0
 
-    return [
+    parts = [
         PropPart(
             name="floor",
             size=(floor_w, floor_d, floor_t),
@@ -217,3 +217,9 @@ def cart_parts(
             parent="handle_left",
         ),
     ]
+    if not params.include_casters:
+        parts = [
+            part for part in parts
+            if not part.name.startswith("wheel_")
+        ]
+    return parts

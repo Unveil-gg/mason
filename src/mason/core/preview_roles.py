@@ -26,7 +26,7 @@ def preview_roles_for(
         return {
             "primary": "full",
             "beauty": ["full"],
-            "diagnostic": ["compare"],
+            "diagnostic": ["compare", "gameplay"],
             "silhouette": [],
             "context": None,
         }
@@ -34,14 +34,14 @@ def preview_roles_for(
         return {
             "primary": "worn",
             "beauty": ["worn", "worn_sheet", *BEAUTY_VIEWS],
-            "diagnostic": list(DIAGNOSTIC_VIEWS),
+            "diagnostic": list(DIAGNOSTIC_VIEWS) + ["gameplay"],
             "silhouette": list(SILHOUETTE_VIEWS),
             "context": "worn",
         }
     return {
         "primary": PRIMARY_VIEW,
         "beauty": list(BEAUTY_VIEWS),
-        "diagnostic": list(DIAGNOSTIC_VIEWS),
+        "diagnostic": list(DIAGNOSTIC_VIEWS) + ["gameplay"],
         "silhouette": list(SILHOUETTE_VIEWS),
         "context": None,
     }

@@ -92,6 +92,8 @@ def test_evaluate_and_history(project: Path, monkeypatch) -> None:
     eval_path.write_text(json.dumps({
         "passed": False,
         "ship": False,
+        "primary_failure": "silhouette reads as a cube",
+        "correction_targets": [{"part": "lid"}],
         "scores": {
             "silhouette": 5,
             "proportions": 5,

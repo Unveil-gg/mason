@@ -146,9 +146,11 @@ def _refine_stacked_body(obj, marks):
     marks["shoulders"] = Vector((
         mid.x, mid.y, pinch_z - height * 0.03,
     ))
-    ankle = marks.get("ankle_l") or marks.get("ankle_r")
-    floor = ankle.z + height * 0.05 if ankle is not None else mins.z
-    shirt_hem = max(mins.z + height * 0.20, floor)
+    hips = marks.get("hips")
+    if hips is not None:
+        shirt_hem = max(hips.z + height * 0.02, mins.z + height * 0.36)
+    else:
+        shirt_hem = mins.z + height * 0.38
     marks["hem"] = Vector((marks["hem"].x, marks["hem"].y, shirt_hem))
     marks["stacked_spheres"] = True
 
@@ -175,41 +177,47 @@ def _measure_torso_half(body, marks):
 
 
 def _bind_sleeve_axes(body, marks):
-    """Sleeve start/end from arm mesh, not inboard bones."""
+    """Sleeve start/end from bones, else farthest hand verts."""
     mins, maxs = body_bounds(body)
     chest = marks.get("chest")
     mid = chest.x if chest is not None else (mins.x + maxs.x) * 0.5
     torso = _measure_torso_half(body, marks)
     marks["torso_half_x"] = float(torso)
-    hips_z = marks["hips"].z
-    neck_z = marks["neck"].z
-    for side, sign, hand_x in (("l", 1.0, maxs.x), ("r", -1.0, mins.x)):
-        inner_y, inner_z, inner_n = 0.0, 0.0, 0
-        hand = None
-        hand_dx = -1.0
-        for vert in body.data.vertices:
-            world = body.matrix_world @ vert.co
-            if world.z < hips_z or world.z > neck_z:
-                continue
-            dx = (world.x - mid) * sign
-            if dx > torso * 1.06 and dx < torso * 1.40:
-                inner_y += world.y
-                inner_z += world.z
-                inner_n += 1
-            if dx > hand_dx:
-                hand_dx = dx
-                hand = world.copy()
-        bone = marks.get("arm_" + side) or marks.get("shoulder_" + side)
-        mid_y = (mins.y + maxs.y) * 0.5
-        fb_y = bone.y if bone is not None else mid_y
-        fb_z = bone.z if bone is not None else marks["shoulders"].z
-        y0 = (inner_y / inner_n) if inner_n else fb_y
-        z0 = (inner_z / inner_n) if inner_n else fb_z
-        marks["sleeve_start_" + side] = Vector((
-            mid + sign * torso * 0.96, y0, z0,
-        ))
+    mid_y = (mins.y + maxs.y) * 0.5
+    ankle = marks.get("ankle_l") or marks.get("ankle_r")
+    z_floor = ankle.z if ankle is not None else mins.z
+    for side, sign in (("l", 1.0), ("r", -1.0)):
+        bone_sh = marks.get("arm_" + side) or marks.get(
+            "shoulder_" + side,
+        )
+        bone_wr = marks.get("wrist_" + side)
+        if bone_sh is not None:
+            start = bone_sh.copy()
+            start.x = mid + sign * torso * 1.04
+        else:
+            start = Vector((
+                mid + sign * torso * 1.04,
+                mid_y,
+                marks["shoulders"].z,
+            ))
+        hand = bone_wr.copy() if bone_wr is not None else None
         if hand is None:
-            hand = Vector((hand_x, fb_y, fb_z))
+            hand_dx = -1.0
+            for vert in body.data.vertices:
+                world = body.matrix_world @ vert.co
+                if world.z < z_floor:
+                    continue
+                dx = (world.x - mid) * sign
+                if dx > hand_dx:
+                    hand_dx = dx
+                    hand = world.copy()
+        if hand is None:
+            hand = Vector((
+                mid + sign * max(torso * 1.8, 0.01),
+                start.y,
+                start.z,
+            ))
+        marks["sleeve_start_" + side] = start
         marks["sleeve_end_" + side] = hand
 
 
@@ -293,11 +301,15 @@ def prepare_garment_body():
     marks = extract_landmarks(body)
     _refine_stacked_body(body, marks)
     _bind_sleeve_axes(body, marks)
+    mins, maxs = body_bounds(body)
+    height = max(maxs.z - mins.z, 0.001)
     if cfg.get("hem") is not None:
         spec_hem = float(cfg["hem"])
-        marks["hem"] = Vector((
-            marks["hem"].x, marks["hem"].y,
-            max(spec_hem, marks["hem"].z),
-        ))
+        anat = marks["hem"].z
+        neck = marks["neck"].z
+        if anat < spec_hem < neck - height * 0.04:
+            marks["hem"] = Vector((
+                marks["hem"].x, marks["hem"].y, spec_hem,
+            ))
     return body, marks
 '''

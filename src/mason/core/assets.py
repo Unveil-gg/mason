@@ -130,6 +130,7 @@ class RasterLayer(BaseModel):
     name: str
     role: Literal[
         "background", "fill", "text", "image", "overlay",
+        "underlay", "paint", "mask", "lettering",
     ] | None = None
     fill: str | None = None
     rect: LayerRect | None = None
@@ -163,6 +164,10 @@ class RasterLayer(BaseModel):
         if self.stamp:
             if not self.fill or self.rect is None:
                 raise ValueError("stamp needs fill and rect")
+            return self
+        if self.role in ("paint", "mask", "lettering", "underlay"):
+            if self.role == "underlay" and not self.image:
+                raise ValueError("underlay needs image")
             return self
         if not self.fill and not self.text and not self.image and not self.pixels:
             raise ValueError("layer needs fill, text, image, or pixels")
@@ -340,6 +345,7 @@ class SpriteSheetSpec(ArtFields):
     canvas: PixelDimensions
     style: str = "default"
     animations: list[SpriteAnimation] = Field(min_length=1)
+    master_frame: str | None = None
     export: SpriteExport = Field(default_factory=SpriteExport)
     metadata: dict[str, str] = Field(default_factory=dict)
 
@@ -392,6 +398,10 @@ def dump_asset_spec(spec: AssetSpec, path: Path) -> None:
         data.pop("depends_on", None)
     if not data.get("decomposition"):
         data.pop("decomposition", None)
+    if not data.get("workflow"):
+        data.pop("workflow", None)
+    if not data.get("master_frame"):
+        data.pop("master_frame", None)
     if not data.get("decals"):
         data.pop("decals", None)
     path.write_text(

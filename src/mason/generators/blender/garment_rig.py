@@ -123,6 +123,15 @@ def _rotate_named(arm, names, axis, angle):
 
 def _apply_pose(arm, kind):
     """Rotate deform bones first so posed verts actually move."""
+    aliases = {
+        "stand": "neutral",
+        "walk": "arms_forward",
+        "sit": "crouch",
+        "reach": "arms_spread",
+    }
+    kind = aliases.get(kind, kind)
+    if kind == "neutral":
+        return
     if kind == "arms_forward":
         _rotate_named(arm, ("arm.l", "c_arm_fk.l"), 0, -0.7)
         _rotate_named(arm, ("arm.r", "c_arm_fk.r"), 0, -0.7)
@@ -152,6 +161,7 @@ def run_pose_tests(shirt, body):
     names = (
         "neutral", "arms_forward", "arms_spread", "arms_up",
         "elbow_bend", "crouch", "twist", "leg_raise",
+        "stand", "walk", "sit", "reach",
     )
     scores = {}
     total = max(len(shirt.data.vertices), 1)

@@ -131,6 +131,53 @@ def test_snap_skin_uses_node_origin() -> None:
     assert ok, detail
 
 
+def test_flush_second_axis() -> None:
+    from mason.generators.blender.snap import apply_seats, facades_fit
+
+    wall = PropPart(
+        name="main",
+        size=(2.0, 1.0, 1.4),
+        location=(0.0, 0.0, 0.7),
+    )
+    pad = PropPart(
+        name="portico",
+        size=(1.2, 0.6, 0.1),
+        location=(0.0, -2.0, 5.0),
+        snap=PartSnap(to="plinth", on="top"),
+        flush=PartSnap(to="main", on="front"),
+    )
+    plinth = PropPart(
+        name="plinth",
+        size=(2.2, 1.2, 0.14),
+        location=(0.0, 0.0, 0.07),
+    )
+    out = apply_seats([plinth, wall, pad])
+    by_name = {p.name: p for p in out}
+    assert by_name["portico"].location[2] == pytest.approx(0.19)
+    assert by_name["portico"].location[1] == pytest.approx(-0.8)
+    ok, detail = facades_fit(out)
+    assert ok, detail
+
+
+def test_facade_fit_rejects_corner_kiss() -> None:
+    from mason.generators.blender.snap import facades_fit
+
+    wall = PropPart(
+        name="main",
+        size=(2.0, 1.0, 1.4),
+        location=(0.0, 0.0, 0.7),
+    )
+    pad = PropPart(
+        name="portico",
+        size=(0.2, 0.2, 0.1),
+        location=(1.08, -0.6, 0.05),
+        flush=PartSnap(to="main", on="front"),
+    )
+    ok, detail = facades_fit([wall, pad])
+    assert not ok
+    assert "portico" in detail
+
+
 def test_unknown_to_raises() -> None:
     part = PropPart(
         name="lid",

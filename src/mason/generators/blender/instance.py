@@ -26,10 +26,8 @@ def import_instance(part):
     for obj in imported:
         if obj.parent and obj.parent in imported:
             continue
-        world = obj.matrix_world.copy()
         obj.parent = root
-        obj.matrix_parent_inverse = root.matrix_world.inverted()
-        obj.matrix_world = world
+        obj.matrix_parent_inverse.identity()
         if obj.type == "MESH" and not obj.name.startswith(name + "_"):
             obj.name = name + "_" + obj.name
     return root

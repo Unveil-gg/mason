@@ -40,6 +40,9 @@ def inspect_payload(job: AssetJob, *, full: bool = False) -> dict[str, Any]:
         "asset_id": spec.id,
         "name": spec.name,
         "type": spec.type,
+        "workflow": spec.workflow or (
+            meta.workflow if meta else None
+        ),
         "style": spec.style,
         "source_spec": meta.source_spec if meta else None,
         "tool": result.tool if result else None,

@@ -336,6 +336,7 @@ def run_ingest(
     fetch_url: str | None = None,
     view: str | None = None,
     component: str | None = None,
+    purpose: str | None = None,
 ) -> dict:
     """CLI entry: measure a reference image and hand it to Mason.
 
@@ -402,7 +403,7 @@ def run_ingest(
         if job.exists():
             spec = _merge_ingest(
                 job.load_spec(), ratio, analysis, view, image,
-                component,
+                component, purpose,
             )
             job.write_spec(spec)
             job.write_art_sidecars(spec)
@@ -412,7 +413,7 @@ def run_ingest(
                 if original.is_file():
                     updated = _merge_ingest(
                         load_asset_spec(original), ratio, analysis,
-                        view, image, component,
+                        view, image, component, purpose,
                     )
                     dump_asset_spec(updated, original)
         else:
@@ -425,14 +426,22 @@ def run_ingest(
             job.write_meta(_rel(root, scaffold_path))
             job.write_art_sidecars(_spec)
             payload["scaffold"] = _rel(root, scaffold_path)
-        dest = _silhouette_dest(job, view, component)
+        dest = _silhouette_dest(job, view, component, purpose)
         regions_dest = job.previews / "reference_regions.png"
         payload["asset_id"] = asset_id
         payload["view"] = view
         payload["component"] = component
+        payload["purpose"] = purpose
+        if purpose == "correction" and asset_id:
+            cached = _cache_correction(job, image, view, component)
+            payload["correction"] = _rel(root, cached) if root else str(cached)
     dest.parent.mkdir(parents=True, exist_ok=True)
     sil.save(dest)
-    if asset_id and _write_whole_object_silhouette(job, component):
+    if (
+        asset_id
+        and purpose != "correction"
+        and _write_whole_object_silhouette(job, component)
+    ):
         primary = job.previews / "reference_silhouette.png"
         if dest.resolve() != primary.resolve():
             sil.save(primary)
@@ -496,14 +505,20 @@ def _merge_ingest(
     view: str | None,
     image: Path,
     component: str | None,
+    purpose: str | None = None,
 ) -> AssetSpec:
     """Merge CV facts. Component isolates skip parent art_analysis."""
-    if not component or _is_component_job(spec, component):
-        spec = _apply_analysis(spec, ratio, analysis)
+    if purpose != "correction":
+        if not component or _is_component_job(spec, component):
+            spec = _apply_analysis(spec, ratio, analysis)
     spec = _apply_reference_view(
         spec, analysis, ratio, view, image, component,
+        purpose=purpose,
     )
-    spec = _bind_component_reference(spec, image, view, component)
+    if purpose == "correction":
+        spec = _bind_correction_reference(spec, image, view, component)
+    else:
+        spec = _bind_component_reference(spec, image, view, component)
     return spec
 
 
@@ -516,8 +531,14 @@ def _is_component_job(spec: AssetSpec, component: str) -> bool:
 
 def _silhouette_dest(
     job, view: str | None, component: str | None,
+    purpose: str | None = None,
 ) -> Path:
     """Preview path for an ingested silhouette."""
+    if purpose == "correction":
+        suffix = "_".join(
+            part for part in (component, view or "default") if part
+        )
+        return job.previews / f"correction_silhouette_{suffix}.png"
     if component:
         suffix = view or "default"
         return job.previews / (
@@ -526,6 +547,51 @@ def _silhouette_dest(
     if view:
         return job.previews / f"reference_silhouette_{view}.png"
     return job.previews / "reference_silhouette.png"
+
+
+def _cache_correction(
+    job: AssetJob,
+    image: Path,
+    view: str | None,
+    component: str | None,
+) -> Path:
+    """Copy a paintover into the job refs cache."""
+    refs = job.dir / "refs"
+    refs.mkdir(parents=True, exist_ok=True)
+    suffix = "_".join(
+        part for part in (component, view or "default") if part
+    )
+    dest = refs / f"correction_{suffix}.png"
+    dest.write_bytes(image.read_bytes())
+    return dest
+
+
+def _bind_correction_reference(
+    spec: AssetSpec,
+    image: Path,
+    view: str | None,
+    component: str | None,
+) -> AssetSpec:
+    """Record a purpose=correction paintover on art_direction."""
+    direction = spec.art_direction or ArtDirection()
+    refs = list(direction.references)
+    path = str(image)
+    already = any(
+        row.path == path and row.purpose == "correction"
+        and row.component == component and row.view == view
+        for row in refs
+    )
+    if not already:
+        refs.append(ReferenceImage(
+            path=path,
+            purpose="correction",
+            view=view,
+            component=component,
+        ))
+        spec.art_direction = direction.model_copy(
+            update={"references": refs},
+        )
+    return spec
 
 
 def _write_whole_object_silhouette(job, component: str | None) -> bool:
@@ -577,9 +643,10 @@ def _apply_reference_view(
     view: str | None,
     image: Path,
     component: str | None = None,
+    purpose: str | None = None,
 ) -> AssetSpec:
     """Merge one measured view into reference_analysis. No parts."""
-    if not view and not component:
+    if not view and not component and purpose != "correction":
         return spec
     view_name = view or "default"
     profile = [
@@ -591,7 +658,9 @@ def _apply_reference_view(
     entry = ReferenceView(
         view=view_name,
         path=str(image),
-        purpose="component" if component else "silhouette",
+        purpose=(
+            purpose or ("component" if component else "silhouette")
+        ),
         component=component,
         height_width_ratio=round(ratio, 4),
         contour=list(analysis.contour),

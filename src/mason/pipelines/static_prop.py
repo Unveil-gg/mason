@@ -17,7 +17,11 @@ from mason.generators.blender.components import expand_components
 from mason.generators.blender.decal_faces import resolve_face
 from mason.generators.blender.part_ops import expand_part_ops
 from mason.generators.blender.recipes import expand_recipe
-from mason.generators.blender.snap import apply_snaps, snaps_touch
+from mason.generators.blender.snap import (
+    apply_seats,
+    facades_fit,
+    snaps_touch,
+)
 from mason.generators.blender.script_builder import build_blender_script
 from mason.pipelines.compare import write_compare_plate
 from mason.pipelines.contact_sheet import write_contact_sheet, write_worn_sheet
@@ -48,7 +52,7 @@ def resolved_parts(spec: StaticPropSpec):
         parts = []
     parts = parts + _decal_parts(spec)
     after_ops = expand_part_ops(parts)
-    after_snap = apply_snaps(after_ops)
+    after_snap = apply_seats(after_ops)
     return expand_components(after_snap)
 
 
@@ -65,10 +69,29 @@ def snap_touch_report(spec: StaticPropSpec) -> tuple[bool, str]:
         )
     else:
         return True, "ok"
-    after_snap = apply_snaps(expand_part_ops(parts + _decal_parts(spec)))
+    after_snap = apply_seats(expand_part_ops(parts + _decal_parts(spec)))
     if not any(part.snap for part in after_snap):
         return True, "ok"
     return snaps_touch(after_snap)
+
+
+def facade_fit_report(spec: StaticPropSpec) -> tuple[bool, str]:
+    """Whether wall snap/flush decorations overlap their host face."""
+    if spec.geometry.parts:
+        parts = list(spec.geometry.parts)
+    elif spec.geometry.recipe is not None:
+        parts = expand_recipe(
+            spec.geometry.recipe,
+            spec.dimensions,
+            spec.geometry.recipe_params,
+            spec.materials.primary,
+        )
+    else:
+        return True, "ok"
+    seated = apply_seats(expand_part_ops(parts + _decal_parts(spec)))
+    if not any(p.flush for p in seated):
+        return True, "ok"
+    return facades_fit(seated)
 
 
 def _decal_parts(spec: StaticPropSpec) -> list[PropPart]:
@@ -265,6 +288,7 @@ def build_static_prop(
             },
         })
     touch = snap_touch_report(spec)
+    facade = facade_fit_report(spec)
     parts = resolved_parts(spec)
     assert_known_families(parts, style)
     spec.geometry.parts = parts
@@ -334,7 +358,7 @@ def build_static_prop(
     write_worn_sheet(job.previews)
     write_compare_plate(job)
     report = validate_static_prop(
-        job, spec, result.exit_code, touch=touch,
+        job, spec, result.exit_code, touch=touch, facade=facade,
     )
     outputs = {}
     glb = job.output / "asset.glb"

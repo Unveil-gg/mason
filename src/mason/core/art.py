@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from mason.core.decompose import Decomposition
 from mason.core.form_plan import GeometricPlan, QualityStage
 from mason.core.ref_analysis import ReferenceAnalysis
+from mason.core.workflow import WorkflowKind
 
 
 class UsageSpec(BaseModel):
@@ -34,6 +35,7 @@ class ReferenceImage(BaseModel):
         "detail",
         "composition",
         "component",
+        "correction",
     ]
     view: str | None = None
     component: str | None = None
@@ -62,6 +64,16 @@ class MaterialIntent(BaseModel):
     palette: str | None = None
 
 
+class GameplayRead(BaseModel):
+    """How the asset must read in-game."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    camera: str = ""
+    on_screen_size: str = ""
+    must_read: list[str] = Field(default_factory=list)
+
+
 class ArtDirection(BaseModel):
     """Optional brief an external agent fills before generation."""
 
@@ -76,6 +88,11 @@ class ArtDirection(BaseModel):
     detail_density: Literal["low", "medium", "high"] = "medium"
     references: list[ReferenceImage] = Field(default_factory=list)
     constraints: list[str] = Field(default_factory=list)
+    focal_point: str = ""
+    value_hierarchy: str = ""
+    asymmetry: str = "none"
+    gameplay: GameplayRead = Field(default_factory=GameplayRead)
+    recognition_details: list[str] = Field(default_factory=list)
 
 
 class PlanForm(BaseModel):
@@ -304,6 +321,16 @@ class CompareToBest(BaseModel):
     reason: str = ""
 
 
+class CorrectionTarget(BaseModel):
+    """One named part, param, or landmark the next edit may change."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    part: str | None = None
+    param: str | None = None
+    landmark: str | None = None
+
+
 class VisualEvaluation(BaseModel):
     """Critic scores written by mason evaluate, not by the build."""
 
@@ -326,11 +353,18 @@ class VisualEvaluation(BaseModel):
     ship: bool = False
     iteration: int | None = None
     created_at: str = ""
+    primary_failure: str = ""
+    correction_targets: list[CorrectionTarget] = Field(
+        default_factory=list,
+    )
+    approved: list[str] = Field(default_factory=list)
+    visual_reasoning: bool = False
 
 
 class ArtFields(BaseModel):
     """Shared optional art-loop fields on every AssetSpec type."""
 
+    workflow: WorkflowKind | None = None
     art_direction: ArtDirection | None = None
     construction_plan: ConstructionPlan | None = None
     geometric_plan: GeometricPlan | None = None

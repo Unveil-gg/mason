@@ -20,7 +20,10 @@ RECIPES = (
     "crate", "shelf", "table", "hydrant", "cart",
     "house", "tree", "pool", "estate",
 )
-LAYER_ROLES = ("background", "fill", "text", "image", "overlay")
+LAYER_ROLES = (
+    "background", "fill", "text", "image", "overlay",
+    "underlay", "paint", "mask", "lettering",
+)
 FAMILIES = (
     "painted_metal", "bare_metal", "varnished_wood",
     "rubber", "plastic", "cardboard", "fabric",
@@ -29,9 +32,20 @@ FAMILIES = (
 )
 
 
-def vocab_payload() -> dict[str, Any]:
-    """Return the agent vocabulary card."""
+def vocab_payload(workflow: str | None = None) -> dict[str, Any]:
+    """Return the agent vocabulary card, optionally scoped."""
+    payload = _full_vocab()
+    if not workflow:
+        return payload
+    from mason.core.workflow import scope_vocab
+    return scope_vocab(payload, workflow)
+
+
+def _full_vocab() -> dict[str, Any]:
+    """Unscoped catalog."""
+    from mason.core.workflow import WORKFLOWS
     return {
+        "workflows": list(WORKFLOWS),
         "shapes": list(SHAPES),
         "techniques": list(TECHNIQUES),
         "components": sorted(COMPONENTS),
@@ -75,9 +89,11 @@ def vocab_payload() -> dict[str, Any]:
             "icons/chrome on top. Never AI the type."
         ),
         "sprites": (
-            "sprite_sheet via Aseprite. One animation per "
-            "row. Prefer pixels+keys and a shared style "
-            "palette. Example: examples/assets/barbarian.yaml."
+            "sprite_sheet via Aseprite. Approve ONE still "
+            "(master_frame) before animation. Later frames "
+            "inherit palette, canvas, and anchors. Prefer "
+            "pixels+keys. Example: examples/assets/"
+            "barbarian.yaml."
         ),
         "style_tune": (
             "styles/<name>.yaml is the project look bible "
@@ -91,7 +107,35 @@ def vocab_payload() -> dict[str, Any]:
             "Recipes are named clusters, not the path to "
             "beauty. Novel assets use parts + style + stamps. "
             "Add a recipe only after the same cluster appears "
-            "three times."
+            "three times. Prefer a specification plus an "
+            "approved master over a new make_* recipe."
+        ),
+        "workflow": (
+            "mason route <subject-or-id> chooses prop|building|"
+            "turned|sculptural|clothing_fitted|clothing_loose|"
+            "character|illustrated|texture|pixel|import. "
+            "Write spec.workflow. mason vocab --workflow "
+            "turned returns only that card. Do not force "
+            "buildings, clothes, or knights through one "
+            "shape grammar. Painterly work goes to Krita "
+            "(illustrated/texture/paint); geometry stays "
+            "on the 3D spec. import is a valid success."
+        ),
+        "plan": (
+            "mason plan <id> checks art_direction completeness "
+            "for the workflow. Include focal_point, "
+            "value_hierarchy, asymmetry, gameplay.must_read, "
+            "and recognition_details. Design the object; do "
+            "not list body parts. Route then ingest then plan "
+            "before writing geometry."
+        ),
+        "paint": (
+            "Krita is the painting desk, not mesh repair. "
+            "mason paint <id> --from render|uv|raster writes "
+            "a locked underlay plus paint/mask/lettering. "
+            "UV: export uv_layout.png, paint, rebind "
+            "part.texture. Paintover: ingest --purpose "
+            "correction. Do not open Krita to fix a neck."
         ),
         "taste": (
             "Ground is pavement or lawn, never a wall albedo. "
@@ -178,20 +222,21 @@ def vocab_payload() -> dict[str, Any]:
             "textures, and tiny details."
         ),
         "critique": (
-            "evaluate mode beauty|silhouette. "
+            "evaluate mode beauty|silhouette. Ask only: "
+            "silhouette match, gameplay-size read, major "
+            "proportions, focal point, material family, "
+            "pose weight, and the SINGLE highest-impact "
+            "correction (primary_failure + "
+            "correction_targets). Do not list ten changes. "
+            "Inspect previews/gameplay.png. "
             "represents_object is false if it does not read "
-            "as the subject (horse/Staunton, not a blob). "
-            "that forces reject. Identity outranks "
-            "continuity: do not list a watertight join as "
-            "improves unless target_identity also rose. "
-            "A drop in target_identity or "
-            "primary_silhouette rejects. try_again only "
-            "when identity still holds and one landmark "
-            "is being moved. Score view_scores and compare "
-            "{verdict: accept|reject|try_again}. "
-            "A better front cannot hide a worse critical "
-            "view. discrepancies rank critical|major|minor "
-            "and bind to a landmark part."
+            "as the subject. that forces reject. Identity "
+            "outranks continuity. A drop in target_identity "
+            "or primary_silhouette rejects. ship is false "
+            "while any critical discrepancy remains. "
+            "Failed evaluate needs primary_failure. "
+            "Score view_scores and compare "
+            "{verdict: accept|reject|try_again}."
         ),
         "iteration": (
             "current_best is the only promoted snapshot. "
@@ -289,7 +334,10 @@ def vocab_payload() -> dict[str, Any]:
             "metadata fit.penetration, fit.clearance_min, "
             "fit.sleeves.*.ratio, and fit.buttons before "
             "guessing from PNGs — those numbers are the "
-            "clipping / sleeve / cue measurements."
+            "clipping / sleeve / cue measurements. "
+            "Do not inflate the torso for loose clothes. "
+            "Pose tests (stand/walk/sit/reach) gate "
+            "validation when pose_scores exist."
         ),
         "run": (
             "Each build writes .mason/jobs/<id>/run.json (copied "
@@ -304,7 +352,11 @@ def vocab_payload() -> dict[str, Any]:
             "part.snap {to, on: top|bottom|front|back|left|right, "
             "embed} meets a named face. Skin/curve/outline snap "
             "against their local AABB (location is the origin, "
-            "not the box center). embed pushes into the target."
+            "not the box center). embed pushes into the target. "
+            "part.flush is a second-axis snap after the first, "
+            "for a portico that sits on a plinth and meets a "
+            "wall. facade_fit fails if a flush decoration does "
+            "not overlap the host face."
         ),
         "decal_face": (
             "decal.face: top|bottom|front|back|left|right derives "

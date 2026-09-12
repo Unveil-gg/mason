@@ -78,6 +78,10 @@ def finish_result(
             spec.type, garment=spec_is_garment(spec),
         ),
     )
+    from mason.pipelines.gameplay import write_gameplay_preview
+    gameplay = write_gameplay_preview(job, spec)
+    if gameplay is not None:
+        result.previews["gameplay"] = job.rel(gameplay)
     job.write_art_sidecars(spec)
     job.write_validation(report)
     job.write_result(result)

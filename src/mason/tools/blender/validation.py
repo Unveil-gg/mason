@@ -18,11 +18,35 @@ def _check(name: str, passed: bool, detail: str | None = None) -> ValidationChec
     return ValidationCheck(name=name, passed=passed, detail=detail)
 
 
+_POSE_ALIASES = {
+    "stand": "neutral",
+    "walk": "arms_forward",
+    "sit": "crouch",
+    "reach": "arms_spread",
+}
+_POSE_PEN_LIMIT = 0.25
+
+
+def _pose_tests_ok(fit: dict) -> tuple[bool, str]:
+    """Fail obvious clipping on stand/walk/sit/reach poses."""
+    scores = fit.get("pose_scores") or {}
+    if not scores:
+        return True, "no pose_scores"
+    failed: list[str] = []
+    for alias, canonical in _POSE_ALIASES.items():
+        row = scores.get(alias) or scores.get(canonical) or {}
+        pen = float(row.get("penetration") or 0.0)
+        if pen > _POSE_PEN_LIMIT:
+            failed.append(f"{alias}={pen:.3f}")
+    return (not failed, ",".join(failed) if failed else "ok")
+
+
 def validate_static_prop(
     job: AssetJob,
     spec: StaticPropSpec,
     exit_code: int,
     touch: tuple[bool, str] | None = None,
+    facade: tuple[bool, str] | None = None,
 ) -> ValidationReport:
     """Run deterministic checks on a static_prop job."""
     checks: list[ValidationCheck] = []
@@ -203,6 +227,8 @@ def validate_static_prop(
                 f"tubes={len(tubes)} clip={clip_s or 'none'}"
             ),
         ))
+        pose_ok, pose_detail = _pose_tests_ok(fit)
+        checks.append(_check("garment_poses", pose_ok, pose_detail))
         if fit:
             metrics["fit"] = fit
     else:
@@ -222,6 +248,8 @@ def validate_static_prop(
         else:
             touch_detail = "ok"
         checks.append(_check("parts_touch", touch_ok, touch_detail))
+        if facade is not None:
+            checks.append(_check("facade_fit", facade[0], facade[1]))
     if spec.geometry.bodies:
         from mason.pipelines.continuity import preview_continuity
         for name in (

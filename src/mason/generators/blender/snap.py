@@ -49,19 +49,38 @@ def union_aabb(
 
 def apply_snaps(parts: list[PropPart]) -> list[PropPart]:
     """Move snapped parts so opposite faces meet. One pass, list order."""
+    return _apply_meets(parts, "snap")
+
+
+def apply_flushes(parts: list[PropPart]) -> list[PropPart]:
+    """Second-axis meet after snap. Portico on a pad against a wall."""
+    return _apply_meets(parts, "flush")
+
+
+def apply_seats(parts: list[PropPart]) -> list[PropPart]:
+    """Snap, then flush. Use this before Blender sees locations."""
+    return apply_flushes(apply_snaps(parts))
+
+
+def _apply_meets(
+    parts: list[PropPart],
+    field: str,
+) -> list[PropPart]:
+    """Move parts that declare snap or flush. Returns a new list."""
     by_name = {part.name: part for part in parts}
     out: list[PropPart] = []
     for part in parts:
-        if part.snap is None:
+        meet = getattr(part, field, None)
+        if meet is None:
             out.append(part)
             continue
         current = list(by_name.values())
         targets = _lookup(
-            current, by_name, _snap_target(part.name, part.snap.to),
+            current, by_name, _snap_target(part.name, meet.to),
         )
         target_lo, target_hi = union_aabb(targets)
         loc = _snapped_location(
-            part, target_lo, target_hi, part.snap.on, part.snap.embed,
+            part, target_lo, target_hi, meet.on, meet.embed,
         )
         moved = part.model_copy(update={"location": loc})
         by_name[part.name] = moved
@@ -75,15 +94,34 @@ def snaps_touch(
 ) -> tuple[bool, str]:
     """Whether every snapped part's AABB meets its target. Returns
     (ok, detail)."""
+    return _meets_touch(parts, "snap", tol)
+
+
+def flushes_touch(
+    parts: list[PropPart],
+    tol: float = 0.05,
+) -> tuple[bool, str]:
+    """Whether every flushed part's AABB meets its host. Returns
+    (ok, detail)."""
+    return _meets_touch(parts, "flush", tol)
+
+
+def _meets_touch(
+    parts: list[PropPart],
+    field: str,
+    tol: float,
+) -> tuple[bool, str]:
+    """Shared snap/flush contact test."""
     by_name = {part.name: part for part in parts}
     details: list[str] = []
     ok = True
     for part in parts:
-        if part.snap is None:
+        meet = getattr(part, field, None)
+        if meet is None:
             continue
         try:
             targets = _lookup(
-                parts, by_name, _snap_target(part.name, part.snap.to),
+                parts, by_name, _snap_target(part.name, meet.to),
             )
         except MasonError as exc:
             ok = False
@@ -91,8 +129,72 @@ def snaps_touch(
             continue
         if not aabbs_touch(aabb(part), union_aabb(targets), tol):
             ok = False
-            details.append(f"{part.name}->{part.snap.to}")
+            details.append(f"{part.name}->{meet.to}")
     return ok, ", ".join(details) if details else "ok"
+
+
+_WALL = frozenset({"front", "back", "left", "right"})
+
+
+def facades_fit(
+    parts: list[PropPart],
+    tol: float = 0.05,
+    min_overlap: float = 0.25,
+) -> tuple[bool, str]:
+    """Wall snap/flush parts must meet the host and share the face.
+
+    A portico that only kisses a corner fails. Returns (ok, detail).
+    """
+    touch_ok, touch_detail = flushes_touch(parts, tol)
+    by_name = {part.name: part for part in parts}
+    details: list[str] = []
+    ok = touch_ok
+    if not touch_ok and touch_detail != "ok":
+        details.append(touch_detail)
+    for part in parts:
+        meets = [part.flush]
+        for meet in meets:
+            if meet is None or meet.on not in _WALL:
+                continue
+            try:
+                targets = _lookup(
+                    parts, by_name, _snap_target(part.name, meet.to),
+                )
+            except MasonError as exc:
+                ok = False
+                details.append(str(exc.message))
+                continue
+            host = union_aabb(targets)
+            child = aabb(part)
+            if not aabbs_touch(child, host, tol):
+                ok = False
+                details.append(f"{part.name}->{meet.to}")
+                continue
+            if not _face_overlap(child, host, meet.on, min_overlap):
+                ok = False
+                details.append(f"{part.name}@{meet.on}")
+    return ok, ", ".join(details) if details else "ok"
+
+
+def _face_overlap(
+    child: tuple[list[float], list[float]],
+    host: tuple[list[float], list[float]],
+    on: str,
+    min_frac: float,
+) -> bool:
+    """True if the child covers enough of the host on the wall face."""
+    # front/back = Y; overlap X and Z. left/right = X; overlap Y and Z.
+    axes = (0, 2) if on in ("front", "back") else (1, 2)
+    c_lo, c_hi = child
+    h_lo, h_hi = host
+    for axis in axes:
+        overlap = min(c_hi[axis], h_hi[axis]) - max(c_lo[axis], h_lo[axis])
+        span = min(c_hi[axis] - c_lo[axis], h_hi[axis] - h_lo[axis])
+        if span <= 1e-6:
+            continue
+        if overlap / span < min_frac:
+            return False
+    return True
 
 
 def aabbs_touch(

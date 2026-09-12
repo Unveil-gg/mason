@@ -281,3 +281,38 @@ def test_ingest_fetch_caches_ref(
     assert cached.is_file()
     assert (job.dir / "refs" / "ref.source.json").is_file()
     assert job.run_json.is_file()
+
+
+def test_ingest_correction_purpose(
+    project: Path, monkeypatch, tmp_path: Path,
+) -> None:
+    spec = parse_asset_spec({
+        "type": "static_prop",
+        "id": "box",
+        "name": "Box",
+        "dimensions": {"width": 1, "depth": 1, "height": 1},
+        "geometry": {"recipe": "crate"},
+    })
+    job = AssetJob(project, spec.id)
+    job.prepare()
+    job.write_spec(spec)
+    job.write_meta(None)
+    src = tmp_path / "fix.png"
+    _dark_rect(src)
+    monkeypatch.chdir(project)
+    result = runner.invoke(
+        app,
+        [
+            "ingest", str(src), "--asset", "box",
+            "--purpose", "correction", "--view", "side", "--json",
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+    data = json.loads(result.stdout)
+    assert data["purpose"] == "correction"
+    assert (job.dir / "refs" / "correction_side.png").is_file()
+    loaded = job.load_spec()
+    purposes = [
+        row.purpose for row in loaded.art_direction.references
+    ]
+    assert "correction" in purposes

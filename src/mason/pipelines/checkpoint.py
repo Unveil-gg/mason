@@ -163,6 +163,19 @@ def apply_checkpoint(
         verdict = "reject"
         why = "does not represent the object"
         reason = f"{why}. {reason}" if reason else why
+    critical = [
+        row for row in evaluation.discrepancies if row.rank == "critical"
+    ]
+    if evaluation.ship and critical:
+        evaluation.ship = False
+        verdict = "reject"
+        why = "ship blocked: critical discrepancies remain"
+        reason = f"{why}. {reason}" if reason else why
+    lock_hits = _locked_region_hits(job, evaluation)
+    if lock_hits:
+        verdict = "reject"
+        why = "locked region(s) changed: " + ", ".join(lock_hits)
+        reason = f"{why}. {reason}" if reason else why
     iou_dropped = []
     if best_n and best_n != candidate:
         iou_dropped = iou_regressed(
@@ -195,8 +208,13 @@ def apply_checkpoint(
                 reason = reason or "not better than current_best"
     accepted = verdict == "accept"
     new_best = candidate if accepted else best_n
+    preserved = not bool(lock_hits)
     if accepted:
         job.set_current_best(candidate)
+        if evaluation.approved:
+            from mason.core.approvals import merge_approved
+            merge_approved(job, evaluation.approved, candidate)
+        _record_first_accept(job, evaluation, candidate, preserved)
     compared = evaluation.compare or CompareToBest()
     compared.verdict = verdict
     compared.reason = reason
@@ -212,6 +230,8 @@ def apply_checkpoint(
         "reason": reason,
         "regressed_views": dropped,
         "critical_views": [row.view for row in views],
+        "approved_preserved": preserved,
+        "locked_changed": lock_hits,
     }
 
 
@@ -333,7 +353,10 @@ def restart_parts(
     keep: list[str],
     rebuild: list[str],
 ) -> dict:
-    """Copy keep parts from current_best; drop rebuild parts."""
+    """Copy keep names from current_best; drop rebuild names.
+
+    Supports static_prop parts, garment fields, and raster layers.
+    """
     meta = job.load_meta()
     best = meta.current_best if meta else None
     if not best:
@@ -349,19 +372,37 @@ def restart_parts(
         )
     best_spec = load_asset_spec(snap)
     live = job.load_spec()
-    if live.type != "static_prop" or best_spec.type != "static_prop":
-        raise MasonError(
-            "restart only applies to static_prop parts.",
-            code="restart_not_prop",
-        )
     keep_set = set(keep)
     rebuild_set = set(rebuild)
-    kept = [p for p in best_spec.geometry.parts if p.name in keep_set]
-    others = [
-        p for p in live.geometry.parts
-        if p.name not in keep_set and p.name not in rebuild_set
-    ]
-    live.geometry.parts = kept + others
+    kept: list[str] = []
+    if live.type == "layered_raster" and best_spec.type == "layered_raster":
+        kept_layers = [p for p in best_spec.layers if p.name in keep_set]
+        others = [
+            p for p in live.layers
+            if p.name not in keep_set and p.name not in rebuild_set
+        ]
+        live.layers = kept_layers + others
+        kept = [p.name for p in kept_layers]
+    elif live.type == "static_prop" and best_spec.type == "static_prop":
+        if live.geometry.garment and best_spec.geometry.garment:
+            kept = _restart_garment(
+                live, best_spec, keep_set, rebuild_set,
+            )
+        else:
+            kept_parts = [
+                p for p in best_spec.geometry.parts if p.name in keep_set
+            ]
+            others = [
+                p for p in live.geometry.parts
+                if p.name not in keep_set and p.name not in rebuild_set
+            ]
+            live.geometry.parts = kept_parts + others
+            kept = [p.name for p in kept_parts]
+    else:
+        raise MasonError(
+            "restart applies to static_prop or layered_raster.",
+            code="restart_not_supported",
+        )
     if live.construction_plan is None:
         from mason.core.art import ConstructionPlan
         live.construction_plan = ConstructionPlan()
@@ -371,12 +412,110 @@ def restart_parts(
     job.write_art_sidecars(live)
     if meta.source_spec:
         dest = job.project_root / meta.source_spec
+        dest.parent.mkdir(parents=True, exist_ok=True)
         dump_asset_spec(live, dest)
     return {
-        "kept": [p.name for p in kept],
+        "kept": kept,
         "removed": list(rebuild_set),
         "from_iteration": best,
     }
+
+
+_GARMENT_FIELDS = frozenset({
+    "collar", "cuffs", "hem", "hood", "sleeve", "neck",
+    "clearance", "ease_offset", "thickness", "fit",
+})
+
+
+def _restart_garment(
+    live,
+    best_spec,
+    keep_set: set[str],
+    rebuild_set: set[str],
+) -> list[str]:
+    """Copy named garment fields from current_best."""
+    kept: list[str] = []
+    aliases = {"ease_offset": "clearance", "collar": "neck"}
+    for name in keep_set:
+        field = aliases.get(name, name)
+        if field not in _GARMENT_FIELDS and name not in _GARMENT_FIELDS:
+            continue
+        src = getattr(best_spec.geometry.garment, field, None)
+        if src is None:
+            continue
+        setattr(live.geometry.garment, field, src)
+        kept.append(name)
+    details = list(best_spec.geometry.garment.details)
+    if rebuild_set:
+        live.geometry.garment.details = [
+            row for row in details if row not in rebuild_set
+        ]
+    return kept
+
+
+def _locked_region_hits(
+    job: AssetJob,
+    evaluation,
+) -> list[str]:
+    """Locked paths that differ from the current_best snapshot."""
+    from mason.core.approvals import (
+        load_approvals,
+        locked_paths_changed,
+    )
+    meta = job.load_meta()
+    if meta is None or meta.current_best is None:
+        return []
+    approvals = load_approvals(job)
+    if not approvals.locks:
+        return []
+    snap = job.iterations / f"{meta.current_best:03d}" / "asset.yaml"
+    if not snap.is_file():
+        return []
+    try:
+        live = job.load_spec()
+        best = load_asset_spec(snap)
+    except Exception:
+        return []
+    return locked_paths_changed(live, best, approvals)
+
+
+def _record_first_accept(
+    job: AssetJob,
+    evaluation,
+    candidate: int,
+    preserved: bool,
+) -> None:
+    """Write time-to-accept the first time a candidate is promoted."""
+    from mason.core.runs import JobRun
+    from mason.core.workflow import infer_workflow
+    spec = None
+    try:
+        spec = job.load_spec()
+    except Exception:
+        spec = None
+    workflow = None
+    if spec is not None:
+        workflow = infer_workflow(
+            (spec.art_direction.subject if spec.art_direction else "")
+            or spec.name,
+            spec,
+        )
+    time_ms = 0
+    for number in job.list_iterations():
+        if number > candidate:
+            continue
+        path = job.iterations / f"{number:03d}" / "run.json"
+        if not path.is_file():
+            continue
+        run = JobRun.model_validate_json(path.read_text(encoding="utf-8"))
+        time_ms += int(run.duration_ms or 0)
+    job.record_accept_metrics(
+        workflow=workflow,
+        iterations=candidate,
+        time_ms=time_ms,
+        visual_reasoning=evaluation.visual_reasoning,
+        approved_preserved=preserved,
+    )
 
 
 def _copy_previews(src: Path, dest: Path) -> None:

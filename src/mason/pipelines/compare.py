@@ -32,12 +32,17 @@ def write_compare_plate(job: AssetJob) -> Path | None:
         prev_label = f"{prev_kind} (iter {prev_n:03d})"
     else:
         prev_label = prev_kind
+    correction = _correction_target(job)
     ref = job.previews / "reference_silhouette.png"
     detail = _first_existing(job.previews, (
         "detail.png", "full.png",
     ))
-    corner = ref if ref.is_file() else detail
-    corner_label = "reference" if ref.is_file() else "detail"
+    if correction is not None:
+        corner, corner_label = correction, "correction"
+    elif ref.is_file():
+        corner, corner_label = ref, "reference"
+    else:
+        corner, corner_label = detail, "detail"
     tiles = [
         _load_tile(current_sil, size, label="current silhouette"),
         _load_tile(current_beauty, size, label="current"),
@@ -113,6 +118,33 @@ def run_compare(asset_id: str) -> dict:
     root = find_project_root()
     job = require_job(root, asset_id)
     return compare_payload(job)
+
+
+def _correction_target(job: AssetJob) -> Path | None:
+    """Prefer an ingested paintover over the original photo."""
+    refs = job.dir / "refs"
+    if refs.is_dir():
+        named = sorted(refs.glob("correction_*.png"))
+        if named:
+            return named[0]
+    preview = job.previews / "correction_silhouette.png"
+    if preview.is_file():
+        return preview
+    try:
+        spec = job.load_spec()
+    except Exception:
+        return None
+    direction = spec.art_direction
+    if direction is None:
+        return None
+    from mason.core.paths import resolve_project_path
+    for row in direction.references:
+        if row.purpose != "correction":
+            continue
+        path = resolve_project_path(job.project_root, row.path)
+        if path.is_file():
+            return path
+    return None
 
 
 def _current_silhouette(job: AssetJob) -> Path | None:

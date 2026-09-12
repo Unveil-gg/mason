@@ -15,12 +15,15 @@ Separate creator and critic even if you are one model.
 
 1. Run `mason doctor --json`.
 2. Confirm the required capabilities are available.
-3. Run `mason vocab --json` and read the style profile.
+3. Run `mason route <subject> --json`, then
+   `mason vocab --workflow <kind> --json`.
 4. If references exist, ingest them with --view and write
    reference_analysis (silhouettes, profile, landmarks).
    Complex objects: decompose, isolate components, model
    each, assemble, then evaluate the whole.
-5. Write `art_direction` (forms, usage, silhouette, materials).
+5. Write `art_direction` (focal point, value hierarchy,
+   gameplay read, silhouette, forms). `mason plan <id>`
+   must pass before parts.
 6. Write geometric_plan (masses, silhouette, landmarks+uv,
    critical_views, stage). Intent only. Recognition is not
    ship; style/type must match. Profile first when silhouette
@@ -29,7 +32,8 @@ Separate creator and critic even if you are one model.
    (inflate). skin is optional (skeleton pipes / blob spheres).
    Record techniques on construction_plan. Intent only.
 8. Create or modify the AssetSpec YAML. Blockout first when
-   silhouette dominates recognition.
+   silhouette dominates recognition. Painterly work uses
+   `mason paint`. Prefer import over a new Mason capability.
 9. Run `mason build <spec> --json`.
 10. Check technical validation. Do not ignore failures.
 11. If recognition is silhouette, inspect preview_roles.silhouette

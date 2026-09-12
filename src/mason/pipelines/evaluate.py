@@ -49,6 +49,13 @@ def evaluate_payload(
             f"Invalid visual evaluation: {exc}",
             code="invalid_evaluation",
         ) from exc
+    if not evaluation.passed and not evaluation.primary_failure:
+        raise MasonError(
+            "Failed evaluate needs primary_failure "
+            "(the single highest-impact miss).",
+            code="invalid_evaluation",
+            hint="Set primary_failure and correction_targets.",
+        )
     root = find_project_root()
     job = require_job(root, asset_id)
     meta = job.load_meta()
