@@ -1,6 +1,8 @@
 type: sprite_sheet
 id: trex
+workflow: pixel
 name: T-Rex
+master_frame: idle
 
 # 32x32 NES T-Rex, side-on, facing right. Horizontal body, big head,
 # tiny arms, heavy legs, long tail.
@@ -181,6 +183,10 @@ animations:
 
 art_direction:
   subject: NES T-Rex side view, facing right
+  focal_point: huge head and tiny arms
+  gameplay:
+    camera: side
+    must_read: [big head, tiny arms, heavy legs, long tail]
   silhouette: Horizontal body, huge head, tiny arms, heavy legs, long tail
   forms:
     primary: [head, torso, tail, legs]

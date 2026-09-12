@@ -7,6 +7,10 @@ art_direction:
   usage:
     importance: focal_prop
     viewing_distance: medium
+  focal_point: corner turret with conical hat
+  gameplay:
+    camera: three_quarter
+    must_read: [L-plan, turret, wrap porch]
   silhouette: >
     L-plan house, corner turret with a conical hat, crossing
     gables, deep wrap porch as a room, lawn and path.
@@ -87,6 +91,7 @@ decomposition:
   - {child: porch, parent: body}
 type: static_prop
 id: victorian_townhouse
+workflow: building
 name: Victorian Townhouse
 dimensions:
   width: 3.13

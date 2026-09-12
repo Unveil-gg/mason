@@ -1,6 +1,6 @@
 art_direction:
-  subject: 'Clean white short-sleeve button-down on ScrapPaws mousey. Plain
-    neck hole at the head-body pinch. Three buttons.
+  subject: 'Clean white short-sleeve button-down on ScrapPaws mousey. Plain neck hole
+    at the head-body pinch. Three buttons.
 
     '
   style:
@@ -13,8 +13,8 @@ art_direction:
   usage:
     importance: standard_prop
     viewing_distance: medium
-  silhouette: 'Shirt covers the body sphere, not a human torso. Plain neck
-    hole in the crease. Thin short sleeves. Hem toward the legs.
+  silhouette: 'Shirt covers the body sphere, not a human torso. Plain neck hole in
+    the crease. Thin short sleeves. Hem toward the legs.
 
     '
   forms:
@@ -34,6 +34,17 @@ art_direction:
   constraints:
   - No logos. No character body in the exported mesh.
   - Native mousey scale. Same skeleton if rigged.
+  focal_point: neck hole and short sleeves on mousey
+  value_hierarchy: torso first, then sleeves, then buttons
+  asymmetry: none
+  gameplay:
+    camera: worn
+    on_screen_size: medium
+    must_read:
+    - neck opening
+    - short sleeves
+    - hem above the feet
+  recognition_details: []
 construction_plan:
   techniques:
   - kind: fit
@@ -101,8 +112,58 @@ geometric_plan:
   notes:
   - Two stacked spheres. Collar at the pinch, not a bone neck.
   - Extract faces, do not loft a blob. Body is not exported.
+decomposition:
+  mode: parts
+  source_views:
+  - worn
+  - front
+  components:
+  - id: torso
+    role: primary
+    technique: fit
+  - id: sleeve
+    role: primary
+    technique: fit
+    instance_of: sleeve
+  - id: collar
+    role: secondary
+    technique: fit
+  joints:
+  - child: torso
+    location:
+    - 0.0
+    - 0.0
+    - 0.0
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    copies: []
+  - child: sleeve
+    parent: torso
+    location:
+    - 0.0
+    - 0.0
+    - 0.0
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    copies: []
+  - child: collar
+    parent: torso
+    location:
+    - 0.0
+    - 0.0
+    - 0.0
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    copies: []
 type: static_prop
 id: fitted_shirt
+workflow: clothing_fitted
 name: Fitted Shirt
 dimensions:
   width: 0.083
@@ -128,6 +189,7 @@ geometry:
     tree_height: 1.0
     pool_width: 1.78
     pool_depth: 1.02
+    include_casters: true
   parts: []
   bodies: []
   garment:
@@ -187,16 +249,5 @@ variants: []
 export:
   format: glb
   save_blend: true
-decomposition:
-  mode: parts
-  source_views: [worn, front]
-  components:
-  - {id: torso, role: primary, technique: fit}
-  - {id: sleeve, role: primary, technique: fit, instance_of: sleeve}
-  - {id: collar, role: secondary, technique: fit}
-  joints:
-  - {child: torso}
-  - {child: sleeve, parent: torso}
-  - {child: collar, parent: torso}
 attachments: []
 metadata: {}

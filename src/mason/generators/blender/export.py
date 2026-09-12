@@ -81,6 +81,8 @@ def scene_bounds():
 
 def export_uv_layout(path):
     """Export the first mesh UV layout for the Krita paint desk."""
+    if bpy.app.background:
+        return
     mesh = next(
         (
             o for o in bpy.data.objects

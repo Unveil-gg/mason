@@ -1,5 +1,6 @@
 type: static_prop
 id: grand_mansion
+workflow: building
 name: Grand Mansion
 
 # Estate recipe: house, garden, pool. Surfaces from 2D tiles.
@@ -50,6 +51,10 @@ art_direction:
   usage:
     importance: focal_prop
     viewing_distance: medium
+  focal_point: central pediment and portico
+  gameplay:
+    camera: three_quarter
+    must_read: [hip roof, portico, rear pool]
   silhouette: >
     Wide house with central pediment and chimneys, low front
     garden masses, rear rectangle of water against a hedge.

@@ -1,3 +1,4 @@
+workflow: prop
 art_direction:
   subject: wire grocery shopping cart
   style:
@@ -36,6 +37,17 @@ art_direction:
   detail_density: medium
   references: []
   constraints: []
+  focal_point: flared wire basket and short handle
+  value_hierarchy: ''
+  asymmetry: none
+  gameplay:
+    camera: three_quarter
+    on_screen_size: ''
+    must_read:
+    - flared basket
+    - handle
+    - four casters
+  recognition_details: []
 construction_plan:
   techniques: []
   primary_forms:

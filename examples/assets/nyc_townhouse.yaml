@@ -7,6 +7,10 @@ art_direction:
   usage:
     importance: focal_prop
     viewing_distance: medium
+  focal_point: stoop over the sunken areaway
+  gameplay:
+    camera: three_quarter
+    must_read: [flat facade, stoop, modest cornice]
   silhouette: >
     Narrow flat slab, modest cornice, stoop over a sunken
     areaway. Not a winged house, not a busy Victorian.
@@ -80,6 +84,7 @@ decomposition:
   - {child: window, parent: parlor}
 type: static_prop
 id: nyc_townhouse
+workflow: building
 name: NYC Townhouse
 dimensions:
   width: 1.40

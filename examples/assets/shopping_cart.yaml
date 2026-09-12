@@ -1,5 +1,6 @@
 type: static_prop
 id: shopping_cart
+workflow: prop
 name: Shopping Cart
 
 # Basket and casters are separate jobs. Assemble instances them.
@@ -67,6 +68,10 @@ art_direction:
   usage:
     importance: standard_prop
     viewing_distance: medium
+  focal_point: flared wire basket and short handle
+  gameplay:
+    camera: three_quarter
+    must_read: [flared basket, handle, four casters]
   silhouette: >
     Flared basket wider at the rim than the floor, four casters,
     short handle aft of the back rim, child-seat flap.

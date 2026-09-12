@@ -399,7 +399,14 @@ def _script_failed(stderr_path: Path) -> bool:
     if not stderr_path.is_file():
         return False
     text = stderr_path.read_text(encoding="utf-8", errors="replace")
-    return "Traceback (most recent call last)" in text
+    if "Traceback (most recent call last)" not in text:
+        return False
+    # Background Blender cannot GPU-export a UV layout PNG.
+    if text.count("Traceback (most recent call last)") == 1 and (
+        "io_mesh_uv_layout" in text or "GPUOffScreen" in text
+    ):
+        return False
+    return True
 
 
 def rel_source(project_root: Path, spec_path: Path | None) -> str | None:

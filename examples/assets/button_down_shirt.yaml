@@ -1,10 +1,11 @@
 type: static_prop
 id: button_down_shirt
+workflow: clothing_loose
 name: Button-Down Shirt
 
 # Long-sleeve button-down fitted to ScrapPaws mousey. Same body
 # as fitted_shirt, different cut: longer sleeves, regular ease,
-# longer hem, collar + placket + buttons.
+# collar + placket + buttons.
 dimensions:
   width: 0.09
   depth: 0.04
@@ -31,7 +32,7 @@ geometry:
     details: [collar, cuffs, hem, buttons]
     surface_details: [placket]
     fabric_weight: medium
-    clearance: 0.014
+    clearance: 0.012
     thickness: 0.003
     hem: 0.20
     sleeve: long
@@ -66,6 +67,10 @@ art_direction:
   usage:
     importance: standard_prop
     viewing_distance: medium
+  focal_point: collar and long sleeves on mousey
+  gameplay:
+    camera: worn
+    must_read: [collar, long sleeves, placket]
   silhouette: >
     Shirt covers the body sphere. Long sleeves to the wrists.
     Collar at the head-body pinch. Hem toward the legs.

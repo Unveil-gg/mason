@@ -3,11 +3,15 @@ art_direction:
   style:
     realism: 0.35
     stylization: 0.65
-    shape_language: []
+    shape_language: [carved, stacked, equine]
   usage:
     importance: hero
     viewing_distance: close
-  silhouette: stacked base, leaning neck, distinct skull/jaw/snout/mane
+  focal_point: side-profile horse head on a turned base
+  gameplay:
+    camera: side
+    must_read: [stacked base, S-curve neck, short snout]
+  silhouette: stacked base, S-curve neck, short horizontal head, mane down the nape
   forms:
     primary: [socle, column, neck, skull]
     secondary: [jaw, snout, mane, ears]
@@ -79,8 +83,28 @@ construction_plan:
   notes:
   - Iteration 005 blockout is the ancestor
   - Do not replace named parts with a skin or sphere cloud
+decomposition:
+  mode: parts
+  source_views: [side, silhouette_side, three_quarter]
+  components:
+  - {id: socle, role: primary, technique: box}
+  - {id: column, role: primary, technique: box}
+  - {id: neck, role: primary, technique: box}
+  - {id: skull, role: primary, technique: box}
+  - {id: jaw, role: secondary, technique: box}
+  - {id: snout, role: secondary, technique: box}
+  - {id: mane_crest, role: secondary, technique: box}
+  joints:
+  - {child: socle}
+  - {child: column, parent: socle}
+  - {child: neck, parent: column}
+  - {child: skull, parent: neck}
+  - {child: jaw, parent: skull}
+  - {child: snout, parent: jaw}
+  - {child: mane_crest, parent: skull}
 type: static_prop
 id: chess_knight
+workflow: sculptural
 name: Knight Chess Piece
 dimensions:
   width: 0.05
@@ -98,16 +122,16 @@ geometry:
   - {name: waist, shape: torus, size: [0.04, 0.04, 0.008], location: [0, 0, 0.025], material: wood_dark, family: plastic}
   - {name: column, shape: tapered_box, size: [0.026, 0.026, 0.028], location: [0, 0, 0.042], taper: [0.78, 0.78], material: wood_dark, family: plastic}
   - {name: collar, shape: torus, size: [0.03, 0.03, 0.008], location: [0, 0, 0.058], material: charcoal, family: bare_metal}
-  - {name: neck, shape: cylinder, size: [0.02, 0.022, 0.022], location: [0, -0.008, 0.07], rotation: [0.55, 0, 0], material: wood_dark, family: plastic}
-  - {name: skull, shape: sphere, size: [0.026, 0.03, 0.024], location: [0, -0.016, 0.086], material: wood_dark, family: plastic}
-  - {name: jaw, shape: tapered_box, size: [0.016, 0.026, 0.012], location: [0, -0.03, 0.078], rotation: [0.25, 0, 0], taper: [0.65, 0.8], material: wood_dark, family: plastic}
-  - {name: snout, shape: tapered_box, size: [0.012, 0.022, 0.01], location: [0, -0.044, 0.08], rotation: [0.2, 0, 0], taper: [0.5, 0.7], material: wood_dark, family: plastic}
-  - {name: brow, shape: box, size: [0.02, 0.012, 0.008], location: [0, -0.02, 0.096], material: wood_dark, family: plastic}
-  - {name: ear, shape: cone, size: [0.01, 0.007, 0.018], location: [-0.01, -0.01, 0.104], rotation: [0.2, 0, 0.55], material: wood_dark, family: plastic, mirror: x}
-  - {name: mane_crest, shape: box, size: [0.008, 0.022, 0.016], location: [0, 0, 0.09], rotation: [0.55, 0, 0], material: cream, family: plastic}
-  - {name: mane_back, shape: box, size: [0.007, 0.014, 0.02], location: [0, 0.01, 0.078], rotation: [0.35, 0, 0], material: cream, family: plastic}
-  - {name: eye, shape: sphere, size: [0.005, 0.004, 0.004], location: [-0.009, -0.026, 0.088], material: charcoal, family: bare_metal, mirror: x}
-  - {name: nostril, shape: cylinder, size: [0.0035, 0.0025, 0.003], location: [-0.0035, -0.052, 0.078], rotation: [1.15, 0, 0], material: charcoal, family: bare_metal, mirror: x}
+  - {name: neck, shape: cylinder, size: [0.026, 0.032, 0.030], location: [0, -0.004, 0.066], rotation: [0.28, 0, 0], material: wood_dark, family: plastic}
+  - {name: skull, shape: sphere, size: [0.022, 0.028, 0.020], location: [0, -0.016, 0.082], material: wood_dark, family: plastic}
+  - {name: jaw, shape: tapered_box, size: [0.015, 0.020, 0.011], location: [0, -0.026, 0.074], rotation: [0.15, 0, 0], taper: [0.70, 0.85], material: wood_dark, family: plastic}
+  - {name: snout, shape: tapered_box, size: [0.011, 0.016, 0.009], location: [0, -0.036, 0.079], rotation: [0.06, 0, 0], taper: [0.55, 0.75], material: wood_dark, family: plastic}
+  - {name: brow, shape: box, size: [0.016, 0.010, 0.006], location: [0, -0.020, 0.090], material: wood_dark, family: plastic}
+  - {name: ear, shape: sphere, size: [0.007, 0.008, 0.009], location: [-0.007, -0.012, 0.090], material: wood_dark, family: plastic, mirror: x}
+  - {name: mane_crest, shape: box, size: [0.009, 0.014, 0.028], location: [0, 0.006, 0.076], rotation: [0.18, 0, 0], material: cream, family: plastic}
+  - {name: mane_back, shape: box, size: [0.008, 0.012, 0.018], location: [0, 0.008, 0.060], rotation: [0.08, 0, 0], material: cream, family: plastic}
+  - {name: eye, shape: sphere, size: [0.0035, 0.003, 0.003], location: [-0.008, -0.026, 0.084], material: charcoal, family: bare_metal, mirror: x}
+  - {name: nostril, shape: cylinder, size: [0.0025, 0.002, 0.002], location: [-0.003, -0.042, 0.078], rotation: [1.20, 0, 0], material: charcoal, family: bare_metal, mirror: x}
 materials:
   strategy: family
   primary: wood_dark
