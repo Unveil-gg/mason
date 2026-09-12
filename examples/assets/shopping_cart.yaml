@@ -66,6 +66,18 @@ construction_plan:
     - rim wider than floor so the front reads nestable
     - walls snap to the floor; handle posts snap to the rim
 
+decomposition:
+  mode: parts
+  source_views: [three_quarter, side]
+  components:
+  - {id: basket, role: primary, technique: modular}
+  - {id: handle, role: secondary, technique: box}
+  - {id: caster, role: secondary, technique: modular, instance_of: caster}
+  joints:
+  - {child: basket}
+  - {child: handle, parent: basket}
+  - {child: caster, parent: basket}
+
 export:
   format: glb
   save_blend: true

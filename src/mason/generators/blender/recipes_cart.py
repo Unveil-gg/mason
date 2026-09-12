@@ -26,9 +26,9 @@ def cart_parts(
     floor_t = 0.014
     rim_t = 0.012
     wall_t = 0.008
-    post_t = 0.018
-    bar_t = 0.022
-    caster_h = 0.08
+    post_t = 0.028
+    bar_t = 0.034
+    caster_h = 0.12
     natural = caster_h + floor_t + basket_h + rim_t + handle_rise
     if natural <= h:
         basket_h = basket_h + (h - natural)
@@ -153,7 +153,7 @@ def cart_parts(
         ),
         PropPart(
             name="wheel_fl",
-            size=(0.05, 0.032, caster_h),
+            size=(0.08, 0.05, caster_h),
             location=(-floor_w / 2.0 + inset, -floor_d / 2.0 + inset, 0.04),
             material=rubber,
             family="rubber",
@@ -162,7 +162,7 @@ def cart_parts(
         ),
         PropPart(
             name="wheel_fr",
-            size=(0.05, 0.032, caster_h),
+            size=(0.08, 0.05, caster_h),
             location=(floor_w / 2.0 - inset, -floor_d / 2.0 + inset, 0.04),
             material=rubber,
             family="rubber",
@@ -171,7 +171,7 @@ def cart_parts(
         ),
         PropPart(
             name="wheel_bl",
-            size=(0.05, 0.032, caster_h),
+            size=(0.08, 0.05, caster_h),
             location=(-floor_w / 2.0 + inset, floor_d / 2.0 - inset, 0.04),
             material=rubber,
             family="rubber",
@@ -180,7 +180,7 @@ def cart_parts(
         ),
         PropPart(
             name="wheel_br",
-            size=(0.05, 0.032, caster_h),
+            size=(0.08, 0.05, caster_h),
             location=(floor_w / 2.0 - inset, floor_d / 2.0 - inset, 0.04),
             material=rubber,
             family="rubber",

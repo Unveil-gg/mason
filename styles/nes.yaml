@@ -9,3 +9,7 @@ palette:
   cloth_light: "#B04A4A"
   metal: "#9AA5AD"
   ink: "#140C08"
+  scale: "#5A9A3A"
+  scale_dark: "#2F5E28"
+  belly: "#D2C48A"
+  tooth: "#F0E8D0"

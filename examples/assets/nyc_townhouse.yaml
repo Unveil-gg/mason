@@ -31,7 +31,7 @@ geometric_plan:
   masses:
   - {name: basement, role: primary, connects_to: [parlor]}
   - {name: parlor, role: primary, connects_to: [basement, second]}
-  - {name: stair, role: secondary, connects_to: [parlor]}
+  - {name: landing, role: secondary, connects_to: [parlor]}
   silhouette: >
     Side: sidewalk does not meet the facade. Stoop bridges
     that NY gap. Front: even window grid, no bay.
@@ -39,11 +39,11 @@ geometric_plan:
   proportions: About 2.2x taller than wide. Parlor is not palatial.
   symmetry: bilateral
   negative_space: areaway under the stoop
-  abstraction: named floors, one stair block with step cuts
+  abstraction: named floors, stacked stoop treads with cheeks
   stage: secondary
   landmarks:
   - {id: cornice, role: modest crown, part: cornice}
-  - {id: stoop, role: stair mass, part: stair}
+  - {id: stoop, role: stair mass, part: landing}
   - {id: areaway, role: NY gap, part: sidewalk}
   critical_views:
   - {view: three_quarter, weight: 2}
@@ -58,11 +58,26 @@ construction_plan:
   primary_forms:
   - {type: box, purpose: stacked stories}
   secondary_forms:
-  - {type: box, purpose: one stair volume}
-  - {type: cutout, purpose: treads and windows}
+  - {type: box, purpose: stacked stoop treads}
+  - {type: cutout, purpose: windows}
   - {type: cornice, purpose: light crown}
   notes:
-  - Stair is one block; cutters notch the steps.
+  - Stoop is stacked treads, not one notched block.
+decomposition:
+  mode: parts
+  source_views: [front, side, three_quarter]
+  components:
+  - {id: basement, role: primary, technique: box}
+  - {id: parlor, role: primary, technique: box}
+  - {id: stoop, role: secondary, technique: box}
+  - {id: cornice, role: secondary, technique: modular}
+  - {id: window, role: tertiary, technique: box, instance_of: window}
+  joints:
+  - {child: basement}
+  - {child: parlor, parent: basement}
+  - {child: stoop, parent: parlor}
+  - {child: cornice, parent: parlor}
+  - {child: window, parent: parlor}
 type: static_prop
 id: nyc_townhouse
 name: NYC Townhouse
@@ -133,58 +148,81 @@ geometry:
     material: brownstone
     family: brownstone
     snap: {to: roof, "on": top, embed: 0.06}
-  - name: stair
-    size: [0.62, 0.70, 0.64]
-    location: [0.0, -1.05, 0.40]
-    material: cream
-    family: plastic
+  - name: landing
+    size: [0.62, 0.28, 0.10]
+    location: [0.0, -0.86, 0.58]
+    material: brownstone
+    family: brownstone
     snap: {to: parlor, "on": front}
-  - name: step_cut_a
-    size: [0.66, 0.22, 0.48]
-    location: [0.0, -1.30, 0.52]
-    material: stone_dark
-    bevel: false
-    snap: {to: stair, "on": front, embed: 0.20}
-    cutout: {target: stair}
-  - name: step_cut_b
-    size: [0.66, 0.22, 0.32]
-    location: [0.0, -1.12, 0.60]
-    material: stone_dark
-    bevel: false
-    snap: {to: stair, "on": front, embed: 0.38}
-    cutout: {target: stair}
-  - name: step_cut_c
-    size: [0.66, 0.22, 0.16]
-    location: [0.0, -0.94, 0.68]
-    material: stone_dark
-    bevel: false
-    snap: {to: stair, "on": front, embed: 0.56}
-    cutout: {target: stair}
-  - name: stair_cap
-    size: [0.62, 0.70, 0.03]
-    location: [0.0, -1.05, 0.72]
-    material: cream
-    family: plastic
-    snap: {to: stair, "on": top}
-  - name: stoop_rail
-    size: [0.03, 0.95, 0.03]
-    location: [-0.34, -1.05, 0.40]
-    rotation: [0.742, 0.0, 0.0]
-    material: ink
-    family: painted_metal
+  - name: step_4
+    size: [0.62, 0.14, 0.10]
+    location: [0.0, -1.04, 0.48]
+    material: brownstone
+    family: brownstone
+    snap: {to: landing, "on": front}
+  - name: step_3
+    size: [0.62, 0.14, 0.10]
+    location: [0.0, -1.18, 0.38]
+    material: brownstone
+    family: brownstone
+    snap: {to: step_4, "on": front}
+  - name: step_2
+    size: [0.62, 0.14, 0.10]
+    location: [0.0, -1.32, 0.28]
+    material: brownstone
+    family: brownstone
+    snap: {to: step_3, "on": front}
+  - name: step_1
+    size: [0.62, 0.14, 0.10]
+    location: [0.0, -1.46, 0.18]
+    material: brownstone
+    family: brownstone
+    snap: {to: step_2, "on": front}
+  - name: cheek
+    size: [0.08, 0.16, 0.22]
+    location: [-0.35, -1.40, 0.18]
+    material: brownstone
+    family: brownstone
+    mirror: x
+  - name: cheek_2
+    size: [0.08, 0.16, 0.32]
+    location: [-0.35, -1.24, 0.23]
+    material: brownstone
+    family: brownstone
+    mirror: x
+  - name: cheek_3
+    size: [0.08, 0.16, 0.42]
+    location: [-0.35, -1.08, 0.28]
+    material: brownstone
+    family: brownstone
+    mirror: x
+  - name: cheek_4
+    size: [0.08, 0.16, 0.52]
+    location: [-0.35, -0.92, 0.33]
+    material: brownstone
+    family: brownstone
+    mirror: x
+  - name: cheek_land
+    size: [0.08, 0.28, 0.60]
+    location: [-0.35, -0.86, 0.37]
+    material: brownstone
+    family: brownstone
     mirror: x
   - name: newel
-    size: [0.04, 0.04, 0.35]
-    location: [-0.58, -0.92, 0.10]
+    size: [0.05, 0.05, 0.36]
+    location: [-0.26, -1.46, 0.40]
     material: ink
     family: painted_metal
-    snap: {to: areaway_floor, "on": front}
+    snap: {to: step_1, "on": top}
     mirror: x
-  - name: rail_top
-    size: [1.20, 0.03, 0.03]
-    location: [0.0, -0.92, 0.275]
+  - name: rail_run
+    size: [0.03, 0.72, 0.03]
+    location: [-0.26, -1.10, 0.70]
+    rotation: [0.42, 0.0, 0.0]
     material: ink
     family: painted_metal
+    snap: {to: newel, "on": top, embed: 0.02}
+    mirror: x
   - name: quoin
     size: [0.08, 0.08, 0.50]
     location: [-0.70, -0.68, 0.25]

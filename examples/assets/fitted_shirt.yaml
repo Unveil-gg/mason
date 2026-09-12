@@ -187,5 +187,16 @@ variants: []
 export:
   format: glb
   save_blend: true
+decomposition:
+  mode: parts
+  source_views: [worn, front]
+  components:
+  - {id: torso, role: primary, technique: fit}
+  - {id: sleeve, role: primary, technique: fit, instance_of: sleeve}
+  - {id: collar, role: secondary, technique: fit}
+  joints:
+  - {child: torso}
+  - {child: sleeve, parent: torso}
+  - {child: collar, parent: torso}
 attachments: []
 metadata: {}

@@ -6,7 +6,7 @@ name: Grand Mansion
 dimensions:
   width: 4.20
   depth: 5.40
-  height: 2.20
+  height: 2.50
 
 style: estate
 
@@ -14,8 +14,8 @@ geometry:
   bevel: true
   recipe: estate
   recipe_params:
-    wing_width: 0.64
-    tree_height: 1.0
+    wing_width: 1.08
+    tree_height: 1.45
     pool_width: 1.78
     pool_depth: 1.02
 
@@ -26,6 +26,20 @@ depends_on:
   - estate_stone_q
   - estate_shingle_q
   - estate_water_q
+
+decomposition:
+  mode: parts
+  source_views: [three_quarter, front]
+  components:
+  - {id: house, role: primary, technique: box}
+  - {id: roof, role: primary, technique: box}
+  - {id: garden, role: secondary, technique: box}
+  - {id: pool, role: secondary, technique: box}
+  joints:
+  - {child: house}
+  - {child: roof, parent: house}
+  - {child: garden, parent: house}
+  - {child: pool, parent: garden}
 
 art_direction:
   subject: grand estate mansion with formal garden and rear pool

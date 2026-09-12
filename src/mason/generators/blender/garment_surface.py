@@ -27,7 +27,7 @@ def _sleeve_reach_t():
         return 0.92
     if sleeve == "none":
         return 0.0
-    return 0.88
+    return 0.45
 
 
 SLEEVE_TUBE_LOG = []

@@ -37,6 +37,7 @@ art_direction:
   references: []
   constraints: []
 construction_plan:
+  techniques: []
   primary_forms:
   - type: rail
     purpose: flared rim
@@ -56,9 +57,60 @@ construction_plan:
   materials:
   - bare_metal
   - rubber
+  keep_parts: []
+  rebuild_parts: []
   notes:
   - rim wider than floor so the front reads nestable
   - walls snap to the floor; handle posts snap to the rim
+decomposition:
+  mode: parts
+  source_views:
+  - three_quarter
+  - side
+  components:
+  - id: basket
+    role: primary
+    technique: modular
+  - id: handle
+    role: secondary
+    technique: box
+  - id: caster
+    role: secondary
+    technique: modular
+    instance_of: caster
+  joints:
+  - child: basket
+    location:
+    - 0.0
+    - 0.0
+    - 0.0
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    copies: []
+  - child: handle
+    parent: basket
+    location:
+    - 0.0
+    - 0.0
+    - 0.0
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    copies: []
+  - child: caster
+    parent: basket
+    location:
+    - 0.0
+    - 0.0
+    - 0.0
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    copies: []
 type: static_prop
 id: shopping_cart_black
 name: Shopping Cart (black)
@@ -88,14 +140,17 @@ geometry:
     pool_width: 1.78
     pool_depth: 1.02
   parts: []
+  bodies: []
 materials:
   strategy: family
   primary: steel
   palette_overrides:
     steel: '#2B2E31'
     steel_dark: '#1A1C1E'
+  bump_strength: 0.04
 variants: []
 export:
   format: glb
   save_blend: true
+attachments: []
 metadata: {}
