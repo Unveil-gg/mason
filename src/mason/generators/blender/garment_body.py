@@ -55,7 +55,11 @@ def _scale_garment_to_body(body):
         "loose": 0.022, "oversized": 0.035,
     }
     fit = cfg.get("fit") or "fitted"
-    cfg["ease_offset"] = ease.get(fit, 0.008) * scale
+    # Tiny characters need a visible world gap or the shirt
+    # vacuum-seals and clips through the body ball.
+    cfg["ease_offset"] = max(
+        ease.get(fit, 0.008) * scale, height * 0.018,
+    )
     return scale
 
 
@@ -148,9 +152,9 @@ def _refine_stacked_body(obj, marks):
     ))
     hips = marks.get("hips")
     if hips is not None:
-        shirt_hem = max(hips.z + height * 0.02, mins.z + height * 0.36)
+        shirt_hem = min(hips.z + height * 0.02, mins.z + height * 0.22)
     else:
-        shirt_hem = mins.z + height * 0.38
+        shirt_hem = mins.z + height * 0.20
     marks["hem"] = Vector((marks["hem"].x, marks["hem"].y, shirt_hem))
     marks["stacked_spheres"] = True
 
@@ -217,6 +221,24 @@ def _bind_sleeve_axes(body, marks):
                 start.y,
                 start.z,
             ))
+        # Wrist bones can sit inside the torso ball. Aim the
+        # cuff along the arm mesh, level with the shoulder.
+        far = abs(hand.x - mid)
+        hips_z = marks["hips"].z
+        neck_z = marks["neck"].z
+        for vert in body.data.vertices:
+            world = body.matrix_world @ vert.co
+            if world.z < hips_z or world.z > neck_z + (
+                maxs.z - mins.z
+            ) * 0.04:
+                continue
+            dx = (world.x - mid) * sign
+            if dx > far:
+                far = dx
+        out = max(far, torso * 1.85)
+        hand.x = mid + sign * out
+        hand.y = start.y
+        hand.z = start.z
         marks["sleeve_start_" + side] = start
         marks["sleeve_end_" + side] = hand
 

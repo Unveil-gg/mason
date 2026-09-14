@@ -19,6 +19,7 @@ geometry:
     tree_height: 1.45
     pool_width: 1.78
     pool_depth: 1.02
+    include_portico: false
 
 materials:
   primary: stone

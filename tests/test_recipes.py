@@ -117,6 +117,16 @@ def test_house_tree_pool_estate() -> None:
     assert "main" in enames
     assert "pool_water" in enames
     assert "tree_trunk" in enames
+    bare = expand_recipe(
+        "house",
+        Dimensions3D(width=3.2, depth=1.6, height=2.0),
+        RecipeParams(include_portico=False),
+        "stone",
+    )
+    bare_names = [p.name for p in bare]
+    assert "column" not in bare_names
+    assert "pediment" not in bare_names
+    assert "main" in bare_names
 
 
 def test_explicit_parts_win() -> None:

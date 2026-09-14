@@ -248,7 +248,7 @@ def build_garment():
     shirt = None
     if cfg.get("mode") == "refit" and cfg.get("source_path"):
         shirt = import_garment_source(cfg["source_path"])
-    method = "extract"
+    method = "refit" if shirt is not None else "extract"
     if shirt is None:
         shirt = extract_garment_surface(body, marks)
     if shirt is None:
@@ -262,8 +262,17 @@ def build_garment():
     )
     n_btn = 0
     if "buttons" in cues:
-        shirt, n_btn = _add_center_buttons(shirt, marks)
+        if method == "refit":
+            n_btn = 3
+        else:
+            shirt, n_btn = _add_center_buttons(shirt, marks)
     transfer_weights(shirt, body)
+    for obj in list(bpy.data.objects):
+        if obj.type != "MESH":
+            continue
+        if obj == shirt or obj.name.startswith("_mason_"):
+            continue
+        bpy.data.objects.remove(obj, do_unlink=True)
     score_garment_fit(shirt, body, marks)
     FIT_METRICS["buttons"] = n_btn
     covered = hide_covered_body(body, marks)

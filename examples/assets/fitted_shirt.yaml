@@ -34,16 +34,13 @@ art_direction:
   constraints:
   - No logos. No character body in the exported mesh.
   - Native mousey scale. Same skeleton if rigged.
-  focal_point: neck hole and short sleeves on mousey
-  value_hierarchy: torso first, then sleeves, then buttons
+  focal_point: ''
+  value_hierarchy: ''
   asymmetry: none
   gameplay:
-    camera: worn
-    on_screen_size: medium
-    must_read:
-    - neck opening
-    - short sleeves
-    - hem above the feet
+    camera: ''
+    on_screen_size: ''
+    must_read: []
   recognition_details: []
 construction_plan:
   techniques:
@@ -163,7 +160,6 @@ decomposition:
     copies: []
 type: static_prop
 id: fitted_shirt
-workflow: clothing_fitted
 name: Fitted Shirt
 dimensions:
   width: 0.083
@@ -190,6 +186,7 @@ geometry:
     pool_width: 1.78
     pool_depth: 1.02
     include_casters: true
+    include_portico: true
   parts: []
   bodies: []
   garment:

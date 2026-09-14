@@ -35,7 +35,7 @@ def house_parts(
     stone = material or "stone"
     wing_w = params.wing_width
     on_plinth = PartSnap(to="plinth", on="top")
-    return [
+    parts = [
         PropPart(
             name="plinth",
             size=(3.28, 1.58, 0.14),
@@ -213,6 +213,21 @@ def house_parts(
             snap=PartSnap(to="portico", on="front"),
         ),
     ]
+    if params.include_portico:
+        return parts
+    skip = {
+        "portico", "column", "column_in", "entablature", "pediment",
+    }
+    kept: list[PropPart] = []
+    for part in parts:
+        if part.name in skip:
+            continue
+        if part.name == "stair":
+            part = part.model_copy(update={
+                "snap": PartSnap(to="plinth", on="front"),
+            })
+        kept.append(part)
+    return kept
 
 
 def tree_parts(

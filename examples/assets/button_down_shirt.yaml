@@ -19,10 +19,12 @@ depends_on:
 geometry:
   bevel: false
   garment:
-    mode: fit
+    mode: refit
     kind: shirt
     body:
       path: examples/refs/mousey.glb
+    source:
+      path: .mason/jobs/fitted_shirt/iterations/062/output/asset.glb
     archetype: small_animal
     fit: regular
     body_regions: [torso, upper_arms]
@@ -32,10 +34,10 @@ geometry:
     details: [collar, cuffs, hem, buttons]
     surface_details: [placket]
     fabric_weight: medium
-    clearance: 0.012
+    clearance: 0.016
     thickness: 0.003
     hem: 0.20
-    sleeve: long
+    sleeve: short
     neck: 0.11
     tail_opening: true
     hide_covered: true

@@ -88,7 +88,7 @@ def _cap_neck(shirt, marks):
     top = neck.z
     mins, maxs = body_bounds(shirt)
     height = max(maxs.z - mins.z, 0.01)
-    cap_r = height * 0.28
+    cap_r = height * 0.16
     imw = shirt.matrix_world.inverted()
     for vert in shirt.data.vertices:
         world = shirt.matrix_world @ vert.co
@@ -131,7 +131,7 @@ def _push_off_body(shirt, body, gap):
         if loc is None or nrm is None:
             continue
         nrm = nrm.normalized()
-        need = gap * (2.2 if high else 1.0)
+        need = gap * (2.6 if high else 1.35)
         if (world - loc).dot(nrm) >= need:
             continue
         vert.co = imw @ (loc + nrm * need)
@@ -141,49 +141,59 @@ def _push_off_body(shirt, body, gap):
 def fit_garment(shirt, body, marks=None):
     """Silhouette, optional cloth, thicken. No vacuum shrinkwrap."""
     cfg = _garment_cfg()
+    refit = cfg.get("mode") == "refit"
     bpy.ops.object.select_all(action="DESELECT")
     shirt.select_set(True)
     bpy.context.view_layer.objects.active = shirt
-    if marks is not None:
-        silhouette_pass(shirt, marks, cfg)
-        _clamp_hem(shirt, marks)
-        _cap_neck(shirt, marks)
-    style = float(cfg.get("stylization") or 0.7)
-    smooth = shirt.modifiers.new("Relax", "SMOOTH")
-    smooth.iterations = 2 + int(style * 2)
-    smooth.factor = 0.22 + style * 0.12
-    _apply_mod(shirt, "Relax")
-    if marks is not None:
-        bmins, bmaxs = body_bounds(body)
-        height = max(bmaxs.z - bmins.z, 0.01)
-        _clip_batwings(shirt, marks, height, body)
-    fit = cfg.get("fit") or "fitted"
-    frames = int(cfg.get("cloth_frames") or 0)
-    if frames > 0 and fit in ("loose", "oversized"):
-        try:
-            _run_cloth(shirt, body, frames, cfg)
-        except Exception:
-            pass
-    weight = cfg.get("fabric_weight") or "medium"
-    thick = float(cfg.get("thickness") or 0.004)
-    if weight == "thin":
-        thick *= 0.7
-    elif weight == "thick":
-        thick *= 1.6
-    sol = shirt.modifiers.new("Thick", "SOLIDIFY")
-    sol.thickness = thick
-    sol.offset = 1.0
-    sol.use_even_offset = True
-    _apply_mod(shirt, "Thick")
-    if marks is not None:
-        _clamp_hem(shirt, marks)
-        _cap_neck(shirt, marks)
-    gap = float(cfg.get("ease_offset") or 0.002) * 1.8
-    _push_off_body(shirt, body, gap)
-    if marks is not None:
-        bmins, bmaxs = body_bounds(body)
-        height = max(bmaxs.z - bmins.z, 0.01)
-        _add_sleeve_tubes(shirt, marks, height, body)
+    bmins, bmaxs = body_bounds(body)
+    height = max(bmaxs.z - bmins.z, 0.01)
+    if refit:
+        if marks is not None:
+            if cfg.get("sleeve") == "long":
+                _add_sleeve_tubes(shirt, marks, height, body)
+            else:
+                _log_sleeve_axes(marks, height, body)
+    else:
+        if marks is not None:
+            silhouette_pass(shirt, marks, cfg)
+            _clamp_hem(shirt, marks)
+            _cap_neck(shirt, marks)
+        style = float(cfg.get("stylization") or 0.7)
+        smooth = shirt.modifiers.new("Relax", "SMOOTH")
+        smooth.iterations = 2 + int(style * 2)
+        smooth.factor = 0.22 + style * 0.12
+        _apply_mod(shirt, "Relax")
+        if marks is not None:
+            _add_sleeve_tubes(shirt, marks, height, body)
+            _clip_batwings(shirt, marks, height, body, keep_tubes=True)
+            _tighten_sleeves(shirt, marks, height, body)
+        fit = cfg.get("fit") or "fitted"
+        frames = int(cfg.get("cloth_frames") or 0)
+        if frames > 0 and fit in ("loose", "oversized"):
+            try:
+                _run_cloth(shirt, body, frames, cfg)
+            except Exception:
+                pass
+        weight = cfg.get("fabric_weight") or "medium"
+        thick = float(cfg.get("thickness") or 0.004)
+        if weight == "thin":
+            thick *= 0.7
+        elif weight == "thick":
+            thick *= 1.6
+        sol = shirt.modifiers.new("Thick", "SOLIDIFY")
+        sol.thickness = thick
+        sol.offset = 1.0
+        sol.use_even_offset = True
+        _apply_mod(shirt, "Thick")
+        if marks is not None:
+            _clamp_hem(shirt, marks)
+            _cap_neck(shirt, marks)
+    if not refit:
+        gap = max(
+            float(cfg.get("ease_offset") or 0.002) * 2.6,
+            height * 0.012,
+        )
+        _push_off_body(shirt, body, gap)
     shade_smooth(shirt)
     return shirt
 

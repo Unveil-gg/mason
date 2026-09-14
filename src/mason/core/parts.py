@@ -267,6 +267,7 @@ class RecipeParams(BaseModel):
     pool_width: float = Field(default=1.78, gt=0)
     pool_depth: float = Field(default=1.02, gt=0)
     include_casters: bool = True
+    include_portico: bool = True
 
 
 from mason.core.garment import GarmentSpec
