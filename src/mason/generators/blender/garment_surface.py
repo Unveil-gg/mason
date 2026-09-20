@@ -20,6 +20,13 @@ def _near_segment(point, start, end, radius):
     return (point - (start + span * t)).length <= radius
 
 
+def _axis_t(point, start, end):
+    """Parameter of point along start-end, unclamped."""
+    span = end - start
+    denom = max(span.length_squared, 1e-8)
+    return (point - start).dot(span) / denom
+
+
 def _sleeve_reach_t():
     """0-1 along shoulder-wrist kept as sleeve mesh."""
     sleeve = _garment_cfg().get("sleeve")
@@ -54,7 +61,7 @@ def _is_sleeve_vert(point, marks, height):
     mid = chest.x if chest is not None else 0.0
     if abs(point.x - mid) < height * 0.14:
         return False
-    rad = height * 0.08
+    rad = height * 0.09
     for side in ("l", "r"):
         sh, wr = _sleeve_axis(marks, side)
         if sh is None or wr is None:
@@ -125,36 +132,129 @@ def _sleeve_radius(body, marks, height):
     return min(arm * 1.28 + ease * 0.35, height * 0.038)
 
 
-def _append_tube(shirt, start, end, rad, segs=10):
-    """Write a tube into the shirt mesh in local space."""
-    imw = shirt.matrix_world.inverted()
-    a = imw @ start
-    b = imw @ end
-    axis = b - a
-    if axis.length < 1e-8:
-        return
-    z = axis.normalized()
+def _axis_frame(direction):
+    """Orthonormal frame with Z along direction."""
+    z = direction.normalized()
     x = z.cross(Vector((0.0, 0.0, 1.0)))
     if x.length < 0.1:
         x = z.cross(Vector((0.0, 1.0, 0.0)))
     x.normalize()
     y = z.cross(x).normalized()
+    return x, y, z
+
+
+def _circle_pts(center, x, y, rad, segs):
+    """World-space circle around center in the x/y frame."""
+    pts = []
+    for i in range(segs):
+        ang = 6.28318530718 * i / segs
+        pts.append(
+            center
+            + x * (math.cos(ang) * rad)
+            + y * (math.sin(ang) * rad),
+        )
+    return pts
+
+
+def _arm_radius_at(body, sh, wr, t, height):
+    """Median body radius near parameter t on shoulder-wrist."""
+    if body is None:
+        return height * 0.018
+    span = wr - sh
+    denom = max(span.length_squared, 1e-8)
+    rads = []
+    for vert in body.data.vertices:
+        world = body.matrix_world @ vert.co
+        tt = (world - sh).dot(span) / denom
+        if abs(tt - t) > 0.14:
+            continue
+        axis = sh + span * max(0.0, min(1.0, tt))
+        rad = (world - axis).length
+        if rad < height * 0.08:
+            rads.append(rad)
+    if not rads:
+        return _arm_radius(body, sh, wr, height)
+    rads.sort()
+    return rads[int(len(rads) * 0.75)]
+
+
+def _shirt_radius_at(shirt, sh, wr, t, height):
+    """Shirt radius near parameter t. Used to match the armhole cut."""
+    span = wr - sh
+    denom = max(span.length_squared, 1e-8)
+    rads = []
+    for vert in shirt.data.vertices:
+        world = shirt.matrix_world @ vert.co
+        tt = (world - sh).dot(span) / denom
+        if abs(tt - t) > 0.12:
+            continue
+        axis = sh + span * max(0.0, min(1.0, tt))
+        rad = (world - axis).length
+        if rad < height * 0.16:
+            rads.append(rad)
+    if not rads:
+        return height * 0.058
+    rads.sort()
+    return rads[int(len(rads) * 0.65)]
+
+
+def _append_tube(shirt, start, end, rad, segs=10):
+    """Write a two-ring tube into the shirt mesh in local space."""
+    _append_loft(shirt, [
+        _circle_pts(start, *_axis_frame(end - start)[:2], rad, segs),
+        _circle_pts(end, *_axis_frame(end - start)[:2], rad, segs),
+    ])
+
+
+def _append_loft(shirt, rings_world, weld=0.0008):
+    """Bridge world-space rings into the shirt and weld nearby verts."""
+    if len(rings_world) < 2:
+        return
+    segs = len(rings_world[0])
+    imw = shirt.matrix_world.inverted()
     bm = bmesh.new()
     bm.from_mesh(shirt.data)
     rings = []
-    for center in (a, b):
-        ring = []
+    for ring in rings_world:
+        rings.append([bm.verts.new(imw @ p) for p in ring])
+    for row in range(len(rings) - 1):
         for i in range(segs):
-            ang = 6.28318530718 * i / segs
-            off = x * (math.cos(ang) * rad) + y * (math.sin(ang) * rad)
-            ring.append(bm.verts.new(center + off))
-        rings.append(ring)
-    for i in range(segs):
-        j = (i + 1) % segs
-        bm.faces.new((
-            rings[0][i], rings[0][j], rings[1][j], rings[1][i],
-        ))
+            j = (i + 1) % segs
+            try:
+                bm.faces.new((
+                    rings[row][i], rings[row][j],
+                    rings[row + 1][j], rings[row + 1][i],
+                ))
+            except ValueError:
+                pass
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=weld)
     bm.to_mesh(shirt.data)
+    bm.free()
+    shirt.data.update()
+
+
+def _strip_old_sleeves(shirt, marks, height):
+    """Drop every hanging sleeve vert. Flat cones miss the arm ray."""
+    chest = marks.get("chest")
+    mid = chest.x if chest is not None else 0.0
+    torso = float(marks.get("torso_half_x") or height * 0.18)
+    hips = marks.get("hips")
+    bm = bmesh.new()
+    bm.from_mesh(shirt.data)
+    kill = []
+    for vert in bm.verts:
+        world = shirt.matrix_world @ vert.co
+        if hips is not None and world.z < hips.z - height * 0.02:
+            continue
+        # torso_half_x can include the arm stubs. Cap to the body ball
+        # so the flat 062 cones actually get deleted.
+        keep = min(torso * 1.04, height * 0.255)
+        if abs(world.x - mid) <= keep:
+            continue
+        kill.append(vert)
+    if kill and len(kill) < len(bm.verts) * 0.70:
+        bmesh.ops.delete(bm, geom=kill, context="VERTS")
+        bm.to_mesh(shirt.data)
     bm.free()
     shirt.data.update()
 
@@ -182,17 +282,28 @@ def _log_sleeve_axes(marks, height, body=None):
 
 
 def _add_sleeve_tubes(shirt, marks, height, body=None):
-    """Join arm-aligned cylinders to the wrists. Returns shirt."""
+    """Replace hanging cones with chubby tubes. Leaves the torso."""
     global SLEEVE_TUBE_LOG
     SLEEVE_TUBE_LOG = []
     reach = _sleeve_reach_t()
     if reach <= 0.0:
         return shirt
-    extras = []
-    rad = _sleeve_radius(body, marks, height)
-    sleeve = _garment_cfg().get("sleeve")
+    stubs = {}
+    for side in ("l", "r"):
+        sh, wr = _sleeve_axis(marks, side, body)
+        if sh is None or wr is None:
+            continue
+        stubs[side] = _shirt_radius_at(shirt, sh, wr, 0.06, height)
+    _strip_old_sleeves(shirt, marks, height)
+    cfg = _garment_cfg()
+    sleeve = cfg.get("sleeve")
+    ease = float(cfg.get("ease_offset") or 0.002)
+    n_rings = 5 if sleeve == "long" else 4
+    segs = 14
     cap = height * (0.42 if sleeve == "long" else 0.28)
     min_len = height * (0.28 if sleeve == "long" else 0.16)
+    floor = height * 0.055
+    rad_cap = height * 0.095
     for side in ("l", "r"):
         sh, wr = _sleeve_axis(marks, side, body)
         if sh is None or wr is None:
@@ -209,33 +320,38 @@ def _add_sleeve_tubes(shirt, marks, height, body=None):
             delta = end - sh
         if delta.length < height * 0.05:
             continue
-        bpy.ops.mesh.primitive_cylinder_add(
-            radius=rad,
-            depth=delta.length,
-            location=sh.lerp(end, 0.5),
-            vertices=10,
-        )
-        cyl = bpy.context.active_object
-        cyl.rotation_euler = delta.normalized().to_track_quat(
-            "Z", "Y",
-        ).to_euler()
-        bpy.ops.object.transform_apply(rotation=True, scale=True)
-        extras.append(cyl)
+        x, y, _z = _axis_frame(delta)
+        stub = stubs.get(side, floor)
+        rings = []
+        last_rad = floor
+        for i in range(n_rings):
+            t = i / float(n_rings - 1)
+            # First ring sits on the armhole so the cut stays covered.
+            along = 0.04 + t * 0.96
+            center = sh.lerp(end, along)
+            arm = _arm_radius_at(body, sh, wr, along * reach, height)
+            rad = max(arm * 1.20 + ease * 0.5, floor)
+            rad = min(rad, rad_cap)
+            if i == 0:
+                rad = max(rad, stub * 0.95, floor * 1.15)
+            else:
+                rad = rad * (1.0 - 0.10 * t)
+            last_rad = rad
+            ring = _circle_pts(center, x, y, rad, segs)
+            if i == n_rings - 1:
+                for pt in ring:
+                    if pt.z < center.z:
+                        pt.z -= height * 0.005
+            rings.append(ring)
+        origin = sh.lerp(end, 0.04)
+        _append_loft(shirt, rings, weld=height * 0.006)
         SLEEVE_TUBE_LOG.append({
             "side": side,
-            "start": [float(sh.x), float(sh.y), float(sh.z)],
+            "start": [float(origin.x), float(origin.y), float(origin.z)],
             "end": [float(end.x), float(end.y), float(end.z)],
-            "radius": float(rad),
+            "radius": float(last_rad),
             "length": float(delta.length),
         })
-    if not extras:
-        return shirt
-    bpy.ops.object.select_all(action="DESELECT")
-    shirt.select_set(True)
-    for extra in extras:
-        extra.select_set(True)
-    bpy.context.view_layer.objects.active = shirt
-    bpy.ops.object.join()
     return shirt
 
 
@@ -291,9 +407,14 @@ def _keep_face_center(center, marks, cfg, height):
     pad = height * 0.04
     if center.z < hem_z - pad or center.z > neck_z + pad * 0.20:
         return False
-    if _is_sleeve_vert(center, marks, height):
-        return False
-    if _is_arm_flesh(center, marks, height):
+    on_sleeve = _is_sleeve_vert(center, marks, height)
+    on_arm = _is_arm_flesh(center, marks, height)
+    if _garment_pipeline() == "stylized":
+        if on_sleeve:
+            return True
+        if on_arm:
+            return False
+    elif on_sleeve or on_arm:
         return False
     head = marks.get("head")
     if head is not None and center.z > neck_z:
@@ -407,7 +528,8 @@ def extract_garment_surface(body, marks):
     )
     bm.to_mesh(garment.data)
     bm.free()
-    _tighten_sleeves(garment, marks, height, body)
+    if _garment_pipeline() != "stylized":
+        _tighten_sleeves(garment, marks, height, body)
     ease = float(cfg.get("ease_offset") or cfg.get("clearance") or 0.008)
     torso_ease = ease * 1.25
     sleeve_ease = ease * 0.7

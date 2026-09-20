@@ -45,21 +45,19 @@ art_direction:
 construction_plan:
   techniques:
   - kind: fit
-    purpose: extract offset silhouette
+    purpose: second-skin extract
     applies_to: shirt
   primary_forms:
   - type: extract
-    purpose: torso and upper-arm faces
-  secondary_forms:
-  - type: collar
-    purpose: neck rim offset
+    purpose: torso and sleeve-band faces
+  secondary_forms: []
   tertiary_details: []
   materials:
   - fabric
   keep_parts: []
   rebuild_parts: []
   notes:
-  - Artist workflow. Solidify last. Weights from mousey.
+  - Stylized shell. Paint buttons. No sleeve tubes.
 geometric_plan:
   primary_read: simple cartoon shirt on mousey
   recognition: mixed
@@ -80,7 +78,7 @@ geometric_plan:
   proportions: Derived from mousey, not a human mannequin.
   symmetry: bilateral
   negative_space: neck hole, cuffs, hem
-  abstraction: body-surface extract, ease offset, solidify
+  abstraction: second-skin extract, ease offset, solidify
   landmarks:
   - id: neck
     role: neck opening
@@ -108,7 +106,7 @@ geometric_plan:
   stage: secondary
   notes:
   - Two stacked spheres. Collar at the pinch, not a bone neck.
-  - Extract faces, do not loft a blob. Body is not exported.
+  - Second-skin extract. No sleeve tubes. Body is not exported.
 decomposition:
   mode: parts
   source_views:
@@ -159,6 +157,7 @@ decomposition:
     - 0.0
     copies: []
 type: static_prop
+workflow: clothing_fitted
 id: fitted_shirt
 name: Fitted Shirt
 dimensions:
@@ -196,6 +195,7 @@ geometry:
       path: examples/refs/mousey.glb
     archetype: small_animal
     fit: fitted
+    pipeline: stylized
     body_regions:
     - torso
     - upper_arms
@@ -215,20 +215,19 @@ geometry:
     - wrist_left
     - wrist_right
     details:
-    - cuffs
     - hem
-    - buttons
     surface_details:
     - placket
+    - buttons
     fabric_weight: thin
-    clearance: 0.01
+    clearance: 0.006
     thickness: 0.002
     hem: 0.14
     sleeve: short
     neck: 0.12
     tail_opening: true
     hide_covered: true
-    stylization: 0.55
+    stylization: 0.25
     stiffness: 0.65
     wrinkle: 0.15
     cloth_frames: 0

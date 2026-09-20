@@ -106,6 +106,37 @@ def _seed_box(project: Path) -> AssetJob:
     return job
 
 
+def test_infer_garment_pipeline() -> None:
+    fitted = parse_asset_spec({
+        "type": "static_prop",
+        "id": "tee",
+        "name": "Tee",
+        "dimensions": {"width": 1, "depth": 1, "height": 1},
+        "geometry": {"garment": {"mode": "template"}},
+    })
+    assert infer_workflow("shirt", fitted) == "clothing_fitted"
+    drape = parse_asset_spec({
+        "type": "static_prop",
+        "id": "coat",
+        "name": "Coat",
+        "dimensions": {"width": 1, "depth": 1, "height": 1},
+        "geometry": {
+            "garment": {"mode": "template", "pipeline": "drape"},
+        },
+    })
+    assert infer_workflow("shirt", drape) == "clothing_loose"
+    loose = parse_asset_spec({
+        "type": "static_prop",
+        "id": "hoodie",
+        "name": "Hoodie",
+        "dimensions": {"width": 1, "depth": 1, "height": 1},
+        "geometry": {
+            "garment": {"mode": "template", "fit": "loose"},
+        },
+    })
+    assert infer_workflow("hoodie", loose) == "clothing_loose"
+
+
 def test_infer_workflow_keywords() -> None:
     assert infer_workflow("Staunton chess knight") == "sculptural"
     assert infer_workflow("turned vase profile") == "turned"
@@ -301,6 +332,20 @@ def test_stats_accepted(project: Path, monkeypatch) -> None:
     data = json.loads(result.stdout)
     assert data["accepted"][0]["asset_id"] == "box"
     assert data["accepted"][0]["iterations_to_accept"] == 1
+
+
+def test_garment_pipeline_helper() -> None:
+    from mason.tools.blender.validation import _garment_pipeline
+    spec = parse_asset_spec({
+        "type": "static_prop",
+        "id": "tee",
+        "name": "Tee",
+        "dimensions": {"width": 1, "depth": 1, "height": 1},
+        "geometry": {"garment": {"mode": "template"}},
+    })
+    assert _garment_pipeline(spec) == "stylized"
+    spec.geometry.garment.pipeline = "drape"
+    assert _garment_pipeline(spec) == "drape"
 
 
 def test_pose_score_gate() -> None:

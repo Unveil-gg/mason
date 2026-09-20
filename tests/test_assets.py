@@ -279,6 +279,10 @@ def test_static_prop_garment_modes() -> None:
     })
     assert template.geometry.garment is not None
     assert template.geometry.garment.mode == "template"
+    assert template.geometry.garment.pipeline == "stylized"
+    assert template.geometry.garment.cloth_frames == 0
+    assert "hem" in template.geometry.garment.details
+    assert "cuffs" not in template.geometry.garment.details
     assert "placket" not in template.geometry.garment.details
     assert "placket" in template.geometry.garment.surface_details
     fit = parse_asset_spec({

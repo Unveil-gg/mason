@@ -23,8 +23,11 @@ previews in a fresh pass and looks for reasons not to ship.
 3. Run `mason route <subject-or-id> --json`, then
    `mason vocab --workflow <kind> --json` (and
    `mason style <name> --json`, or `styles/*.yaml`).
-   Write `workflow` on the spec. Do not force buildings,
-   clothes, knights, or illustrations through one grammar.
+   Write `workflow` on the spec. Clothes default to
+   `clothing_fitted` (second-skin extract + painted
+   details). `clothing_loose` / `pipeline: drape` is
+   later. Do not force buildings, clothes, knights, or
+   illustrations through one grammar.
 4. Understand the request. If `references` exist, run
    `mason ingest <image> --asset <id> [--style <name>] --json`
    or `mason ingest --fetch <url> --asset <id> --json` (caches

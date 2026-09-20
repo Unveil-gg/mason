@@ -9,6 +9,14 @@ def _garment_cfg():
     return CONFIG.get("garment") or {}
 
 
+def _garment_pipeline():
+    """stylized second-skin (default) or later drape."""
+    raw = _garment_cfg().get("pipeline") or "stylized"
+    if raw == "drape":
+        return "drape"
+    return "stylized"
+
+
 def import_body_glb(path):
     """Import a character GLB. Returns the character mesh."""
     before = set(bpy.data.objects)

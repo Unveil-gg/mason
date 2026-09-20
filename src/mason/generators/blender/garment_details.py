@@ -99,7 +99,11 @@ def add_garment_details(shirt, marks):
     sleeve = cfg.get("sleeve")
     if "hem" in wanted or "waistband" in wanted:
         _offset_band(shirt, marks["hem"].z, pad, amt)
-    if "cuffs" in wanted and sleeve != "none":
+    if (
+        "cuffs" in wanted
+        and sleeve != "none"
+        and _garment_pipeline() != "stylized"
+    ):
         for side in ("l", "r"):
             loc = _cuff_point(marks, side, sleeve)
             if loc is not None:

@@ -287,6 +287,13 @@ def test_blender_script_has_garment_pipeline(project: Path) -> None:
     assert "def _measure_torso_half" in script
     assert "SLEEVE_TUBE_LOG" in script
     assert "def _append_tube" in script
+    assert "def _append_loft" in script
+    assert "def _strip_old_sleeves" in script
+    assert "def _push_sleeves_off_arm" in script
+    assert "def _thicken_sleeves" in script
+    assert "def _shirt_radius_at" in script
+    assert "def _axis_t" in script
+    assert "if method != \"refit\":" in script
     assert "def _push_off_body" in script
     assert "def _sleeve_report" in script
     assert "def _flap_stats" in script
@@ -295,6 +302,8 @@ def test_blender_script_has_garment_pipeline(project: Path) -> None:
     assert "def _clip_regions" in script
     assert "FIT_METRICS[\"buttons\"]" in script
     assert "def fit_garment" in script
+    assert "def _fit_stylized" in script
+    assert "def _garment_pipeline" in script
     assert "def build_garment" in script
     assert "def silhouette_pass" in script
     assert "_mason_body" in script

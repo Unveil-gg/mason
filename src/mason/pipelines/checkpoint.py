@@ -424,6 +424,7 @@ def restart_parts(
 _GARMENT_FIELDS = frozenset({
     "collar", "cuffs", "hem", "hood", "sleeve", "neck",
     "clearance", "ease_offset", "thickness", "fit",
+    "pipeline",
 })
 
 

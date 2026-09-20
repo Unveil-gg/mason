@@ -12,6 +12,7 @@ FitEase = Literal[
     "skin_tight", "fitted", "regular", "loose", "oversized",
 ]
 GarmentKind = Literal["shirt", "tunic", "vest", "hoodie"]
+GarmentPipeline = Literal["stylized", "drape"]
 
 _KIND_DEFAULTS: dict[str, dict[str, list[str]]] = {
     "shirt": {
@@ -25,7 +26,7 @@ _KIND_DEFAULTS: dict[str, dict[str, list[str]]] = {
         "openings": [
             "neck", "waist", "wrist_left", "wrist_right",
         ],
-        "details": ["collar", "cuffs", "hem"],
+        "details": ["hem"],
         "surface_details": ["placket", "buttons"],
     },
     "tunic": {
@@ -33,7 +34,7 @@ _KIND_DEFAULTS: dict[str, dict[str, list[str]]] = {
         "anchors": ["neck", "shoulder_left", "shoulder_right", "hips"],
         "panels": ["front", "back", "sleeve_left", "sleeve_right"],
         "openings": ["neck", "waist", "wrist_left", "wrist_right"],
-        "details": ["collar", "cuffs", "hem"],
+        "details": ["hem"],
         "surface_details": [],
     },
     "vest": {
@@ -73,6 +74,7 @@ class GarmentSpec(BaseModel):
     source: ImageSource | None = None
     archetype: Literal["small_animal"] = "small_animal"
     fit: FitEase = "fitted"
+    pipeline: GarmentPipeline = "stylized"
     body_regions: list[str] = Field(default_factory=list)
     anchors: list[str] = Field(default_factory=list)
     panels: list[str] = Field(default_factory=list)
@@ -90,7 +92,7 @@ class GarmentSpec(BaseModel):
     stylization: float = Field(default=0.7, ge=0.0, le=1.0)
     stiffness: float = Field(default=0.6, ge=0.0, le=1.0)
     wrinkle: float = Field(default=0.2, ge=0.0, le=1.0)
-    cloth_frames: int = Field(default=8, ge=0, le=24)
+    cloth_frames: int = Field(default=0, ge=0, le=24)
     pose_tests: bool = True
 
     @model_validator(mode="after")

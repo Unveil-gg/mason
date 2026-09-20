@@ -42,7 +42,10 @@ _HINTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         "cover", "poster", "menu", "card", "sticker", "sign",
         "decal", "label", "billboard",
     )),
-    ("clothing_loose", ("loose shirt", "hoodie", "tunic", "oversized", "coat")),
+    ("clothing_loose", (
+        "loose shirt", "hoodie", "tunic", "oversized", "coat",
+        "drape", "cloth sim",
+    )),
     ("clothing_fitted", (
         "shirt", "garment", "clothing", "clothes", "fitted", "dress",
     )),
@@ -141,7 +144,10 @@ _CARDS: dict[str, dict[str, Any]] = {
     },
     "clothing_fitted": {
         "type": "static_prop",
-        "summary": "Derive from the character body; offset; transfer weights.",
+        "summary": (
+            "Second-skin extract from the body; paint details. "
+            "No cloth sim."
+        ),
         "required_refs": ["worn"],
         "operations": ("garment", "fit", "weight_transfer"),
         "examples": ("examples/assets/fitted_shirt.yaml",),
@@ -155,7 +161,10 @@ _CARDS: dict[str, dict[str, Any]] = {
     },
     "clothing_loose": {
         "type": "static_prop",
-        "summary": "Dedicated garment silhouette, not an inflated torso.",
+        "summary": (
+            "Later drape path. Same extract unless "
+            "pipeline is drape."
+        ),
         "required_refs": ["worn"],
         "operations": ("garment", "fit", "drape", "weight_transfer"),
         "examples": ("examples/assets/button_down_shirt.yaml",),
@@ -322,8 +331,9 @@ def _workflow_from_spec(spec: Any) -> str | None:
     geom = getattr(spec, "geometry", None)
     garment = getattr(geom, "garment", None) if geom else None
     if garment is not None:
+        pipeline = getattr(garment, "pipeline", "stylized")
         fit = getattr(garment, "fit", "fitted")
-        if fit in ("loose", "oversized"):
+        if pipeline == "drape" or fit in ("loose", "oversized"):
             return "clothing_loose"
         return "clothing_fitted"
     spec_type = getattr(spec, "type", None)

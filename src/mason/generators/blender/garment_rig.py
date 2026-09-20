@@ -254,7 +254,8 @@ def build_garment():
     if shirt is None:
         shirt = loft_garment(body, marks)
         method = "loft"
-    add_garment_details(shirt, marks)
+    if method != "refit":
+        add_garment_details(shirt, marks)
     fit_garment(shirt, body, marks)
     apply_garment_material(shirt)
     cues = set(cfg.get("details") or []) | set(

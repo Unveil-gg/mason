@@ -1,138 +1,247 @@
+workflow: clothing_fitted
+art_direction:
+  subject: White short-sleeve button-down on ScrapPaws mousey. Second-skin
+    shell, neck hole at the head-body pinch, three buttons.
+  style:
+    realism: 0.15
+    stylization: 0.85
+    shape_language:
+    - soft
+    - clean
+    - wearable
+  usage:
+    importance: standard_prop
+    viewing_distance: medium
+  silhouette: Shirt covers the body sphere and upper arms. Plain neck hole
+    in the crease. Hem toward the legs.
+  forms:
+    primary:
+    - torso surface
+    - short sleeve bands
+    secondary:
+    - hem
+    tertiary:
+    - buttons
+  materials:
+  - family: fabric
+    palette: cotton
+  detail_density: low
+  references: []
+  constraints:
+  - No logos. No character body in the exported mesh.
+  - Native mousey scale.
+  focal_point: three buttons on a white body-shell shirt
+  value_hierarchy: white shirt, then buttons, then hem
+  asymmetry: none
+  gameplay:
+    camera: worn
+    on_screen_size: medium
+    must_read:
+    - white shirt on mousey
+    - three buttons
+    - short sleeves
+  recognition_details:
+  - neck hole at the pinch
+  - three chest buttons
+construction_plan:
+  techniques:
+  - kind: fit
+    purpose: second-skin extract
+    applies_to: shirt
+  primary_forms:
+  - type: extract
+    purpose: torso and sleeve-band faces
+  secondary_forms: []
+  tertiary_details: []
+  materials:
+  - fabric
+  keep_parts: []
+  rebuild_parts: []
+  notes:
+  - Stylized shell. Paint-on sleeves. No tubes or drape.
+geometric_plan:
+  primary_read: short-sleeve button-down painted on mousey
+  recognition: mixed
+  must_survive_small:
+  - neck opening
+  - short sleeve bands
+  - hem above the ground
+  masses:
+  - name: shirt
+    role: primary
+    connects_to: []
+    notes: ''
+  silhouette: Front is a white T with buttons. Side is the body sphere.
+    Hem above the feet. Sleeves follow the arms.
+  silhouette_vs_similar: Not a vest. Not a crate. Not a coat.
+  proportions: Derived from mousey
+  symmetry: bilateral
+  negative_space: neck hole, hem
+  abstraction: second-skin extract, ease offset, solidify
+  landmarks:
+  - id: neck
+    role: neck opening
+    part: shirt
+    notes: ''
+  - id: hem
+    role: shirt hem
+    part: shirt
+    notes: ''
+  - id: cuff_l
+    role: left cuff
+    part: shirt
+    notes: ''
+  - id: cuff_r
+    role: right cuff
+    part: shirt
+    notes: ''
+  critical_views:
+  - view: worn
+    weight: 4.0
+  - view: front
+    weight: 2.0
+  - view: three_quarter
+    weight: 2.0
+  stage: secondary
+  notes:
+  - Two stacked spheres. Collar at the pinch, not a bone neck.
+  - Second-skin extract. No sleeve tubes. Body is not exported.
+decomposition:
+  mode: parts
+  source_views:
+  - worn
+  - front
+  components:
+  - id: torso
+    role: primary
+    technique: fit
+  - id: sleeve
+    role: primary
+    technique: fit
+    instance_of: sleeve
+  - id: collar
+    role: secondary
+    technique: fit
+  joints:
+  - child: torso
+    location:
+    - 0.0
+    - 0.0
+    - 0.0
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    copies: []
+  - child: sleeve
+    parent: torso
+    location:
+    - 0.0
+    - 0.0
+    - 0.0
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    copies: []
+  - child: collar
+    parent: torso
+    location:
+    - 0.0
+    - 0.0
+    - 0.0
+    rotation:
+    - 0.0
+    - 0.0
+    - 0.0
+    copies: []
 type: static_prop
 id: button_down_shirt
-workflow: clothing_loose
 name: Button-Down Shirt
-
-# Long-sleeve button-down fitted to ScrapPaws mousey. Same body
-# as fitted_shirt, different cut: longer sleeves, regular ease,
-# collar + placket + buttons.
 dimensions:
   width: 0.09
   depth: 0.04
   height: 0.06
-
 style: default
-
-depends_on:
-  - cotton_weave
-
 geometry:
   bevel: false
+  recipe_params:
+    board_thickness: 0.03
+    shelf_count: 4
+    side_panels: true
+    back_panel: false
+    leg_thickness: 0.06
+    body_radius: 0.11
+    body_height: 0.42
+    cap_count: 2
+    bolt_count: 6
+    flare: 0.18
+    basket_height: 0.42
+    handle_rise: 0.16
+    wing_width: 0.64
+    tree_height: 1.0
+    pool_width: 1.78
+    pool_depth: 1.02
+    include_casters: true
+    include_portico: true
+  parts: []
+  bodies: []
   garment:
-    mode: refit
+    mode: fit
     kind: shirt
     body:
       path: examples/refs/mousey.glb
-    source:
-      path: .mason/jobs/fitted_shirt/iterations/062/output/asset.glb
     archetype: small_animal
-    fit: regular
-    body_regions: [torso, upper_arms]
-    anchors: [neck, shoulder_left, shoulder_right, waist]
-    panels: [front, back, sleeve_left, sleeve_right]
-    openings: [neck, waist, wrist_left, wrist_right]
-    details: [collar, cuffs, hem, buttons]
-    surface_details: [placket]
-    fabric_weight: medium
-    clearance: 0.016
-    thickness: 0.003
-    hem: 0.20
+    fit: fitted
+    pipeline: stylized
+    body_regions:
+    - torso
+    - upper_arms
+    anchors:
+    - neck
+    - shoulder_left
+    - shoulder_right
+    - waist
+    panels:
+    - front
+    - back
+    - sleeve_left
+    - sleeve_right
+    openings:
+    - neck
+    - waist
+    - wrist_left
+    - wrist_right
+    details:
+    - hem
+    surface_details:
+    - placket
+    - buttons
+    fabric_weight: thin
+    clearance: 0.006
+    thickness: 0.002
+    hem: 0.14
     sleeve: short
-    neck: 0.11
+    neck: 0.12
     tail_opening: true
     hide_covered: true
-    stylization: 0.5
-    stiffness: 0.55
-    wrinkle: 0.2
+    stylization: 0.25
+    stiffness: 0.65
+    wrinkle: 0.15
     cloth_frames: 0
     pose_tests: true
-
 materials:
   strategy: palette
   primary: cotton
-  roughness: 0.85
+  roughness: 0.55
   metallic: 0.0
-  shader: fabric
-  bump_strength: 0.08
-  bump_map:
-    asset: cotton_weave
-    file: output/asset.png
   palette_overrides:
-    cotton: "#F4F1EA"
-
-art_direction:
-  subject: Long-sleeve white button-down on mousey
-  style:
-    realism: 0.2
-    stylization: 0.8
-    shape_language: [soft, clean, wearable]
-  usage:
-    importance: standard_prop
-    viewing_distance: medium
-  focal_point: collar and long sleeves on mousey
-  gameplay:
-    camera: worn
-    must_read: [collar, long sleeves, placket]
-  silhouette: >
-    Shirt covers the body sphere. Long sleeves to the wrists.
-    Collar at the head-body pinch. Hem toward the legs.
-  forms:
-    primary: [torso surface, long sleeves]
-    secondary: [collar, hem, cuffs]
-    tertiary: [placket, buttons]
-  materials:
-    - {family: fabric, palette: cotton}
-  detail_density: medium
-  constraints:
-    - No logos. No character body in the exported mesh.
-    - Native mousey scale.
-
-geometric_plan:
-  primary_read: long-sleeve button-down on mousey
-  recognition: mixed
-  must_survive_small:
-    - neck opening
-    - long sleeves
-    - hem above the ground
-  masses:
-    - {name: shirt, role: primary}
-  silhouette: >
-    Front: collar, placket, sleeves to the wrists.
-    Side: rounded chest ease. Hem above the feet.
-  silhouette_vs_similar: Not a vest. Not a crate. Not short sleeves.
-  proportions: Derived from mousey
-  symmetry: bilateral
-  negative_space: neck hole, cuffs, hem
-  abstraction: body-surface extract
-  stage: secondary
-  landmarks:
-    - {id: neck, role: neck opening, part: shirt}
-    - {id: hem, role: shirt hem, part: shirt}
-    - {id: cuff_l, role: left cuff, part: shirt}
-    - {id: cuff_r, role: right cuff, part: shirt}
-  critical_views:
-    - {view: worn, weight: 4}
-    - {view: front, weight: 2}
-    - {view: three_quarter, weight: 2}
-
-construction_plan:
-  techniques:
-    - {kind: fit, purpose: extract offset silhouette, applies_to: shirt}
-  notes:
-    - Long sleeves. Regular ease. Extract, do not box.
-
-decomposition:
-  mode: parts
-  source_views: [worn, front]
-  components:
-    - {id: torso, role: primary, technique: fit}
-    - {id: sleeve, role: primary, technique: fit, instance_of: sleeve}
-    - {id: collar, role: secondary, technique: fit}
-  joints:
-    - {child: torso}
-    - {child: sleeve, parent: torso}
-    - {child: collar, parent: torso}
-
+    cotton: '#F4F1EA'
+  shader: principled
+  bump_strength: 0.0
+variants: []
 export:
   format: glb
   save_blend: true
+attachments: []
+metadata: {}

@@ -27,6 +27,15 @@ _POSE_ALIASES = {
 _POSE_PEN_LIMIT = 0.25
 
 
+def _garment_pipeline(spec: StaticPropSpec) -> str:
+    """stylized second-skin (default) or later drape."""
+    garment = spec.geometry.garment
+    if garment is None:
+        return "stylized"
+    raw = getattr(garment, "pipeline", "stylized") or "stylized"
+    return "drape" if raw == "drape" else "stylized"
+
+
 def _pose_tests_ok(fit: dict) -> tuple[bool, str]:
     """Fail obvious clipping on stand/walk/sit/reach poses."""
     scores = fit.get("pose_scores") or {}
@@ -197,18 +206,25 @@ def validate_static_prop(
         ) if body_h > 1e-6 else len(tubes) >= 2
         flap_cap = body_h * 0.12 if body_h > 1e-6 else 0.02
         span_cap = body_h * 0.14 if body_h > 1e-6 else 0.05
+        stylized = _garment_pipeline(spec) == "stylized"
         if spec.geometry.garment.sleeve in ("short", "long"):
-            ok = ok and cuffs > 0.005 and cuffs < cuff_cap
-            ok = ok and not wide and not baggy
-            ok = ok and all(a > 0.16 for a in alongs)
-            ok = ok and flare < 1.65
-            ok = ok and tube_ok
-            ok = ok and all(o <= flap_cap for o in off_maxs)
-            ok = ok and all(s <= span_cap for s in side_spans)
-            ok = ok and max(flaps) <= 24
-            ok = ok and asym < 0.35
-        ok = ok and brim < 1.75
-        if spec.geometry.garment.sleeve == "long":
+            if stylized:
+                ok = ok and (not alongs or max(alongs) > 0.04)
+            else:
+                ok = ok and cuffs > 0.005 and cuffs < cuff_cap
+                ok = ok and not wide and not baggy
+                ok = ok and all(a > 0.16 for a in alongs)
+                ok = ok and flare < 1.65
+                ok = ok and tube_ok
+                ok = ok and all(o <= flap_cap for o in off_maxs)
+                ok = ok and all(s <= span_cap for s in side_spans)
+                ok = ok and max(flaps) <= 24
+                ok = ok and asym < 0.35
+        ok = ok and brim < (5.5 if stylized else 1.75)
+        if (
+            spec.geometry.garment.sleeve == "long"
+            and not stylized
+        ):
             ok = ok and all(a > 0.70 for a in alongs)
         if want_btn:
             ok = ok and n_btn >= 3

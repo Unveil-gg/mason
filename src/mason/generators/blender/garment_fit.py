@@ -138,8 +138,82 @@ def _push_off_body(shirt, body, gap):
     shirt.data.update()
 
 
+def _push_sleeves_off_arm(
+    shirt, body, marks, height, gap, from_idx=0,
+):
+    """Push only verts inside the arm. Leaves the torso alone."""
+    dg = bpy.context.evaluated_depsgraph_get()
+    tree = BVHTree.FromObject(body, dg)
+    imw = shirt.matrix_world.inverted()
+    for vert in shirt.data.vertices:
+        if vert.index < from_idx:
+            continue
+        world = shirt.matrix_world @ vert.co
+        if not _is_sleeve_vert(world, marks, height):
+            continue
+        loc, nrm, _idx, _d = tree.find_nearest(world)
+        if loc is None or nrm is None:
+            continue
+        nrm = nrm.normalized()
+        if (world - loc).dot(nrm) >= 0.0:
+            continue
+        vert.co = imw @ (loc + nrm * gap)
+    shirt.data.update()
+
+
+def _thicken_sleeves(shirt, marks, height, thick, from_idx=0):
+    """Solidify remade sleeve verts so tubes have cloth depth."""
+    vg = shirt.vertex_groups.new(name="mason_sleeve")
+    idxs = [
+        v.index for v in shirt.data.vertices
+        if v.index >= from_idx
+        and _is_sleeve_vert(
+            shirt.matrix_world @ v.co, marks, height,
+        )
+    ]
+    if not idxs:
+        return
+    vg.add(idxs, 1.0, "REPLACE")
+    sol = shirt.modifiers.new("ThickSleeve", "SOLIDIFY")
+    sol.thickness = thick
+    sol.offset = 1.0
+    sol.use_even_offset = True
+    sol.use_rim = True
+    sol.vertex_group = "mason_sleeve"
+    _apply_mod(shirt, "ThickSleeve")
+
+
+def _fit_stylized(shirt, body, marks, height, gap):
+    """Second-skin: hem/neck, thin solidify, light push. No tubes."""
+    if marks is not None:
+        _clamp_hem(shirt, marks)
+        _cap_neck(shirt, marks)
+    cfg = _garment_cfg()
+    weight = cfg.get("fabric_weight") or "medium"
+    thick = float(cfg.get("thickness") or 0.004)
+    if weight == "thin":
+        thick *= 0.7
+    elif weight == "thick":
+        thick *= 1.6
+    smooth = shirt.modifiers.new("Relax", "SMOOTH")
+    smooth.iterations = 3
+    smooth.factor = 0.35
+    _apply_mod(shirt, "Relax")
+    sol = shirt.modifiers.new("Thick", "SOLIDIFY")
+    sol.thickness = thick
+    sol.offset = 1.0
+    sol.use_even_offset = True
+    _apply_mod(shirt, "Thick")
+    if marks is not None:
+        _clamp_hem(shirt, marks)
+        _cap_neck(shirt, marks)
+    _push_off_body(shirt, body, gap)
+    shade_smooth(shirt)
+    return shirt
+
+
 def fit_garment(shirt, body, marks=None):
-    """Silhouette, optional cloth, thicken. No vacuum shrinkwrap."""
+    """Stylized second-skin, or later drape with tubes/cloth."""
     cfg = _garment_cfg()
     refit = cfg.get("mode") == "refit"
     bpy.ops.object.select_all(action="DESELECT")
@@ -147,12 +221,22 @@ def fit_garment(shirt, body, marks=None):
     bpy.context.view_layer.objects.active = shirt
     bmins, bmaxs = body_bounds(body)
     height = max(bmaxs.z - bmins.z, 0.01)
+    gap = max(
+        float(cfg.get("ease_offset") or 0.002) * 2.0,
+        height * 0.010,
+    )
+    if _garment_pipeline() == "stylized":
+        return _fit_stylized(shirt, body, marks, height, gap)
     if refit:
         if marks is not None:
-            if cfg.get("sleeve") == "long":
-                _add_sleeve_tubes(shirt, marks, height, body)
-            else:
-                _log_sleeve_axes(marks, height, body)
+            n0 = len(shirt.data.vertices)
+            _add_sleeve_tubes(shirt, marks, height, body)
+            _push_sleeves_off_arm(
+                shirt, body, marks, height, gap, from_idx=n0,
+            )
+            _thicken_sleeves(
+                shirt, marks, height, height * 0.014, from_idx=n0,
+            )
     else:
         if marks is not None:
             silhouette_pass(shirt, marks, cfg)
@@ -164,9 +248,8 @@ def fit_garment(shirt, body, marks=None):
         smooth.factor = 0.22 + style * 0.12
         _apply_mod(shirt, "Relax")
         if marks is not None:
-            _add_sleeve_tubes(shirt, marks, height, body)
             _clip_batwings(shirt, marks, height, body, keep_tubes=True)
-            _tighten_sleeves(shirt, marks, height, body)
+            _add_sleeve_tubes(shirt, marks, height, body)
         fit = cfg.get("fit") or "fitted"
         frames = int(cfg.get("cloth_frames") or 0)
         if frames > 0 and fit in ("loose", "oversized"):
@@ -188,11 +271,8 @@ def fit_garment(shirt, body, marks=None):
         if marks is not None:
             _clamp_hem(shirt, marks)
             _cap_neck(shirt, marks)
-    if not refit:
-        gap = max(
-            float(cfg.get("ease_offset") or 0.002) * 2.6,
-            height * 0.012,
-        )
+        if marks is not None:
+            _push_sleeves_off_arm(shirt, body, marks, height, gap)
         _push_off_body(shirt, body, gap)
     shade_smooth(shirt)
     return shirt
