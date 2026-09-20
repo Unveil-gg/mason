@@ -303,6 +303,9 @@ def test_blender_script_has_garment_pipeline(project: Path) -> None:
     assert "FIT_METRICS[\"buttons\"]" in script
     assert "def fit_garment" in script
     assert "def _fit_stylized" in script
+    assert "def _extract_stylized_shell" in script
+    assert "def _bisect_fill" in script
+    assert "def _torso_shell_radii" in script
     assert "def _garment_pipeline" in script
     assert "def build_garment" in script
     assert "def silhouette_pass" in script

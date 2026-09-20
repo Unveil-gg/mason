@@ -325,8 +325,8 @@ def _full_vocab() -> dict[str, Any]:
         "garment": (
             "geometry.garment.pipeline is stylized (default) "
             "or drape. Stylized is Animal Crossing-style: "
-            "extract covered body faces including the sleeve "
-            "band, offset, solidify, transfer weights. "
+            "remesh the body into a smooth shell, crop to "
+            "hem/neck/sleeve band, solidify, transfer weights. "
             "Hem/hat/pack stay mesh. Buttons, placket, "
             "prints stay surface_details. Do not loft sleeve "
             "tubes or run cloth. drape is a later path "

@@ -21,7 +21,8 @@ def transfer_weights(shirt, body):
         xfer.layers_vgroup_select_dst = "NAME"
         bpy.context.view_layer.objects.active = shirt
         bpy.ops.object.modifier_apply(modifier="Weights")
-        bpy.ops.object.vertex_group_normalize_all(lock_active=False)
+        if shirt.vertex_groups:
+            bpy.ops.object.vertex_group_normalize_all(lock_active=False)
     shirt.parent = arm
     shirt.parent_type = "ARMATURE"
     shirt.matrix_parent_inverse = arm.matrix_world.inverted()

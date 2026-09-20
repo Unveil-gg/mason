@@ -491,8 +491,98 @@ def _tighten_sleeves(garment, marks, height, body=None):
     garment.data.update()
 
 
+def _bisect_fill(obj, origin, normal, drop_below):
+    """Cut obj on a plane, drop one side, and fill the cap."""
+    bpy.ops.object.select_all(action="DESELECT")
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.mesh.bisect(
+        plane_co=origin,
+        plane_no=normal,
+        clear_inner=drop_below,
+        clear_outer=not drop_below,
+        use_fill=True,
+    )
+    bpy.ops.object.mode_set(mode="OBJECT")
+
+
+def _torso_shell_radii(body, marks, gap):
+    """Half-extents of torso verts, plus ease. Ignores arms."""
+    torso = float(marks.get("torso_half_x") or 0.02)
+    z0 = marks["hem"].z
+    z1 = marks["neck"].z
+    chest = marks.get("chest")
+    mid_x = chest.x if chest is not None else 0.0
+    xs, ys = [], []
+    for vert in body.data.vertices:
+        world = body.matrix_world @ vert.co
+        if world.z < z0 or world.z > z1:
+            continue
+        if abs(world.x - mid_x) > torso * 1.12:
+            continue
+        xs.append(world.x)
+        ys.append(world.y)
+    if not xs:
+        mins, maxs = body_bounds(body)
+        return (
+            torso + gap,
+            (maxs.y - mins.y) * 0.35 + gap,
+            (z1 - z0) * 0.5 + gap * 0.4,
+            mid_x,
+            (mins.y + maxs.y) * 0.5,
+        )
+    rx = max(abs(x - mid_x) for x in xs) + gap
+    mid_y = (min(ys) + max(ys)) * 0.5
+    ry = max(abs(y - mid_y) for y in ys) + gap
+    rz = (z1 - z0) * 0.5 + gap * 0.4
+    return rx, ry, rz, mid_x, mid_y
+
+
+def _extract_stylized_shell(body, marks):
+    """Closed ellipsoid hull around the torso. Not a body extract."""
+    cfg = _garment_cfg()
+    mins, maxs = body_bounds(body)
+    height = max(maxs.z - mins.z, 0.001)
+    gap = max(
+        float(cfg.get("ease_offset") or 0.002),
+        height * 0.016,
+    )
+    if cfg.get("sleeve") == "long":
+        gap = gap + height * 0.04
+    rx, ry, rz, mid_x, mid_y = _torso_shell_radii(body, marks, gap)
+    hem_z = marks["hem"].z
+    neck_z = marks["neck"].z
+    mid_z = (hem_z + neck_z) * 0.5
+    bpy.ops.mesh.primitive_uv_sphere_add(
+        radius=1.0,
+        location=(mid_x, mid_y, mid_z),
+        segments=24,
+        ring_count=16,
+    )
+    garment = bpy.context.active_object
+    garment.name = cfg.get("kind") or "shirt"
+    garment.scale = (
+        max(rx, height * 0.08),
+        max(ry, height * 0.06),
+        max(rz, height * 0.08),
+    )
+    bpy.ops.object.transform_apply(scale=True)
+    _bisect_fill(
+        garment, (mid_x, mid_y, hem_z), (0.0, 0.0, 1.0), True,
+    )
+    _bisect_fill(
+        garment, (mid_x, mid_y, neck_z), (0.0, 0.0, 1.0), False,
+    )
+    shade_smooth(garment)
+    return garment
+
+
 def extract_garment_surface(body, marks):
     """Duplicate body faces in garment regions and offset them."""
+    if _garment_pipeline() == "stylized":
+        return _extract_stylized_shell(body, marks)
     cfg = _garment_cfg()
     mins, maxs = body_bounds(body)
     height = max(maxs.z - mins.z, 0.001)

@@ -184,30 +184,14 @@ def _thicken_sleeves(shirt, marks, height, thick, from_idx=0):
 
 
 def _fit_stylized(shirt, body, marks, height, gap):
-    """Second-skin: hem/neck, thin solidify, light push. No tubes."""
+    """Smooth the solid shell. No tubes, no second solidify."""
     if marks is not None:
         _clamp_hem(shirt, marks)
-        _cap_neck(shirt, marks)
-    cfg = _garment_cfg()
-    weight = cfg.get("fabric_weight") or "medium"
-    thick = float(cfg.get("thickness") or 0.004)
-    if weight == "thin":
-        thick *= 0.7
-    elif weight == "thick":
-        thick *= 1.6
     smooth = shirt.modifiers.new("Relax", "SMOOTH")
-    smooth.iterations = 3
-    smooth.factor = 0.35
+    smooth.iterations = 4
+    smooth.factor = 0.25
     _apply_mod(shirt, "Relax")
-    sol = shirt.modifiers.new("Thick", "SOLIDIFY")
-    sol.thickness = thick
-    sol.offset = 1.0
-    sol.use_even_offset = True
-    _apply_mod(shirt, "Thick")
-    if marks is not None:
-        _clamp_hem(shirt, marks)
-        _cap_neck(shirt, marks)
-    _push_off_body(shirt, body, gap)
+    _push_off_body(shirt, body, gap * 0.45)
     shade_smooth(shirt)
     return shirt
 

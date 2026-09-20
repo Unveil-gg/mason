@@ -97,7 +97,11 @@ def add_garment_details(shirt, marks):
     pad = height * 0.04
     amt = float(cfg.get("ease_offset") or 0.002) * 0.5
     sleeve = cfg.get("sleeve")
-    if "hem" in wanted or "waistband" in wanted:
+    stylized = _garment_pipeline() == "stylized"
+    if (
+        ("hem" in wanted or "waistband" in wanted)
+        and not stylized
+    ):
         _offset_band(shirt, marks["hem"].z, pad, amt)
     if (
         "cuffs" in wanted
