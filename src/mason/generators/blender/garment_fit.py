@@ -188,10 +188,9 @@ def _fit_stylized(shirt, body, marks, height, gap):
     if marks is not None:
         _clamp_hem(shirt, marks)
     smooth = shirt.modifiers.new("Relax", "SMOOTH")
-    smooth.iterations = 4
-    smooth.factor = 0.25
+    smooth.iterations = 2
+    smooth.factor = 0.15
     _apply_mod(shirt, "Relax")
-    _push_off_body(shirt, body, gap * 0.45)
     shade_smooth(shirt)
     return shirt
 

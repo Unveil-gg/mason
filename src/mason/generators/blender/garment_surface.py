@@ -508,49 +508,78 @@ def _bisect_fill(obj, origin, normal, drop_below):
     bpy.ops.object.mode_set(mode="OBJECT")
 
 
-def _torso_shell_radii(body, marks, gap):
-    """Half-extents of torso verts, plus ease. Ignores arms."""
+def _torso_origin(body, marks):
+    """Centroid of torso-band verts, ignoring arms."""
+    chest = marks.get("chest")
+    mid_x = chest.x if chest is not None else 0.0
     torso = float(marks.get("torso_half_x") or 0.02)
     z0 = marks["hem"].z
     z1 = marks["neck"].z
-    chest = marks.get("chest")
-    mid_x = chest.x if chest is not None else 0.0
-    xs, ys = [], []
+    xs, ys, zs = [], [], []
     for vert in body.data.vertices:
         world = body.matrix_world @ vert.co
         if world.z < z0 or world.z > z1:
             continue
-        if abs(world.x - mid_x) > torso * 1.12:
+        if abs(world.x - mid_x) > torso * 1.05:
             continue
         xs.append(world.x)
         ys.append(world.y)
+        zs.append(world.z)
     if not xs:
         mins, maxs = body_bounds(body)
-        return (
-            torso + gap,
-            (maxs.y - mins.y) * 0.35 + gap,
-            (z1 - z0) * 0.5 + gap * 0.4,
-            mid_x,
-            (mins.y + maxs.y) * 0.5,
-        )
-    rx = max(abs(x - mid_x) for x in xs) + gap
-    mid_y = (min(ys) + max(ys)) * 0.5
-    ry = max(abs(y - mid_y) for y in ys) + gap
-    rz = (z1 - z0) * 0.5 + gap * 0.4
-    return rx, ry, rz, mid_x, mid_y
+        return Vector((
+            mid_x, (mins.y + maxs.y) * 0.5, (z0 + z1) * 0.5,
+        ))
+    n = float(len(xs))
+    return Vector((sum(xs) / n, sum(ys) / n, sum(zs) / n))
+
+
+def _ray_on_body(body, origin, direction, reach):
+    """World hit of a ray in object space."""
+    imw = body.matrix_world.inverted()
+    rot = body.matrix_world.to_3x3()
+    local_d = (rot.inverted() @ direction).normalized()
+    hit = body.ray_cast(imw @ origin, local_d, distance=reach)
+    ok, loc, nrm, _idx = hit
+    if not ok:
+        return None, None
+    return body.matrix_world @ loc, (rot @ nrm).normalized()
+
+
+def _torso_shell_radii(body, marks, gap):
+    """Raycast the body surface from the torso center."""
+    origin = _torso_origin(body, marks)
+    mins, maxs = body_bounds(body)
+    reach = max((maxs - mins).length, 0.05)
+    xs, ys = [], []
+    rays = (
+        (1.0, 0.0, 0.0), (-1.0, 0.0, 0.0),
+        (0.0, 1.0, 0.0), (0.0, -1.0, 0.0),
+        (0.7, 0.7, 0.0), (-0.7, 0.7, 0.0),
+        (0.7, -0.7, 0.0), (-0.7, -0.7, 0.0),
+    )
+    for raw in rays:
+        loc, _n = _ray_on_body(body, origin, Vector(raw), reach)
+        if loc is None:
+            continue
+        xs.append(abs(loc.x - origin.x))
+        ys.append(abs(loc.y - origin.y))
+    torso = float(marks.get("torso_half_x") or 0.02)
+    rx = max(max(xs) if xs else 0.0, torso) + gap
+    ry = max(max(ys) if ys else 0.0, torso * 0.65) + gap
+    rz = (marks["neck"].z - marks["hem"].z) * 0.5 + gap
+    return rx, ry, rz, origin.x, origin.y
 
 
 def _extract_stylized_shell(body, marks):
-    """Closed ellipsoid hull around the torso. Not a body extract."""
+    """Closed hull sized from body raycasts, plus a thin ease."""
     cfg = _garment_cfg()
     mins, maxs = body_bounds(body)
     height = max(maxs.z - mins.z, 0.001)
-    gap = max(
+    gap = min(
         float(cfg.get("ease_offset") or 0.002),
-        height * 0.016,
+        height * 0.012,
     )
-    if cfg.get("sleeve") == "long":
-        gap = gap + height * 0.04
     rx, ry, rz, mid_x, mid_y = _torso_shell_radii(body, marks, gap)
     hem_z = marks["hem"].z
     neck_z = marks["neck"].z
@@ -564,9 +593,9 @@ def _extract_stylized_shell(body, marks):
     garment = bpy.context.active_object
     garment.name = cfg.get("kind") or "shirt"
     garment.scale = (
-        max(rx, height * 0.08),
-        max(ry, height * 0.06),
-        max(rz, height * 0.08),
+        max(rx, height * 0.06),
+        max(ry, height * 0.05),
+        max(rz, height * 0.06),
     )
     bpy.ops.object.transform_apply(scale=True)
     _bisect_fill(
