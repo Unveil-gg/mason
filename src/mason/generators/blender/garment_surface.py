@@ -407,13 +407,22 @@ def _keep_face_center(center, marks, cfg, height):
     hem_z = marks["hem"].z
     neck_z = marks["neck"].z
     pad = height * 0.04
-    if center.z < hem_z - pad or center.z > neck_z + pad * 0.20:
+    stylized = _garment_pipeline() == "stylized"
+    if stylized:
+        if center.z < hem_z or center.z > neck_z - height * 0.008:
+            return False
+    elif center.z < hem_z - pad or center.z > neck_z + pad * 0.20:
         return False
     on_sleeve = _is_sleeve_vert(center, marks, height)
     on_arm = _is_arm_flesh(center, marks, height)
-    if _garment_pipeline() == "stylized":
+    if stylized:
         if on_sleeve or on_arm:
             return False
+        for side in ("l", "r"):
+            start = marks.get("sleeve_start_" + side)
+            if start is not None:
+                if (center - start).length < height * 0.09:
+                    return False
     elif on_sleeve or on_arm:
         return False
     head = marks.get("head")
@@ -496,30 +505,82 @@ def _extract_stylized_shell(body, marks):
     cfg = _garment_cfg()
     mins, maxs = body_bounds(body)
     height = max(maxs.z - mins.z, 0.001)
+    # Waist of the body ball. Feet-relative % is a romper.
+    hem_z = marks["neck"].z - height * 0.22
+    neck_cut = marks["neck"].z - height * 0.008
+    marks["hem"] = Vector((marks["hem"].x, marks["hem"].y, hem_z))
     garment = body.copy()
     garment.data = body.data.copy()
     garment.name = cfg.get("kind") or "shirt"
     bpy.context.collection.objects.link(garment)
     garment.parent = None
     garment.matrix_world = body.matrix_world.copy()
+    bpy.ops.object.select_all(action="DESELECT")
+    garment.select_set(True)
+    bpy.context.view_layer.objects.active = garment
+    bpy.ops.object.transform_apply(
+        location=True, rotation=True, scale=True,
+    )
     bm = bmesh.new()
     bm.from_mesh(garment.data)
+    geom = list(bm.verts) + list(bm.edges) + list(bm.faces)
+    bmesh.ops.bisect_plane(
+        bm, geom=geom,
+        plane_co=Vector((0.0, 0.0, hem_z)),
+        plane_no=Vector((0.0, 0.0, 1.0)),
+        clear_inner=True,
+    )
+    geom = list(bm.verts) + list(bm.edges) + list(bm.faces)
+    bmesh.ops.bisect_plane(
+        bm, geom=geom,
+        plane_co=Vector((0.0, 0.0, neck_cut)),
+        plane_no=Vector((0.0, 0.0, -1.0)),
+        clear_inner=True,
+    )
     drop = []
     for face in bm.faces:
-        center = garment.matrix_world @ face.calc_center_median()
+        center = face.calc_center_median()
         if not _keep_face_center(center, marks, cfg, height):
             drop.append(face)
     if drop and len(drop) < len(bm.faces):
         bmesh.ops.delete(bm, geom=drop, context="FACES")
+    mw = garment.matrix_world
+    stray = [
+        v for v in bm.verts
+        if (mw @ v.co).z < hem_z - height * 0.001
+    ]
+    for vert in stray:
+        bm.verts.remove(vert)
+    bm.verts.ensure_lookup_table()
+    for _ in range(3):
+        rim = [v for v in bm.verts if v.is_boundary]
+        if not rim:
+            break
+        bmesh.ops.smooth_vert(bm, verts=rim, factor=0.45)
     bm.to_mesh(garment.data)
     bm.free()
     if len(garment.data.polygons) < 12:
         bpy.data.objects.remove(garment, do_unlink=True)
         return None
-    gap = min(
-        float(cfg.get("ease_offset") or 0.002) * 0.35,
-        height * 0.006,
-    )
+    # Second pass: world Z, after bmesh write.
+    kill_idx = [
+        v.index for v in garment.data.vertices
+        if (mw @ v.co).z < hem_z - height * 0.001
+    ]
+    if kill_idx:
+        bm = bmesh.new()
+        bm.from_mesh(garment.data)
+        bm.verts.ensure_lookup_table()
+        for i in kill_idx:
+            if i < len(bm.verts):
+                bm.verts[i].tag = True
+        tagged = [v for v in bm.verts if v.tag]
+        for vert in tagged:
+            bm.verts.remove(vert)
+        bm.to_mesh(garment.data)
+        bm.free()
+    # Hairline only. AC paint-on, not a draped hull.
+    gap = height * 0.0012
     for vert in garment.data.vertices:
         vert.co += vert.normal * gap
     garment.data.update()

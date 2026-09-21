@@ -1,7 +1,7 @@
 workflow: clothing_fitted
 art_direction:
-  subject: White short-sleeve button-down on ScrapPaws mousey. Second-skin
-    shell, neck hole at the head-body pinch, three buttons.
+  subject: White short-sleeve AC tee on ScrapPaws mousey. Painted-on
+    body-ball shirt, open neck, three chest buttons.
   style:
     realism: 0.15
     stylization: 0.85
@@ -12,8 +12,8 @@ art_direction:
   usage:
     importance: standard_prop
     viewing_distance: medium
-  silhouette: Shirt covers the body sphere and upper arms. Plain neck hole
-    in the crease. Hem toward the legs.
+  silhouette: Painted-on tee on the upper body sphere. No collar. Hem
+    at the waist, not the legs. Arms stay the body sticks.
   forms:
     primary:
     - torso surface
@@ -104,7 +104,7 @@ geometric_plan:
     weight: 2.0
   stage: secondary
   notes:
-  - Two stacked spheres. Collar at the pinch, not a bone neck.
+  - Two stacked spheres. Open neck at the pinch. No collar.
   - Second-skin extract. No sleeve tubes. Body is not exported.
 decomposition:
   mode: parts
@@ -119,9 +119,6 @@ decomposition:
     role: primary
     technique: fit
     instance_of: sleeve
-  - id: collar
-    role: secondary
-    technique: fit
   joints:
   - child: torso
     location:
@@ -134,17 +131,6 @@ decomposition:
     - 0.0
     copies: []
   - child: sleeve
-    parent: torso
-    location:
-    - 0.0
-    - 0.0
-    - 0.0
-    rotation:
-    - 0.0
-    - 0.0
-    - 0.0
-    copies: []
-  - child: collar
     parent: torso
     location:
     - 0.0

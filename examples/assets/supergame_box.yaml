@@ -1,0 +1,113 @@
+type: static_prop
+id: supergame_box
+workflow: prop
+name: SuperGame Live Wire Box
+
+dimensions:
+  width: 0.133
+  depth: 0.184
+  height: 0.032
+
+style: supergame
+
+depends_on:
+  - supergame_hero
+  - supergame_spine
+
+geometry:
+  bevel: true
+  bevel_width: 0.001
+  bevel_segments: 2
+  parts:
+    - name: tray
+      shape: box
+      size: [0.127, 0.178, 0.024]
+      location: [0.0, 0.0, 0.012]
+      family: cardboard
+      material: navy_dark
+    - name: lid
+      shape: box
+      size: [0.133, 0.184, 0.008]
+      location: [0.0, 0.0, 0.028]
+      family: cardboard
+      material: navy
+
+materials:
+  primary: navy
+
+decals:
+  - name: cover
+    image: {asset: supergame_hero, file: previews/full.png}
+    face: top
+    inset: 0.0003
+    material: navy
+  - name: spine
+    image: {asset: supergame_spine, file: output/asset.png}
+    face: left
+    inset: 0.0003
+    material: navy
+  - name: spine_right
+    image: {asset: supergame_spine, file: output/asset.png}
+    face: right
+    inset: 0.0003
+    material: navy
+
+art_direction:
+  subject: SNES-proportion SuperGame box for Live Wire
+  style:
+    realism: 0.25
+    stylization: 0.75
+    shape_language: [cartridge, printed, electric]
+  usage:
+    importance: hero
+    viewing_distance: close
+  focal_point: pixel cover of an electrician versus wires
+  value_hierarchy: navy carton, gold SuperGame spine, cyan cover art
+  silhouette: shallow portrait lid-and-tray, taller than it is wide
+  gameplay:
+    camera: three_quarter
+    must_read: [SUPERGAME spine, cover figure, box thickness]
+  recognition_details: [gold binding, hard hat, electric wires]
+  forms:
+    primary: [tray, lid]
+    secondary: [cover, spine]
+    tertiary: []
+  detail_density: medium
+
+geometric_plan:
+  primary_read: 16-bit game box, not a board-game square
+  recognition: mixed
+  must_survive_small:
+    - portrait lid
+    - thin carton
+    - SuperGame spine
+  masses:
+    - {name: tray, role: primary}
+    - {name: lid, role: primary, connects_to: [tray]}
+  silhouette: flat portrait brick
+  silhouette_vs_similar: Taller than a Euro board game. Thinner than a book.
+  proportions: 13.3 by 18.4 by 3.2 cm
+  symmetry: bilateral
+  negative_space: none
+  abstraction: printed carton
+  stage: secondary
+  landmarks:
+    - {id: lid, role: cover, part: lid}
+    - {id: spine, role: SuperGame binding, part: tray}
+  critical_views:
+    - {view: three_quarter, weight: 3}
+    - {view: top, weight: 2}
+    - {view: side, weight: 1}
+
+construction_plan:
+  techniques:
+    - {kind: box, purpose: lid and tray, applies_to: carton}
+  primary_forms:
+    - {type: box, purpose: tray}
+    - {type: box, purpose: lid}
+  notes:
+    - Pixel cover is a sprite job. Spine is illustrated. No SNES recipe.
+
+export:
+  format: glb
+  save_blend: true

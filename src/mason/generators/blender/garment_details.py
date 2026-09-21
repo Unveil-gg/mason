@@ -65,12 +65,21 @@ def _add_center_buttons(shirt, marks):
     mins, maxs = body_bounds(shirt)
     height = max(maxs.z - mins.z, 0.01)
     extras = []
-    for i in range(3):
-        loc = _front_on_shirt(shirt, mins.z + height * (0.28 + 0.20 * i))
+    if _garment_pipeline() == "stylized":
+        hem_z = marks["hem"].z
+        neck_z = marks["neck"].z
+        span = max(neck_z - hem_z, 0.01)
+        zs = [hem_z + span * (0.55 + 0.15 * i) for i in range(3)]
+        radius = height * 0.028
+    else:
+        zs = [mins.z + height * (0.28 + 0.20 * i) for i in range(3)]
+        radius = height * 0.055
+    for z in zs:
+        loc = _front_on_shirt(shirt, z)
         if loc is None:
             continue
         bpy.ops.mesh.primitive_uv_sphere_add(
-            radius=height * 0.055, location=loc, segments=8, ring_count=6,
+            radius=radius, location=loc, segments=8, ring_count=6,
         )
         btn = bpy.context.active_object
         mat = create_material("button", "#6B5344", 0.45, 0.0, 0.0)

@@ -140,10 +140,12 @@ def extract_landmarks(obj):
 
 
 def _refine_stacked_body(obj, marks):
-    """Collar at the pinch of two stacked masses; longer hem.
+    """Pinch neck; stylized shirts stop at the torso waist.
 
     Mousey is two spheres, not a human neck. Bone neck often sits
     too low on the body ball, so sleeves root under the arm sockets.
+    Full-character height includes the head, so a feet-relative hem
+    lands on the legs. Measure down from the pinch instead.
     """
     mins, maxs = body_bounds(obj)
     height = max(maxs.z - mins.z, 0.001)
@@ -159,7 +161,10 @@ def _refine_stacked_body(obj, marks):
         mid.x, mid.y, pinch_z - height * 0.03,
     ))
     hips = marks.get("hips")
-    if hips is not None:
+    if _garment_pipeline() == "stylized":
+        # AC tee: mid body-ball. Not mins.z + k*height (romper).
+        shirt_hem = marks["neck"].z - height * 0.22
+    elif hips is not None:
         shirt_hem = min(hips.z + height * 0.02, mins.z + height * 0.22)
     else:
         shirt_hem = mins.z + height * 0.20
@@ -333,7 +338,10 @@ def prepare_garment_body():
     _bind_sleeve_axes(body, marks)
     mins, maxs = body_bounds(body)
     height = max(maxs.z - mins.z, 0.001)
-    if cfg.get("hem") is not None:
+    if (
+        cfg.get("hem") is not None
+        and _garment_pipeline() != "stylized"
+    ):
         spec_hem = float(cfg["hem"])
         anat = marks["hem"].z
         neck = marks["neck"].z

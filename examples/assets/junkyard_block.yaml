@@ -1,0 +1,265 @@
+type: static_prop
+id: junkyard_block
+workflow: building
+name: Junkyard Block
+
+dimensions:
+  width: 1.60
+  depth: 1.60
+  height: 0.72
+
+style: iron
+
+geometry:
+  bevel: true
+  bevel_width: 0.01
+  bevel_segments: 2
+  parts:
+    - name: pad
+      shape: box
+      size: [1.60, 1.60, 0.06]
+      location: [0.0, 0.0, 0.03]
+      material: iron_dark
+      family: bare_metal
+      wear: 0.7
+    - name: crate_low
+      shape: box
+      size: [0.36, 0.32, 0.28]
+      location: [-0.42, -0.38, 0.20]
+      material: iron
+      family: painted_metal
+      wear: 0.45
+    - name: crate_mid
+      shape: box
+      size: [0.30, 0.28, 0.22]
+      location: [-0.40, -0.36, 0.45]
+      material: iron_light
+      family: painted_metal
+      wear: 0.5
+      rotation: [0.0, 0.0, 0.12]
+    - name: crate_side
+      shape: box
+      size: [0.24, 0.40, 0.20]
+      location: [-0.10, -0.48, 0.16]
+      material: iron
+      family: painted_metal
+      wear: 0.4
+      rotation: [0.0, 0.0, -0.2]
+    - name: barrel_a
+      shape: cylinder
+      size: [0.22, 0.22, 0.34]
+      location: [0.38, -0.40, 0.23]
+      material: steel
+      family: bare_metal
+      wear: 0.55
+    - name: barrel_b
+      shape: cylinder
+      size: [0.20, 0.20, 0.32]
+      location: [0.58, -0.22, 0.16]
+      rotation: [1.5708, 0.0, 0.4]
+      material: steel_dark
+      family: bare_metal
+      wear: 0.65
+    - name: tire
+      shape: torus
+      size: [0.28, 0.28, 0.08]
+      location: [0.46, -0.08, 0.42]
+      rotation: [1.15, 0.2, 0.0]
+      material: rubber
+      family: rubber
+    - name: drum
+      shape: cylinder
+      size: [0.30, 0.30, 0.26]
+      location: [0.42, 0.38, 0.19]
+      material: iron
+      family: painted_metal
+      wear: 0.6
+    - name: beam
+      shape: box
+      size: [0.90, 0.08, 0.08]
+      location: [-0.10, 0.18, 0.22]
+      rotation: [0.0, 0.15, 0.55]
+      material: steel
+      family: bare_metal
+      wear: 0.5
+    - name: scrap_a
+      shape: box
+      size: [0.42, 0.28, 0.03]
+      location: [-0.46, 0.36, 0.14]
+      rotation: [0.35, 0.1, 0.4]
+      material: iron_light
+      family: bare_metal
+      wear: 0.8
+    - name: scrap_b
+      shape: box
+      size: [0.34, 0.22, 0.025]
+      location: [-0.22, 0.50, 0.18]
+      rotation: [-0.4, 0.2, -0.3]
+      material: steel
+      family: bare_metal
+      wear: 0.7
+    - name: pipe
+      shape: cylinder
+      size: [0.08, 0.08, 0.70]
+      location: [0.10, 0.42, 0.22]
+      rotation: [1.2, 0.0, 0.6]
+      material: steel_dark
+      family: bare_metal
+      wear: 0.4
+    - name: crate_high
+      shape: box
+      size: [0.22, 0.20, 0.16]
+      location: [-0.36, -0.32, 0.64]
+      material: steel
+      family: painted_metal
+      wear: 0.35
+      rotation: [0.0, 0.0, -0.18]
+    - name: crate_back
+      shape: box
+      size: [0.28, 0.22, 0.18]
+      location: [-0.52, 0.08, 0.15]
+      material: iron_light
+      family: painted_metal
+      wear: 0.5
+    - name: barrel_c
+      shape: cylinder
+      size: [0.18, 0.18, 0.28]
+      location: [0.18, -0.52, 0.20]
+      material: steel
+      family: bare_metal
+      wear: 0.4
+    - name: scrap_c
+      shape: box
+      size: [0.38, 0.20, 0.04]
+      location: [0.22, 0.10, 0.16]
+      rotation: [0.5, 0.0, 0.8]
+      material: iron_light
+      family: bare_metal
+      wear: 0.75
+    - name: can
+      shape: cylinder
+      size: [0.10, 0.10, 0.14]
+      location: [-0.58, 0.10, 0.13]
+      material: handle
+      family: painted_metal
+      wear: 0.55
+    - name: fence
+      shape: box
+      size: [1.20, 0.04, 0.46]
+      location: [0.0, 0.72, 0.29]
+      material: steel
+      family: bare_metal
+      component: wire_wall
+      component_params: {count: 7}
+      wear: 0.35
+    - name: post_l
+      shape: box
+      size: [0.06, 0.06, 0.52]
+      location: [-0.60, 0.72, 0.32]
+      material: iron_dark
+      family: bare_metal
+    - name: post_r
+      shape: box
+      size: [0.06, 0.06, 0.52]
+      location: [0.60, 0.72, 0.32]
+      material: iron_dark
+      family: bare_metal
+
+materials:
+  primary: iron
+
+decomposition:
+  mode: parts
+  source_views: [three_quarter, side]
+  components:
+    - {id: pad, role: primary, technique: box}
+    - {id: crate_low, role: primary, technique: box}
+    - {id: crate_mid, role: secondary, technique: box}
+    - {id: crate_side, role: secondary, technique: box}
+    - {id: crate_high, role: secondary, technique: box}
+    - {id: crate_back, role: secondary, technique: box}
+    - {id: barrel_c, role: tertiary, technique: box}
+    - {id: scrap_c, role: tertiary, technique: box}
+    - {id: barrel_a, role: primary, technique: box}
+    - {id: barrel_b, role: secondary, technique: box}
+    - {id: tire, role: secondary, technique: box}
+    - {id: drum, role: secondary, technique: box}
+    - {id: beam, role: secondary, technique: box}
+    - {id: scrap_a, role: tertiary, technique: box}
+    - {id: scrap_b, role: tertiary, technique: box}
+    - {id: pipe, role: tertiary, technique: box}
+    - {id: can, role: tertiary, technique: box}
+    - {id: fence, role: primary, technique: modular}
+
+art_direction:
+  subject: modular junkyard tile, stacked scrap behind a wire fence
+  style:
+    realism: 0.4
+    stylization: 0.6
+    shape_language: [stacked, rusted, modular]
+  usage:
+    importance: standard_prop
+    viewing_distance: medium
+  focal_point: crate stack and leaning tire on a barrel
+  value_hierarchy: dark pad, mid rust crates, bright steel barrel
+  silhouette: low slab, rear fence, piled junk to the left and right
+  gameplay:
+    camera: three_quarter
+    must_read: [slab, crate pile, barrels, fence]
+  recognition_details: [wire fence, tire, oil drum, rusted crates]
+  forms:
+    primary: [pad, crate_low, barrel_a, fence]
+    secondary: [crate_mid, barrel_b, tire, drum, beam]
+    tertiary: [scrap_a, scrap_b, pipe, can]
+  detail_density: medium
+  asymmetry: crate pile left, barrels right, fence on the back edge
+
+geometric_plan:
+  primary_read: a city-block scrap pile, not a single crate
+  recognition: mixed
+  must_survive_small:
+    - ground slab
+    - crate stack
+    - barrel plus tire
+    - rear fence
+  masses:
+    - {name: pad, role: primary}
+    - {name: crate_low, role: primary, connects_to: [pad, crate_mid]}
+    - {name: barrel_a, role: primary, connects_to: [pad, tire]}
+    - {name: fence, role: primary, connects_to: [pad]}
+    - {name: drum, role: secondary, connects_to: [pad]}
+  silhouette: low square pad, rear screen, two piles
+  silhouette_vs_similar: Not a clean crate. Not a building. Fence is a screen.
+  proportions: Pad 1.6 m. Piles under 0.7 m. Fence about 0.5 m.
+  symmetry: asymmetric
+  negative_space: path through the middle toward the fence
+  abstraction: primitive scrap, readable masses
+  stage: secondary
+  landmarks:
+    - {id: crate_stack, role: left pile, part: crate_mid}
+    - {id: tire, role: tire on barrel, part: tire}
+    - {id: fence, role: rear screen, part: fence}
+  critical_views:
+    - {view: three_quarter, weight: 3}
+    - {view: side, weight: 2}
+    - {view: top, weight: 1}
+
+construction_plan:
+  techniques:
+    - {kind: box, purpose: pad crates scrap beam, applies_to: piles}
+    - {kind: modular, purpose: wire fence, applies_to: fence}
+  primary_forms:
+    - {type: box, purpose: pad}
+    - {type: box, purpose: crates}
+    - {type: cylinder, purpose: barrels}
+  secondary_forms:
+    - {type: torus, purpose: tire}
+    - {type: box, purpose: I-beam and scrap sheets}
+  tertiary_details:
+    - {type: cylinder, purpose: pipe and can}
+  notes:
+    - No junkyard recipe. Compose from box, cylinder, torus, wire_wall.
+
+export:
+  format: glb
+  save_blend: true
