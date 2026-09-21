@@ -304,10 +304,7 @@ def test_blender_script_has_garment_pipeline(project: Path) -> None:
     assert "def fit_garment" in script
     assert "def _fit_stylized" in script
     assert "def _extract_stylized_shell" in script
-    assert "def _bisect_fill" in script
-    assert "def _torso_shell_radii" in script
-    assert "def _ray_on_body" in script
-    assert "def _torso_origin" in script
+    assert "Copy torso faces off the body" in script
     assert "def _garment_pipeline" in script
     assert "def build_garment" in script
     assert "def silhouette_pass" in script

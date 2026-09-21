@@ -184,13 +184,8 @@ def _thicken_sleeves(shirt, marks, height, thick, from_idx=0):
 
 
 def _fit_stylized(shirt, body, marks, height, gap):
-    """Smooth the solid shell. No tubes, no second solidify."""
-    if marks is not None:
-        _clamp_hem(shirt, marks)
-    smooth = shirt.modifiers.new("Relax", "SMOOTH")
-    smooth.iterations = 2
-    smooth.factor = 0.15
-    _apply_mod(shirt, "Relax")
+    """Keep the extracted body faces. No tubes, remesh, or drape."""
+    _ = (body, marks, height, gap)
     shade_smooth(shirt)
     return shirt
 

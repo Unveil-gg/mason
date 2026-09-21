@@ -34,6 +34,8 @@ def _sleeve_reach_t():
         return 0.92
     if sleeve == "none":
         return 0.0
+    if _garment_pipeline() == "stylized":
+        return 0.18
     return 0.45
 
 
@@ -410,9 +412,7 @@ def _keep_face_center(center, marks, cfg, height):
     on_sleeve = _is_sleeve_vert(center, marks, height)
     on_arm = _is_arm_flesh(center, marks, height)
     if _garment_pipeline() == "stylized":
-        if on_sleeve:
-            return True
-        if on_arm:
+        if on_sleeve or on_arm:
             return False
     elif on_sleeve or on_arm:
         return False
@@ -491,119 +491,38 @@ def _tighten_sleeves(garment, marks, height, body=None):
     garment.data.update()
 
 
-def _bisect_fill(obj, origin, normal, drop_below):
-    """Cut obj on a plane, drop one side, and fill the cap."""
-    bpy.ops.object.select_all(action="DESELECT")
-    obj.select_set(True)
-    bpy.context.view_layer.objects.active = obj
-    bpy.ops.object.mode_set(mode="EDIT")
-    bpy.ops.mesh.select_all(action="SELECT")
-    bpy.ops.mesh.bisect(
-        plane_co=origin,
-        plane_no=normal,
-        clear_inner=drop_below,
-        clear_outer=not drop_below,
-        use_fill=True,
-    )
-    bpy.ops.object.mode_set(mode="OBJECT")
-
-
-def _torso_origin(body, marks):
-    """Centroid of torso-band verts, ignoring arms."""
-    chest = marks.get("chest")
-    mid_x = chest.x if chest is not None else 0.0
-    torso = float(marks.get("torso_half_x") or 0.02)
-    z0 = marks["hem"].z
-    z1 = marks["neck"].z
-    xs, ys, zs = [], [], []
-    for vert in body.data.vertices:
-        world = body.matrix_world @ vert.co
-        if world.z < z0 or world.z > z1:
-            continue
-        if abs(world.x - mid_x) > torso * 1.05:
-            continue
-        xs.append(world.x)
-        ys.append(world.y)
-        zs.append(world.z)
-    if not xs:
-        mins, maxs = body_bounds(body)
-        return Vector((
-            mid_x, (mins.y + maxs.y) * 0.5, (z0 + z1) * 0.5,
-        ))
-    n = float(len(xs))
-    return Vector((sum(xs) / n, sum(ys) / n, sum(zs) / n))
-
-
-def _ray_on_body(body, origin, direction, reach):
-    """World hit of a ray in object space."""
-    imw = body.matrix_world.inverted()
-    rot = body.matrix_world.to_3x3()
-    local_d = (rot.inverted() @ direction).normalized()
-    hit = body.ray_cast(imw @ origin, local_d, distance=reach)
-    ok, loc, nrm, _idx = hit
-    if not ok:
-        return None, None
-    return body.matrix_world @ loc, (rot @ nrm).normalized()
-
-
-def _torso_shell_radii(body, marks, gap):
-    """Raycast the body surface from the torso center."""
-    origin = _torso_origin(body, marks)
-    mins, maxs = body_bounds(body)
-    reach = max((maxs - mins).length, 0.05)
-    xs, ys = [], []
-    rays = (
-        (1.0, 0.0, 0.0), (-1.0, 0.0, 0.0),
-        (0.0, 1.0, 0.0), (0.0, -1.0, 0.0),
-        (0.7, 0.7, 0.0), (-0.7, 0.7, 0.0),
-        (0.7, -0.7, 0.0), (-0.7, -0.7, 0.0),
-    )
-    for raw in rays:
-        loc, _n = _ray_on_body(body, origin, Vector(raw), reach)
-        if loc is None:
-            continue
-        xs.append(abs(loc.x - origin.x))
-        ys.append(abs(loc.y - origin.y))
-    torso = float(marks.get("torso_half_x") or 0.02)
-    rx = max(max(xs) if xs else 0.0, torso) + gap
-    ry = max(max(ys) if ys else 0.0, torso * 0.65) + gap
-    rz = (marks["neck"].z - marks["hem"].z) * 0.5 + gap
-    return rx, ry, rz, origin.x, origin.y
-
-
 def _extract_stylized_shell(body, marks):
-    """Closed hull sized from body raycasts, plus a thin ease."""
+    """Copy torso faces off the body. Same mesh, not a new primitive."""
     cfg = _garment_cfg()
     mins, maxs = body_bounds(body)
     height = max(maxs.z - mins.z, 0.001)
-    gap = min(
-        float(cfg.get("ease_offset") or 0.002),
-        height * 0.012,
-    )
-    rx, ry, rz, mid_x, mid_y = _torso_shell_radii(body, marks, gap)
-    hem_z = marks["hem"].z
-    neck_z = marks["neck"].z
-    mid_z = (hem_z + neck_z) * 0.5
-    bpy.ops.mesh.primitive_uv_sphere_add(
-        radius=1.0,
-        location=(mid_x, mid_y, mid_z),
-        segments=24,
-        ring_count=16,
-    )
-    garment = bpy.context.active_object
+    garment = body.copy()
+    garment.data = body.data.copy()
     garment.name = cfg.get("kind") or "shirt"
-    garment.scale = (
-        max(rx, height * 0.06),
-        max(ry, height * 0.05),
-        max(rz, height * 0.06),
+    bpy.context.collection.objects.link(garment)
+    garment.parent = None
+    garment.matrix_world = body.matrix_world.copy()
+    bm = bmesh.new()
+    bm.from_mesh(garment.data)
+    drop = []
+    for face in bm.faces:
+        center = garment.matrix_world @ face.calc_center_median()
+        if not _keep_face_center(center, marks, cfg, height):
+            drop.append(face)
+    if drop and len(drop) < len(bm.faces):
+        bmesh.ops.delete(bm, geom=drop, context="FACES")
+    bm.to_mesh(garment.data)
+    bm.free()
+    if len(garment.data.polygons) < 12:
+        bpy.data.objects.remove(garment, do_unlink=True)
+        return None
+    gap = min(
+        float(cfg.get("ease_offset") or 0.002) * 0.35,
+        height * 0.006,
     )
-    bpy.ops.object.transform_apply(scale=True)
-    _bisect_fill(
-        garment, (mid_x, mid_y, hem_z), (0.0, 0.0, 1.0), True,
-    )
-    _bisect_fill(
-        garment, (mid_x, mid_y, neck_z), (0.0, 0.0, 1.0), False,
-    )
+    for vert in garment.data.vertices:
+        vert.co += vert.normal * gap
+    garment.data.update()
     shade_smooth(garment)
     return garment
 

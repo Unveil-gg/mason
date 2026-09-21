@@ -29,23 +29,33 @@ def transfer_weights(shirt, body):
 
 
 def hide_covered_body(body, marks):
-    """Mark covered body faces and a mason_covered group for Godot."""
+    """Remove the same torso faces the shirt copied. Arms stay."""
     cfg = _garment_cfg()
     if not cfg.get("hide_covered"):
         return []
-    hem_z = marks["hem"].z
-    neck_z = marks["neck"].z
+    mins, maxs = body_bounds(body)
+    height = max(maxs.z - mins.z, 0.001)
     vg = body.vertex_groups.get("mason_covered")
     if vg is None:
         vg = body.vertex_groups.new(name="mason_covered")
     indices = []
     verts = set()
-    for poly in body.data.polygons:
-        center = body.matrix_world @ poly.center
-        if hem_z <= center.z <= neck_z:
-            poly.hide = True
-            indices.append(poly.index)
-            verts.update(poly.vertices)
+    drop = []
+    bm = bmesh.new()
+    bm.from_mesh(body.data)
+    bm.faces.ensure_lookup_table()
+    for face in bm.faces:
+        center = body.matrix_world @ face.calc_center_median()
+        if not _keep_face_center(center, marks, cfg, height):
+            continue
+        drop.append(face)
+        indices.append(face.index)
+        verts.update(v.index for v in face.verts)
+    if drop:
+        bmesh.ops.delete(bm, geom=drop, context="FACES")
+        bm.to_mesh(body.data)
+    bm.free()
+    body.data.update()
     if verts:
         vg.add(list(verts), 1.0, "REPLACE")
     return indices
