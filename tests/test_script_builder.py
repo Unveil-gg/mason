@@ -51,6 +51,9 @@ def test_blender_script_has_helpers(project: Path) -> None:
     assert "def finish_geometry" in script
     assert "def create_material" in script
     assert "def export_glb" in script
+    assert "def flatten_materials_for_gltf" in script
+    assert "def pack_prop_for_export" in script
+    assert "def emit_export_volumes" in script
     assert "json.loads" in script
     assert "#654936" in script
     assert "BLENDER_EEVEE" in script
@@ -65,6 +68,40 @@ def test_blender_script_has_helpers(project: Path) -> None:
     assert "0.08, 0.08, 0.09" in script
     assert "def create_textured_material" in script
     assert 'path + "@"' in script
+    compile(script, "<build.py>", "exec")
+
+
+def test_prop_export_config(project: Path) -> None:
+    spec = parse_asset_spec({
+        "type": "static_prop",
+        "id": "box",
+        "name": "Box",
+        "dimensions": {"width": 1, "depth": 1, "height": 1},
+        "geometry": {
+            "parts": [{
+                "name": "cabinet",
+                "shape": "box",
+                "size": [1, 1, 1],
+                "location": [0, 0, 0.5],
+            }],
+        },
+        "export": {
+            "profile": "prop",
+            "movers": ["lid"],
+            "volumes": [{"name": "col_cabinet"}],
+        },
+    })
+    style = load_style(project / "styles" / "default.yaml")
+    parts = resolved_parts(spec)
+    bw, bs, r, m = apply_style_defaults(spec, style)
+    script = build_blender_script(
+        spec, style, parts, project / ".mason" / "jobs" / "box",
+        bevel_width=bw, bevel_segments=bs, roughness=r, metallic=m,
+    )
+    assert '"export_profile": "prop"' in script
+    assert '"lid"' in script
+    assert "col_cabinet" in script
+    compile(script, "<build.py>", "exec")
 
 
 def test_blender_script_wires_part_textures(project: Path) -> None:

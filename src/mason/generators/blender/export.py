@@ -1,8 +1,85 @@
 """Blender source snippets for export and metadata."""
 
 EXPORT_SRC = r'''
+def _principled_input(bsdf, *names):
+    """First matching Principled input, or None."""
+    for name in names:
+        if name in bsdf.inputs:
+            return bsdf.inputs[name]
+    return None
+
+
+def _read_base_color(bsdf):
+    """Best solid base color from a Principled tree."""
+    color_in = _principled_input(bsdf, "Base Color", "Color")
+    if color_in is None:
+        return None
+    if not color_in.is_linked:
+        return tuple(color_in.default_value)
+    from_node = color_in.links[0].from_node
+    if from_node.type == "TEX_IMAGE":
+        return None
+    if from_node.type in ("MIX_RGB", "MIX"):
+        c1 = _principled_input(from_node, "Color1", "A")
+        if c1 is not None and not c1.is_linked:
+            return tuple(c1.default_value)
+    return None
+
+
+def flatten_materials_for_gltf():
+    """Collapse procedural color trees so glTF gets baseColorFactor.
+
+    Mason's family variation uses noise->mix on Base Color. The glTF
+    exporter skips that and ships grey materials unless we simplify.
+    Image-textured materials are left unchanged.
+    """
+    for mat in list(bpy.data.materials):
+        if mat.name.startswith("_mason_") or not mat.use_nodes:
+            continue
+        bsdf = next(
+            (n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED"),
+            None,
+        )
+        if bsdf is None:
+            continue
+        base = _read_base_color(bsdf)
+        if base is None:
+            continue
+        rough_in = bsdf.inputs.get("Roughness")
+        metal_in = bsdf.inputs.get("Metallic")
+        rough = (
+            float(rough_in.default_value)
+            if rough_in is not None and not rough_in.is_linked
+            else 0.5
+        )
+        metal = (
+            float(metal_in.default_value)
+            if metal_in is not None and not metal_in.is_linked
+            else 0.0
+        )
+        mat.node_tree.nodes.clear()
+        out = mat.node_tree.nodes.new("ShaderNodeOutputMaterial")
+        new_bsdf = mat.node_tree.nodes.new("ShaderNodeBsdfPrincipled")
+        mat.node_tree.links.new(
+            new_bsdf.outputs["BSDF"], out.inputs["Surface"],
+        )
+        color_in = _principled_input(new_bsdf, "Base Color", "Color")
+        color_in.default_value = base
+        new_bsdf.inputs["Roughness"].default_value = rough
+        new_bsdf.inputs["Metallic"].default_value = metal
+
+
 def export_glb(path):
-    """Export meshes and attach empties. Skip _mason_ helpers."""
+    """Export meshes and attach empties. Skip _mason_ helpers.
+
+    profile=prop merges statics and bakes one atlas first. The
+    .blend was already saved, so the kit graph stays editable.
+    """
+    if CONFIG.get("export_profile") == "prop":
+        pack_prop_for_export()
+    else:
+        flatten_materials_for_gltf()
+        emit_export_volumes()
     bpy.ops.object.select_all(action="DESELECT")
     for obj in bpy.data.objects:
         if obj.name.startswith("_mason_"):
@@ -15,11 +92,17 @@ def export_glb(path):
             continue
         obj.hide_set(False)
         obj.select_set(True)
-    bpy.ops.export_scene.gltf(
-        filepath=path,
-        export_format="GLB",
-        use_selection=True,
-    )
+    kwargs = {
+        "filepath": path,
+        "export_format": "GLB",
+        "use_selection": True,
+        "export_extras": True,
+    }
+    try:
+        bpy.ops.export_scene.gltf(**kwargs)
+    except TypeError:
+        kwargs.pop("export_extras", None)
+        bpy.ops.export_scene.gltf(**kwargs)
 
 
 def create_attachments():
@@ -133,6 +216,9 @@ def write_metadata(path):
             "min": [float(omins.x), float(omins.y), float(omins.z)],
             "max": [float(omaxs.x), float(omaxs.y), float(omaxs.z)],
         }
+    saved = globals().get("PART_BOUNDS")
+    if saved:
+        object_bounds = saved
     payload = {
         "objects": [o.name for o in meshes],
         "mesh_count": len(meshes),
@@ -158,6 +244,16 @@ def write_metadata(path):
             }
             for o in bpy.data.objects
             if o.type == "EMPTY" and o.name.startswith("attach_")
+        ],
+        "volumes": [
+            {
+                "name": o.name,
+                "kind": o.get("mason_kind") or "box",
+                "min": [float(v) for v in o["mason_min"]],
+                "max": [float(v) for v in o["mason_max"]],
+            }
+            for o in bpy.data.objects
+            if o.type == "EMPTY" and "mason_min" in o.keys()
         ],
     }
     fit = globals().get("FIT_METRICS")

@@ -37,12 +37,35 @@ class PixelDimensions(BaseModel):
     height: int = Field(gt=0)
 
 
+class ExportVolume(BaseModel):
+    """Gameplay hull written as a glTF empty plus extras.
+
+    `min`/`max` are world AABB. When omitted, Mason unions the
+    named parts (or every static mesh, if `parts` is empty).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    kind: Literal["box"] = "box"
+    parts: list[str] = Field(default_factory=list)
+    min: tuple[float, float, float] | None = None
+    max: tuple[float, float, float] | None = None
+
+
 class Export3D(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     format: Literal["glb"] = "glb"
     save_blend: bool = True
     install_to: str | None = None
+    # kit: one object per part. prop: merge statics, bake one atlas.
+    profile: Literal["kit", "prop"] = "kit"
+    # Roots that stay separate, plus their children. Empty on a
+    # prop falls back to attachment parents.
+    movers: list[str] = Field(default_factory=list)
+    atlas_size: int = Field(default=1024, ge=64, le=2048)
+    volumes: list[ExportVolume] = Field(default_factory=list)
 
 
 class MaterialsSpec(BaseModel):

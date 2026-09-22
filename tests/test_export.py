@@ -51,7 +51,7 @@ def test_export_requires_destination(project: Path, monkeypatch) -> None:
         run_export("box")
 
 
-def test_export_prefers_current_best(
+def test_export_prefers_live_over_current_best(
     project: Path, monkeypatch, tmp_path: Path,
 ) -> None:
     monkeypatch.chdir(project)
@@ -64,6 +64,22 @@ def test_export_prefers_current_best(
     job.set_current_best(2)
     dest = tmp_path / "out"
     run_export("box", to=dest)
+    assert (dest / "box.glb").read_bytes() == b"live-glb"
+
+
+def test_export_best_uses_current_best(
+    project: Path, monkeypatch, tmp_path: Path,
+) -> None:
+    monkeypatch.chdir(project)
+    job = _make_job(project)
+    live = job.output / "asset.glb"
+    live.write_bytes(b"live-glb")
+    snap = job.iterations / "002" / "output"
+    snap.mkdir(parents=True, exist_ok=True)
+    (snap / "asset.glb").write_bytes(b"best-glb")
+    job.set_current_best(2)
+    dest = tmp_path / "out"
+    run_export("box", to=dest, best=True)
     assert (dest / "box.glb").read_bytes() == b"best-glb"
 
 
@@ -97,9 +113,21 @@ def test_export_godot_subfolder(
     monkeypatch.chdir(project)
     _make_job(project)
     dest = tmp_path / "res"
-    result = run_export("box", to=dest, engine="godot")
+    result = run_export("box", to=dest, engine="godot", layout="grouped")
     assert (dest / "models" / "box.glb").is_file()
     assert result.installed["glb"] == str(dest / "models" / "box.glb")
+
+
+def test_export_godot_flat_layout(
+    project: Path, monkeypatch, tmp_path: Path,
+) -> None:
+    monkeypatch.chdir(project)
+    _make_job(project)
+    dest = tmp_path / "res"
+    result = run_export("box", to=dest, engine="godot")
+    assert (dest / "box.glb").is_file()
+    assert not (dest / "models").exists()
+    assert result.installed["glb"] == str(dest / "box.glb")
 
 
 def test_export_writes_manifest(

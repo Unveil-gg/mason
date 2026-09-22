@@ -351,6 +351,15 @@ metadata:
     The handle drops and the lid shuts together.
     Slide ram down on Z to compress. No baked clip.
 
+# Author as parts. Ship as one static body plus the two movers.
 export:
   format: glb
   save_blend: true
+  profile: prop
+  movers: [flap_hinge, ram]
+  atlas_size: 1024
+  volumes:
+    - name: col_cabinet
+    - name: vol_hopper
+      min: [-0.27, -0.20, 0.12]
+      max: [0.27, 0.20, 1.08]

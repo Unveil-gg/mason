@@ -27,18 +27,26 @@ def _export_source(
     job: AssetJob,
     key: str,
     rel_path: str,
+    *,
+    best: bool = False,
 ) -> Path | None:
-    """Prefer current_best snapshot outputs over the live result."""
-    meta = job.load_meta()
+    """Pick the GLB/PNG to install.
+
+    Default: latest live output/ (most recent rebuild). Pass best=True
+    to ship the promoted current_best snapshot instead.
+    """
     name = _OUTPUT_NAMES.get(key)
+    live = root / rel_path
+    if not best and live.is_file():
+        return live
+    meta = job.load_meta()
     if meta and meta.current_best and name:
         snap = (
             job.iterations / f"{meta.current_best:03d}" / "output" / name
         )
         if snap.is_file():
             return snap
-    src = root / rel_path
-    return src if src.is_file() else None
+    return live if live.is_file() else None
 
 
 def _resolve_dest(root: Path, raw: str | Path) -> Path:
@@ -77,7 +85,9 @@ def _manifest_extra(job: AssetJob) -> dict:
     if result is None:
         return {}
     extra: dict = {}
-    for key in ("bounds", "animations", "frame_size", "attachments"):
+    for key in (
+        "bounds", "animations", "frame_size", "attachments", "volumes",
+    ):
         value = result.validation.get(key)
         if value:
             extra[key] = value
@@ -115,18 +125,42 @@ def _update_manifest(
     return manifest_path
 
 
+def _copy_atlas_sidecars(
+    src_glb: Path, dest_glb: Path, asset_id: str,
+) -> dict[str, str]:
+    """Place baked atlas PNGs beside the installed GLB."""
+    names = {
+        "atlas_albedo.png": f"{asset_id}_albedo.png",
+        "atlas_orm.png": f"{asset_id}_orm.png",
+    }
+    copied: dict[str, str] = {}
+    for src_name, dest_name in names.items():
+        src = src_glb.parent / src_name
+        if not src.is_file():
+            continue
+        dest = dest_glb.parent / dest_name
+        dest.write_bytes(src.read_bytes())
+        copied[dest.stem] = str(dest)
+    return copied
+
+
 def run_export(
     asset_id: str,
     to: Path | None = None,
     engine: str = "generic",
+    *,
+    best: bool = False,
+    layout: str = "flat",
 ) -> ExportResult:
     """Copy a built asset's finished outputs into a target project.
 
     Args:
         asset_id: Job/asset id to export.
         to: Optional destination dir, overriding spec/project config.
-        engine: "generic" (flat copy) or "godot" (models/textures
-            subfolders, for res:// friendly layout).
+        engine: "generic" or "godot" (manifest only; layout is
+            separate).
+        layout: "flat" writes into --to. "grouped" adds models/
+            and textures/ subfolders.
 
     Returns:
         ExportResult with the absolute paths written.
@@ -145,10 +179,10 @@ def run_export(
     for key, rel_path in result.outputs.items():
         if key not in INSTALLABLE_KEYS:
             continue
-        src = _export_source(root, job, key, rel_path)
+        src = _export_source(root, job, key, rel_path, best=best)
         if src is None or not src.is_file():
             continue
-        sub = GODOT_SUBDIRS.get(key, "") if engine == "godot" else ""
+        sub = GODOT_SUBDIRS.get(key, "") if layout == "grouped" else ""
         target_dir = (dest_dir / sub) if sub else dest_dir
         target_dir.mkdir(parents=True, exist_ok=True)
         name = INSTALL_NAMES.get(key)
@@ -157,6 +191,8 @@ def run_export(
         )
         dest.write_bytes(src.read_bytes())
         installed[key] = str(dest)
+        if key == "glb":
+            installed.update(_copy_atlas_sidecars(src, dest, asset_id))
     manifest = None
     if installed:
         manifest = str(_update_manifest(
@@ -194,6 +230,9 @@ def run_export_kit(
     kit: str,
     to: Path | None = None,
     engine: str = "generic",
+    *,
+    best: bool = False,
+    layout: str = "flat",
 ) -> KitExportResult:
     """Export every member of a kit (an already-built asset pack).
 
@@ -223,7 +262,10 @@ def run_export_kit(
                 context={"kit": spec.id, "member": member},
             )
     members: dict[str, ExportResult] = {
-        member: run_export(member, to, engine) for member in spec.members
+        member: run_export(
+            member, to, engine, best=best, layout=layout,
+        )
+        for member in spec.members
     }
     manifest_path = next(
         (Path(m.manifest) for m in members.values() if m.manifest), None,

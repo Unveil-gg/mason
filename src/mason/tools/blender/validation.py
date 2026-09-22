@@ -138,6 +138,8 @@ def validate_static_prop(
             metrics["object_bounds_count"] = len(data["object_bounds"])
         if data.get("attachments"):
             metrics["attachments"] = data["attachments"]
+        if data.get("volumes"):
+            metrics["volumes"] = data["volumes"]
     else:
         checks.append(_check("metadata", False, "metadata.json missing"))
 

@@ -10,6 +10,8 @@ from mason.core.styles import StyleProfile
 from mason.generators.blender.bodies import CREATE_BODIES_SRC
 from mason.generators.blender.curves import CREATE_CURVE_SRC
 from mason.generators.blender.export import EXPORT_SRC
+from mason.generators.blender.prop_atlas import PROP_ATLAS_SRC
+from mason.generators.blender.prop_pack import PROP_PACK_SRC
 from mason.generators.blender.instance import CREATE_INSTANCE_SRC
 from mason.generators.blender.garment_anatomy import (
     CREATE_GARMENT_ANATOMY_SRC,
@@ -104,6 +106,12 @@ def build_blender_script(
         "attachments": [
             item.model_dump(mode="json") for item in spec.attachments
         ],
+        "export_profile": spec.export.profile,
+        "export_movers": _export_movers(spec),
+        "export_atlas_size": spec.export.atlas_size,
+        "export_volumes": [
+            item.model_dump(mode="json") for item in spec.export.volumes
+        ],
         "tile_size": style.textures.tile_size,
         "wrap": style.textures.wrap,
         "surface_strategy": spec.materials.strategy,
@@ -123,6 +131,20 @@ def build_blender_script(
         + "\n''')\n"
         + _BODY
     )
+
+
+def _export_movers(spec: StaticPropSpec) -> list[str]:
+    """Roots that stay unmerged. Attachment parents if unset."""
+    if spec.export.movers:
+        return list(spec.export.movers)
+    if spec.export.profile != "prop":
+        return []
+    found: list[str] = []
+    for sock in spec.attachments:
+        parent = sock.parent
+        if parent and parent not in found:
+            found.append(parent)
+    return found
 
 
 def _garment_payload(spec: StaticPropSpec, job_dir: Path) -> dict | None:
@@ -166,6 +188,8 @@ _BODY = (
     + CREATE_SKIN_SRC
     + CREATE_BODIES_SRC
     + CREATE_MATERIAL_SRC
+    + PROP_PACK_SRC
+    + PROP_ATLAS_SRC
     + CREATE_GARMENT_BODY_SRC
     + CREATE_GARMENT_ANATOMY_SRC
     + CREATE_GARMENT_SURFACE_SRC
@@ -396,6 +420,7 @@ def main():
             save_blend(blend)
         export_glb(os.path.join(output, "asset.glb"))
         export_uv_layout(os.path.join(output, "uv_layout.png"))
+        write_metadata(os.path.join(output, "metadata.json"))
     if mode in ("all", "preview"):
         if mode == "preview" and os.path.isfile(blend):
             bpy.ops.wm.open_mainfile(filepath=blend)
@@ -406,8 +431,6 @@ def main():
             CONFIG.get("engine") or "eevee",
             demo_lighting=bool(CONFIG.get("demo_lighting")),
         )
-    if mode in ("all", "build"):
-        write_metadata(os.path.join(output, "metadata.json"))
 
 
 if __name__ == "__main__":

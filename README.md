@@ -326,8 +326,8 @@ use `mason export`. It never copies working files (`.blend`/`.kra`) or
 previews.
 
 ```bash
-mason export simple_crate --to ../my_game/res/models
-mason export simple_crate --engine godot   # models/, textures/ subfolders
+mason export simple_crate --to ../my_game/res
+mason export simple_crate --layout grouped   # models/, textures/
 ```
 
 The destination can also be set once instead of passed every time:

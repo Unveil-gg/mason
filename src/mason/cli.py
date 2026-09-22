@@ -253,6 +253,23 @@ def export(
         str,
         typer.Option("--engine", help="generic or godot."),
     ] = "generic",
+    best: Annotated[
+        bool,
+        typer.Option(
+            "--best",
+            help=(
+                "Ship the promoted current_best snapshot instead of "
+                "the latest live rebuild output."
+            ),
+        ),
+    ] = False,
+    layout: Annotated[
+        str,
+        typer.Option(
+            "--layout",
+            help="flat (into --to) or grouped (models/, textures/).",
+        ),
+    ] = "flat",
     json_mode: JsonFlag = False,
 ) -> None:
     """Copy an asset's finished outputs into another project, or
@@ -260,7 +277,9 @@ def export(
 
     def _run():
         if kit:
-            result = run_export_kit(kit, to, engine)
+            result = run_export_kit(
+                kit, to, engine, best=best, layout=layout,
+            )
             _emit(
                 json_mode, result.model_dump(),
                 lambda: print_kit_export(result),
@@ -274,7 +293,9 @@ def export(
                 code="export_missing_target",
                 hint="mason export <asset-id> | mason export --kit <id>",
             )
-        result = run_export(asset_id, to, engine)
+        result = run_export(
+            asset_id, to, engine, best=best, layout=layout,
+        )
         _emit(json_mode, result.model_dump(), lambda: print_export(result))
         if not result.success:
             raise typer.Exit(code=1)

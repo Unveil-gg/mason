@@ -322,6 +322,16 @@ def _full_vocab() -> dict[str, Any]:
             "rotation, parent}]. Empties named attach_<name> "
             "export in the GLB and metadata.json / manifest."
         ),
+        "export_profile": (
+            "export.profile kit (default) keeps one mesh per "
+            "part. prop joins statics into body, keeps "
+            "export.movers (or attachment parents) plus their "
+            "children as separate meshes, and bakes one albedo "
+            "plus ORM atlas. export.volumes [{name, kind: box, "
+            "parts, min, max}] become empties with mason_min / "
+            "mason_max extras. mason export writes into --to; "
+            "--layout grouped adds models/ and textures/."
+        ),
         "garment": (
             "geometry.garment.pipeline is stylized (default) "
             "or drape. Stylized is Animal Crossing-style: "
