@@ -280,6 +280,7 @@ def test_blender_script_has_garment_pipeline(project: Path) -> None:
     assert "def add_garment_details" in script
     assert "def render_worn_preview" in script
     assert "def _pale_preview" in script
+    assert "Props dim when any used palette swatch is pale" in script
     assert "worn_front" in script
     assert "def _tighten_sleeves" in script
     assert "def _clip_batwings" in script

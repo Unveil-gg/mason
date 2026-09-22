@@ -13,145 +13,53 @@ layers:
   - name: felt
     role: background
     fill: label_green
-  - name: felt_grain
-    role: overlay
-    fill: wood_dark
-    stamp: dapple
-    stamp_inner: label_green
-    stamp_seed: 11
-    opacity: 0.35
+  - name: painting
+    role: image
+    image: examples/ref/travel_pips_cover.png
     rect: {x: 0, y: 0, width: 768, height: 512}
-  - name: table
-    role: fill
-    fill: wood_dark
-    rect: {x: 0, y: 340, width: 768, height: 172}
-  - name: table_grain
-    role: overlay
-    fill: wood_light
-    stamp: speckle
-    stamp_inner: wood_dark
-    stamp_seed: 4
-    opacity: 0.5
-    rect: {x: 0, y: 340, width: 768, height: 172}
-  - name: die_a
-    role: fill
-    fill: cream
-    rect: {x: 92, y: 210, width: 150, height: 150}
-  - name: die_a_pip_c
-    role: fill
-    fill: ink
-    shape: ellipse
-    rect: {x: 148, y: 266, width: 38, height: 38}
-  - name: die_a_pip_tl
-    role: fill
-    fill: ink
-    shape: ellipse
-    rect: {x: 108, y: 226, width: 32, height: 32}
-  - name: die_a_pip_tr
-    role: fill
-    fill: ink
-    shape: ellipse
-    rect: {x: 194, y: 226, width: 32, height: 32}
-  - name: die_a_pip_bl
-    role: fill
-    fill: ink
-    shape: ellipse
-    rect: {x: 108, y: 312, width: 32, height: 32}
-  - name: die_a_pip_br
-    role: fill
-    fill: ink
-    shape: ellipse
-    rect: {x: 194, y: 312, width: 32, height: 32}
-  - name: die_b
-    role: fill
-    fill: cream
-    rect: {x: 310, y: 168, width: 136, height: 136}
-  - name: die_b_pip_tl
-    role: fill
-    fill: ink
-    shape: ellipse
-    rect: {x: 328, y: 186, width: 30, height: 30}
-  - name: die_b_pip_c
-    role: fill
-    fill: ink
-    shape: ellipse
-    rect: {x: 363, y: 221, width: 30, height: 30}
-  - name: die_b_pip_br
-    role: fill
-    fill: ink
-    shape: ellipse
-    rect: {x: 398, y: 256, width: 30, height: 30}
-  - name: die_c
-    role: fill
-    fill: cream
-    rect: {x: 500, y: 228, width: 160, height: 160}
-  - name: die_c_pip_tl
-    role: fill
-    fill: ink
-    shape: ellipse
-    rect: {x: 520, y: 248, width: 34, height: 34}
-  - name: die_c_pip_tr
-    role: fill
-    fill: ink
-    shape: ellipse
-    rect: {x: 606, y: 248, width: 34, height: 34}
-  - name: die_c_pip_bl
-    role: fill
-    fill: ink
-    shape: ellipse
-    rect: {x: 520, y: 334, width: 34, height: 34}
-  - name: die_c_pip_br
-    role: fill
-    fill: ink
-    shape: ellipse
-    rect: {x: 606, y: 334, width: 34, height: 34}
   - name: banner
     role: fill
     fill: wood_dark
-    opacity: 0.88
-    rect: {x: 0, y: 28, width: 768, height: 132}
+    opacity: 0.82
+    rect: {x: 0, y: 24, width: 768, height: 118}
   - name: title
     role: text
     text: TRAVEL PIPS
     fill: cream
-    font_size: 64
+    font_size: 58
     align: center
-    rect: {x: 40, y: 40, width: 688, height: 80}
+    rect: {x: 36, y: 32, width: 696, height: 70}
   - name: subtitle
     role: text
     text: A Pocket Dice Game
     fill: brass
-    font_size: 26
+    font_size: 24
     align: center
-    rect: {x: 40, y: 116, width: 688, height: 36}
-  - name: rule
-    role: fill
-    fill: brass
-    stamp: rule
-    rect: {x: 80, y: 168, width: 608, height: 8}
+    rect: {x: 36, y: 100, width: 696, height: 32}
   - name: vignette
     role: overlay
     fill: wood_dark
     stamp: vignette
+    opacity: 0.45
     rect: {x: 0, y: 0, width: 768, height: 512}
 
 art_direction:
-  subject: travel dice-game box lid, three dice on green felt
+  subject: travel dice-game box lid, painted product art
   style:
-    realism: 0.3
-    stylization: 0.7
-    shape_language: [blocky, printed, pocket]
+    realism: 0.55
+    stylization: 0.45
+    shape_language: [printed, pocket, felt]
   usage:
     importance: hero
     viewing_distance: close
-  focal_point: TRAVEL PIPS title over three cream dice
-  value_hierarchy: dark banner, cream dice, green felt ground
-  silhouette: landscape lid, banner on top, three squares
+  focal_point: TRAVEL PIPS over three ivory dice on green felt
+  value_hierarchy: dark banner, cream dice, deep green felt
+  silhouette: landscape lid
   gameplay:
     camera: top
-    must_read: [title, three dice, felt table]
-  recognition_details: [five-pip, three-pip, four-pip]
-  detail_density: medium
+    must_read: [title, three dice, felt]
+  recognition_details: [pips, felt, title]
+  detail_density: high
 
 export:
   kra: true

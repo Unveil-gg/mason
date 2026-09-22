@@ -6,7 +6,7 @@ name: Travel Pips Box
 dimensions:
   width: 0.11
   depth: 0.075
-  height: 0.048
+  height: 0.036
 
 style: default
 
@@ -21,160 +21,79 @@ geometry:
   parts:
     - name: tray
       shape: box
-      size: [0.104, 0.070, 0.022]
-      location: [0.0, 0.0, 0.011]
+      size: [0.104, 0.070, 0.026]
+      location: [0.0, 0.0, 0.013]
       family: cardboard
       material: wood_light
     - name: lid
       shape: box
-      size: [0.110, 0.075, 0.008]
-      location: [0.0, 0.0, 0.026]
+      size: [0.110, 0.075, 0.010]
+      location: [0.0, 0.0, 0.031]
       family: cardboard
       material: cream
-    - name: die_a
-      shape: box
-      size: [0.016, 0.016, 0.016]
-      location: [-0.022, -0.008, 0.038]
-      family: plastic
-      material: cream
-    - name: die_b
-      shape: box
-      size: [0.016, 0.016, 0.016]
-      location: [0.024, 0.008, 0.038]
-      family: plastic
-      material: cream
-      rotation: [0.0, 0.0, 0.35]
-    - name: pip_a_c
-      shape: sphere
-      size: [0.0028, 0.0028, 0.0028]
-      location: [-0.022, -0.008, 0.0466]
-      material: ink
-    - name: pip_a_tl
-      shape: sphere
-      size: [0.0026, 0.0026, 0.0026]
-      location: [-0.0265, -0.0035, 0.0466]
-      material: ink
-    - name: pip_a_tr
-      shape: sphere
-      size: [0.0026, 0.0026, 0.0026]
-      location: [-0.0175, -0.0035, 0.0466]
-      material: ink
-    - name: pip_a_bl
-      shape: sphere
-      size: [0.0026, 0.0026, 0.0026]
-      location: [-0.0265, -0.0125, 0.0466]
-      material: ink
-    - name: pip_a_br
-      shape: sphere
-      size: [0.0026, 0.0026, 0.0026]
-      location: [-0.0175, -0.0125, 0.0466]
-      material: ink
-    - name: pip_a_f1
-      shape: sphere
-      size: [0.0024, 0.0024, 0.0024]
-      location: [-0.0264, -0.0166, 0.0424]
-      material: ink
-    - name: pip_a_f2
-      shape: sphere
-      size: [0.0024, 0.0024, 0.0024]
-      location: [-0.0220, -0.0166, 0.0380]
-      material: ink
-    - name: pip_a_f3
-      shape: sphere
-      size: [0.0024, 0.0024, 0.0024]
-      location: [-0.0176, -0.0166, 0.0336]
-      material: ink
-    - name: pip_b_c
-      shape: sphere
-      size: [0.0028, 0.0028, 0.0028]
-      location: [0.024, 0.008, 0.0466]
-      material: ink
-    - name: pip_b_tl
-      shape: sphere
-      size: [0.0024, 0.0024, 0.0024]
-      location: [0.0196, 0.0124, 0.0466]
-      material: ink
-    - name: pip_b_br
-      shape: sphere
-      size: [0.0024, 0.0024, 0.0024]
-      location: [0.0284, 0.0036, 0.0466]
-      material: ink
-    - name: pip_b_f1
-      shape: sphere
-      size: [0.0024, 0.0024, 0.0024]
-      location: [0.0196, -0.0006, 0.0424]
-      material: ink
-    - name: pip_b_f2
-      shape: sphere
-      size: [0.0024, 0.0024, 0.0024]
-      location: [0.0284, -0.0006, 0.0336]
-      material: ink
 
 materials:
   primary: cream
 
 decals:
-  - name: top_art
+  - name: cover
     image: {asset: dice_game_cover, file: output/asset.png}
-    location: [0.0, 0.0, 0.0303]
-    rotation: [0.0, 0.0, 0.0]
-    size: [0.110, 0.075]
+    face: top
+    inset: 0.0003
+    material: cream
   - name: front_spine
     image: {asset: dice_game_spine, file: output/asset.png}
-    location: [0.0, -0.0378, 0.015]
-    rotation: [1.5708, 0.0, 0.0]
-    size: [0.110, 0.030]
+    face: front
+    inset: 0.0003
+    material: wood_dark
   - name: back_spine
     image: {asset: dice_game_spine, file: output/asset.png}
-    location: [0.0, 0.0378, 0.015]
-    rotation: [1.5708, 0.0, 3.1416]
-    size: [0.110, 0.030]
+    face: back
+    inset: 0.0003
+    material: wood_dark
 
 art_direction:
-  subject: pocket travel dice game in a small lid-and-tray box
+  subject: closed pocket dice-game carton with printed lid
   style:
-    realism: 0.35
-    stylization: 0.65
+    realism: 0.45
+    stylization: 0.55
     shape_language: [rectangular, printed, pocket]
   usage:
     importance: hero
     viewing_distance: close
-  focal_point: lid art and two loose dice on the lid
-  value_hierarchy: cream lid, green cover, dark pips
-  silhouette: shallow rectangular box with two cubes on top
+  focal_point: TRAVEL PIPS over painted dice on felt
+  value_hierarchy: cream carton, green felt painting, dark spine
+  silhouette: shallow landscape box
   gameplay:
     camera: three_quarter
-    must_read: [box, lid art, two dice]
-  recognition_details: [TRAVEL PIPS, pip cubes]
+    must_read: [box, lid painting, title]
+  recognition_details: [TRAVEL PIPS, three dice, felt]
   forms:
-    primary: [tray, lid, die_a, die_b]
-    secondary: [top_art]
-    tertiary: [pips]
+    primary: [tray, lid]
+    secondary: [cover, front_spine]
+    tertiary: []
   detail_density: medium
 
 geometric_plan:
   primary_read: packaged pocket dice game, not a crate
   recognition: mixed
   must_survive_small:
-    - lid over tray
-    - two cubes on the lid
-    - pip dots
+    - closed lid over tray
+    - printed landscape lid
+    - titled spine
   masses:
     - {name: tray, role: primary}
     - {name: lid, role: primary, connects_to: [tray]}
-    - {name: die_a, role: secondary, connects_to: [lid]}
-    - {name: die_b, role: secondary, connects_to: [lid]}
-  silhouette: shallow brick with two sitting cubes
-  silhouette_vs_similar: Not a book. Not a crate. Dice sit on the lid.
-  proportions: Box about 11 by 7.5 cm. Dice 16 mm.
-  symmetry: local
-  negative_space: air around the two dice
-  abstraction: printed product plus primitive cubes
-  stage: secondary
+  silhouette: shallow landscape brick
+  silhouette_vs_similar: Not a book. Not a crate. Art is the lid.
+  proportions: Box about 11 by 7.5 by 3.6 cm
+  symmetry: bilateral
+  negative_space: none
+  abstraction: printed carton
+  stage: material
   landmarks:
     - {id: lid, role: printed lid, part: lid}
-    - {id: die_a, role: left die, part: die_a}
-    - {id: die_b, role: right die, part: die_b}
+    - {id: front_spine, role: TRAVEL PIPS spine, part: tray}
   critical_views:
     - {view: three_quarter, weight: 3}
     - {view: top, weight: 2}
@@ -182,17 +101,13 @@ geometric_plan:
 
 construction_plan:
   techniques:
-    - {kind: box, purpose: lid tray dice, applies_to: package}
+    - {kind: box, purpose: lid and tray, applies_to: package}
   primary_forms:
     - {type: box, purpose: tray}
     - {type: box, purpose: lid}
-  secondary_forms:
-    - {type: box, purpose: dice, count: 2}
-  tertiary_details:
-    - {type: sphere, purpose: pips}
   notes:
-    - Cover and spine are separate illustrated jobs, applied as decals.
-    - No dice-game recipe. Lid plus tray plus cubes.
+    - Cover and spine are illustrated jobs, applied as decals.
+    - Painted lid is AI underlay plus Mason lettering. No dice recipe.
 
 export:
   format: glb

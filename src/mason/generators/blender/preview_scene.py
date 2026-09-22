@@ -41,14 +41,18 @@ def _hex_luma(value):
 
 
 def _pale_preview():
-    """True when a garment hero would vanish on a light studio."""
-    if not CONFIG.get("garment"):
-        return False
+    """True when a light hero would vanish on a light studio.
+
+    Garments always dim: worn cotton blows out the same way.
+    Props dim when any used palette swatch is pale (cream dice
+    boxes, paper lids). Dark iron / navy assets keep the
+    brighter key so they do not disappear.
+    """
     pal = CONFIG.get("palette") or {}
     for value in pal.values():
         if _hex_luma(value) >= 0.62:
             return True
-    return True
+    return bool(CONFIG.get("garment"))
 
 
 def _tint_plate(rgb):
