@@ -284,9 +284,9 @@ def _bake_prop_atlas():
         _raster_mesh(obj, albedo, orm, _vertex_ao(obj))
     albedo = _dilate(albedo, 2)
     orm = _dilate(orm, 2)
-    albedo_img = _image_from("mason_albedo", albedo, "sRGB")
-    orm_img = _image_from("mason_orm", orm, "Non-Color")
+    albedo_img = _image_from("albedo", albedo, "sRGB")
+    orm_img = _image_from("orm", orm, "Non-Color")
     _assign_atlas(meshes, albedo_img, orm_img)
-    _save_atlas(albedo_img, "atlas_albedo.png")
-    _save_atlas(orm_img, "atlas_orm.png")
+    _save_atlas(albedo_img, "albedo.png")
+    _save_atlas(orm_img, "orm.png")
 '''

@@ -130,8 +130,8 @@ def _copy_atlas_sidecars(
 ) -> dict[str, str]:
     """Place baked atlas PNGs beside the installed GLB."""
     names = {
-        "atlas_albedo.png": f"{asset_id}_albedo.png",
-        "atlas_orm.png": f"{asset_id}_orm.png",
+        "albedo.png": f"{asset_id}_albedo.png",
+        "orm.png": f"{asset_id}_orm.png",
     }
     copied: dict[str, str] = {}
     for src_name, dest_name in names.items():

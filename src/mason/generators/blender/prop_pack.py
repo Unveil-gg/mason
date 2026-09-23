@@ -86,15 +86,29 @@ def emit_export_volumes():
         if bounds is None:
             continue
         mins, maxs = bounds
+        # glTF is Y-up. Store the AABB in that space so extras
+        # match the exported node (x, z, -y).
+        corners = []
+        for x in (mins[0], maxs[0]):
+            for y in (mins[1], maxs[1]):
+                for z in (mins[2], maxs[2]):
+                    corners.append((x, z, -y))
+        gmin = [min(c[i] for c in corners) for i in range(3)]
+        gmax = [max(c[i] for c in corners) for i in range(3)]
         empty = bpy.data.objects.new(name, None)
         empty.empty_display_type = "CUBE"
-        empty.empty_display_size = 0.05
+        # Cube display is half-extent. Scale is the full box, so
+        # Godot can read the hull from the node transform.
+        empty.empty_display_size = 0.5
         empty.location = [
             (mins[i] + maxs[i]) * 0.5 for i in range(3)
         ]
+        empty.scale = [
+            max(maxs[i] - mins[i], 1e-4) for i in range(3)
+        ]
         empty["mason_kind"] = spec.get("kind") or "box"
-        empty["mason_min"] = [float(v) for v in mins]
-        empty["mason_max"] = [float(v) for v in maxs]
+        empty["mason_min"] = [float(v) for v in gmin]
+        empty["mason_max"] = [float(v) for v in gmax]
         bpy.context.collection.objects.link(empty)
 
 
