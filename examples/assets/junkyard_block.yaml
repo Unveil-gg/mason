@@ -1,125 +1,141 @@
 type: static_prop
 id: junkyard_block
 workflow: prop
-name: Trash Bale
+name: Trash Cube
 
+# Stackable yard bale for Scrap Paws. A soft cube; the junk
+# is painted and bumped, not modeled as sticking-out scraps.
+# Sits on z=0. Top face stays flush so cubes can stack.
 dimensions:
-  width: 1.10
-  depth: 0.86
-  height: 0.82
+  width: 0.94
+  depth: 0.94
+  height: 0.92
 
 style: iron
 
 geometry:
   bevel: true
-  bevel_width: 0.012
+  bevel_width: 0.016
   bevel_segments: 2
   parts:
     - name: bale
       shape: box
-      size: [1.06, 0.82, 0.74]
-      location: [0.0, 0.0, 0.37]
+      size: [0.90, 0.90, 0.90]
+      location: [0.0, 0.0, 0.45]
       material: iron
-      family: bare_metal
-      texture: {path: examples/ref/trash_bale_albedo.png}
-      wear: 0.55
+      family: rubber
+      texture: {path: examples/ref/trash_cube_albedo.png}
+      bump_map: {path: examples/ref/trash_cube_bump.png}
+      bevel: true
     - name: strap_top_a
       shape: box
-      size: [1.12, 0.06, 0.035]
-      location: [0.0, -0.20, 0.76]
+      size: [0.90, 0.036, 0.012]
+      location: [0.0, -0.16, 0.894]
       material: steel
       family: bare_metal
+      bevel: false
     - name: strap_top_b
       shape: box
-      size: [1.12, 0.06, 0.035]
-      location: [0.0, 0.20, 0.76]
+      size: [0.90, 0.036, 0.012]
+      location: [0.0, 0.16, 0.894]
       material: steel
       family: bare_metal
-    - name: strap_left_a
-      shape: box
-      size: [0.035, 0.06, 0.78]
-      location: [-0.548, -0.20, 0.39]
-      material: steel
-      family: bare_metal
-    - name: strap_left_b
-      shape: box
-      size: [0.035, 0.06, 0.78]
-      location: [-0.548, 0.20, 0.39]
-      material: steel
-      family: bare_metal
-    - name: strap_right_a
-      shape: box
-      size: [0.035, 0.06, 0.78]
-      location: [0.548, 0.20, 0.39]
-      material: steel
-      family: bare_metal
-    - name: strap_right_b
-      shape: box
-      size: [0.035, 0.06, 0.78]
-      location: [0.548, -0.20, 0.39]
-      material: steel
-      family: bare_metal
+      bevel: false
     - name: strap_cross
       shape: box
-      size: [0.06, 0.88, 0.035]
-      location: [0.0, 0.0, 0.76]
-      material: steel_dark
+      size: [0.036, 0.90, 0.012]
+      location: [0.0, 0.0, 0.894]
+      material: steel
       family: bare_metal
+      bevel: false
+    - name: strap_left_a
+      shape: box
+      size: [0.012, 0.036, 0.82]
+      location: [-0.454, -0.16, 0.45]
+      material: steel
+      family: bare_metal
+      bevel: false
+    - name: strap_left_b
+      shape: box
+      size: [0.012, 0.036, 0.82]
+      location: [-0.454, 0.16, 0.45]
+      material: steel
+      family: bare_metal
+      bevel: false
+    - name: strap_right_a
+      shape: box
+      size: [0.012, 0.036, 0.82]
+      location: [0.454, 0.16, 0.45]
+      material: steel
+      family: bare_metal
+      bevel: false
+    - name: strap_right_b
+      shape: box
+      size: [0.012, 0.036, 0.82]
+      location: [0.454, -0.16, 0.45]
+      material: steel
+      family: bare_metal
+      bevel: false
     - name: strap_front
       shape: box
-      size: [1.12, 0.035, 0.06]
-      location: [0.0, -0.428, 0.37]
+      size: [0.90, 0.012, 0.034]
+      location: [0.0, -0.454, 0.45]
       material: steel
       family: bare_metal
+      bevel: false
     - name: strap_back
       shape: box
-      size: [1.12, 0.035, 0.06]
-      location: [0.0, 0.428, 0.37]
+      size: [0.90, 0.012, 0.034]
+      location: [0.0, 0.454, 0.45]
       material: steel
       family: bare_metal
+      bevel: false
 
 materials:
   primary: iron
+  bump_strength: 0.35
 
 art_direction:
-  subject: compressed scrap-yard trash bale, steel-strapped cube
+  subject: >
+    cozy stackable trash cube, soft cardboard and metal
+    packed under thin steel bands
   style:
-    realism: 0.4
-    stylization: 0.6
-    shape_language: [cubed, crushed, strapped]
+    realism: 0.2
+    stylization: 0.8
+    shape_language: [cube, soft, strapped]
   usage:
     importance: standard_prop
     viewing_distance: medium
-  focal_point: packed junk face in steel bands
-  value_hierarchy: rusted packed face, brighter steel straps
-  silhouette: squat strapped cube
+  focal_point: warm painted junk on a stackable cube
+  value_hierarchy: tan cardboard, silver scrap, shiny steel bands
+  silhouette: nearly a cube, bands barely proud
   gameplay:
     camera: three_quarter
-    must_read: [cube, straps, crushed metal]
-  recognition_details: [bale, banding, scrap texture]
+    must_read: [cube, straps, cardboard]
+  recognition_details: [bale, thin bands, painted scrap]
   forms:
     primary: [bale]
-    secondary: [strap_top_a, strap_top_b, strap_cross]
-    tertiary: [strap_left_a, strap_right_a]
+    secondary: [strap_cross, strap_front]
+    tertiary: [strap_top_a]
   detail_density: medium
-  asymmetry: crushed face, even straps
+  asymmetry: painted scraps only, even bands
 
 geometric_plan:
-  primary_read: one strapped cube of crushed junk, not a pile
+  primary_read: one soft cube of packed junk, stackable
   recognition: mixed
   must_survive_small:
     - cube mass
-    - crossing steel straps
-    - packed scrap read
+    - thin steel bands
+    - warm cardboard face
   masses:
     - {name: bale, role: primary}
     - {name: straps, role: secondary, connects_to: [bale]}
-  silhouette: low brick with band crossings
+  silhouette: cube with shallow bands
   silhouette_vs_similar: Not a crate. Not a loose junk pile.
-  proportions: About 1.1 by 0.86 by 0.82 m
+  proportions: 0.9 m cube, sitting on the ground
   symmetry: local
   negative_space: none
-  abstraction: low-poly cube plus albedo of crushed pieces
+  abstraction: cube plus bump; texture carries the junk
   stage: material
   landmarks:
     - {id: bale, role: packed face, part: bale}
@@ -127,19 +143,24 @@ geometric_plan:
   critical_views:
     - {view: three_quarter, weight: 3}
     - {view: front, weight: 2}
-    - {view: top, weight: 1}
+    - {view: top, weight: 2}
 
 construction_plan:
   techniques:
-    - {kind: box, purpose: bale and straps, applies_to: cube}
+    - {kind: box, purpose: bale and flush straps, applies_to: cube}
   primary_forms:
-    - {type: box, purpose: compressed bale}
+    - {type: box, purpose: stackable bale}
   secondary_forms:
-    - {type: box, purpose: steel straps, count: 5}
+    - {type: box, purpose: steel straps, count: 4}
   notes:
-    - Texture carries the junk. Do not model each can.
-    - No junkyard recipe.
+    - Nothing proud enough to block a stack.
+    - Bump map makes the face lumpy. Do not model scraps.
 
 export:
   format: glb
   save_blend: true
+  profile: prop
+  atlas_size: 1024
+  volumes:
+    - name: col_bale
+      parts: [bale]
