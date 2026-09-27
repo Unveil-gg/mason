@@ -132,6 +132,7 @@ def _copy_atlas_sidecars(
     names = {
         "albedo.png": f"{asset_id}_albedo.png",
         "orm.png": f"{asset_id}_orm.png",
+        "normal.png": f"{asset_id}_normal.png",
     }
     copied: dict[str, str] = {}
     for src_name, dest_name in names.items():

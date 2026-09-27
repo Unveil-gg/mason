@@ -51,6 +51,20 @@ uv sync
 uv run mason doctor
 ```
 
+To call `mason` from any terminal, including Cursor and Claude
+Code, install the console script onto PATH:
+
+```bash
+uv tool install --editable .
+mason config set tools.blender.path \
+  "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe"
+mason doctor
+```
+
+Krita, Aseprite, and ImageMagick stay optional. Mason finds
+them the same way it finds Blender. Re-run the tool install
+after pulling if you did not use `--editable`.
+
 Editable install with pip:
 
 ```bash

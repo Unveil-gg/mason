@@ -134,10 +134,19 @@ def save_blend(path):
     the rename fail with "Cannot change old file". Clear both before
     saving.
     """
-    for candidate in (path, path + "@"):
-        if os.path.isfile(candidate):
-            os.remove(candidate)
-    bpy.ops.wm.save_as_mainfile(filepath=path, check_existing=False)
+    def _clear():
+        for candidate in (path, path + "@"):
+            if os.path.isfile(candidate):
+                os.remove(candidate)
+
+    _clear()
+    try:
+        bpy.ops.wm.save_as_mainfile(filepath=path, check_existing=False)
+    except RuntimeError:
+        _clear()
+        bpy.ops.wm.save_as_mainfile(
+            filepath=path, check_existing=False,
+        )
 
 
 def scene_bounds():

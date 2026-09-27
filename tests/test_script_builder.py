@@ -125,6 +125,8 @@ def test_blender_script_wires_part_textures(project: Path) -> None:
     assert "/abs/path/plank.png" in script
     assert '"tile_size": 1.0' in script
     assert '"wrap": "repeat"' in script
+    assert "def _tex_image" in script
+    assert "if CONFIG.get(\"part_textures\"):" in script
 
 
 def test_blender_script_wires_demo_lighting(project: Path) -> None:
@@ -317,7 +319,7 @@ def test_blender_script_has_garment_pipeline(project: Path) -> None:
     assert "def add_garment_details" in script
     assert "def render_worn_preview" in script
     assert "def _pale_preview" in script
-    assert "Props dim when any used palette swatch is pale" in script
+    assert "Solid pale props (cream boxes, paper lids) still dim." in script
     assert "worn_front" in script
     assert "def _tighten_sleeves" in script
     assert "def _clip_batwings" in script

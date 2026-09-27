@@ -95,6 +95,21 @@ def test_export_uses_to_override(
     assert result.installed["glb"] == str(dest / "box.glb")
 
 
+def test_export_copies_normal_sidecar(
+    project: Path, monkeypatch, tmp_path: Path,
+) -> None:
+    monkeypatch.chdir(project)
+    job = _make_job(project)
+    for name in ("albedo.png", "orm.png", "normal.png"):
+        (job.output / name).write_bytes(name.encode())
+    dest = tmp_path / "out"
+    result = run_export("box", to=dest)
+    assert (dest / "box_normal.png").read_bytes() == b"normal.png"
+    assert (dest / "box_albedo.png").is_file()
+    assert (dest / "box_orm.png").is_file()
+    assert result.installed["box_normal"] == str(dest / "box_normal.png")
+
+
 def test_export_uses_project_config(
     project: Path, monkeypatch, tmp_path: Path,
 ) -> None:

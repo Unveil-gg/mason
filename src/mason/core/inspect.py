@@ -142,7 +142,40 @@ def inspect_payload(job: AssetJob, *, full: bool = False) -> dict[str, Any]:
         payload["art_direction"] = (
             direction.model_dump(mode="json") if direction else None
         )
-    return payload
+        return payload
+    return _inspect_card(job, spec, style, payload)
+
+
+def _inspect_card(job, spec, style, payload) -> dict[str, Any]:
+    """Short inspect payload. `--full` returns the long dump."""
+    validation = payload.get("validation") or {}
+    roles = payload.get("preview_roles") or {}
+    primary = roles.get("primary")
+    previews = payload.get("previews") or {}
+    card: dict[str, Any] = {
+        "asset_id": payload["asset_id"],
+        "name": payload["name"],
+        "type": payload["type"],
+        "workflow": payload["workflow"],
+        "validation": validation,
+        "triangles": validation.get("triangles"),
+        "bounds": validation.get("bounds"),
+        "atlas_baked": (job.dir / "output" / "albedo.png").is_file(),
+        "normal_baked": (job.dir / "output" / "normal.png").is_file(),
+        "preview_primary": primary,
+        "primary_preview": previews.get(primary) if primary else None,
+    }
+    if spec.type in ("layered_raster", "sprite_sheet", "image_process"):
+        dims = getattr(spec, "canvas", None) or getattr(
+            spec, "dimensions", None,
+        )
+        if dims is not None and getattr(dims, "width", None):
+            card["canvas"] = {
+                "width": dims.width, "height": dims.height,
+            }
+        if style is not None:
+            card["palette"] = dict(style.palette)
+    return card
 
 
 def _slim_validation(report) -> dict[str, Any] | None:

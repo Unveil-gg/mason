@@ -14,11 +14,23 @@ If this turn generated or edited code, end with a suggested commit message (1–
 
 # Mason Agent Workflow
 
+## Stop early
+
+A one-mass prop or a raster (layered, sprite, or image
+process) stops after `mason build`, `mason inspect --json`,
+and one look at the primary preview named on the card.
+A material or palette change is a rebuild, not a new
+evaluation essay. Open another preview only when the card
+disagrees with the spec. Run `mason doctor` once per
+machine, not once per asset. `inspect --full` is the long
+dump.
+
 Separate **creator** and **critic** even if you are one model.
 The creator authors direction, plan, and geometry. The critic scores
 previews in a fresh pass and looks for reasons not to ship.
 
-1. Run `mason doctor --json`.
+1. Run `mason doctor --json` once per machine when it has
+   not already succeeded in this session.
 2. Confirm the required capabilities are available.
 3. Run `mason route <subject-or-id> --json`, then
    `mason vocab --workflow <kind> --json` (and

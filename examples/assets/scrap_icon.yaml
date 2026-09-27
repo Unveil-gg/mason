@@ -1,0 +1,111 @@
+type: sprite_sheet
+id: scrap_icon
+workflow: pixel
+name: Scrap Icon
+master_frame: idle
+
+# 32x32 strapped scrap cube for Scrap Paws. Two frames so the
+# paper scraps breathe. Palette is the default style.
+canvas: {width: 32, height: 32}
+style: default
+
+animations:
+  - name: idle
+    loop: true
+    frames:
+      - duration_ms: 420
+        layers:
+          - name: sprite
+            keys: &keys
+              D: wood_dark
+              W: wood_light
+              S: steel
+              C: cream
+            pixels: &idle0
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "........DDDDDDDDDDDDDDDD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWCCWWSWWCCWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DSSSSSSSSSSSSSSD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWCCWWSWWCCWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DDDDDDDDDDDDDDDD........"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+      - duration_ms: 420
+        layers:
+          - name: sprite
+            keys: *keys
+            pixels:
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "........DDDDDDDDDDDDDDDD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWCCWWSWWCCWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DSSSSSSSSSSSSSSD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWCCWWSWWCCWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DWWWWWWSWWWWWWWD........"
+              - "........DDDDDDDDDDDDDDDD........"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+              - "................................"
+
+art_direction:
+  subject: tiny strapped scrap cube icon
+  focal_point: steel bands on a cardboard face
+  value_hierarchy: cream scraps, tan face, steel cross
+  usage:
+    importance: standard_prop
+    viewing_distance: close
+  silhouette: square cube
+  forms:
+    primary: [cube]
+    secondary: [bands]
+  detail_density: low
+
+export:
+  png: true
+  frames: true
+  aseprite: true

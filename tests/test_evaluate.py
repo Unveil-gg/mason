@@ -66,7 +66,13 @@ def test_finish_result_snapshots_iteration(project: Path) -> None:
 
 def test_inspect_includes_art_and_iteration(project: Path) -> None:
     job = _seed_job(project)
-    payload = inspect_payload(job)
+    card = inspect_payload(job)
+    assert card["triangles"] == 12
+    assert card["atlas_baked"] is False
+    assert card["preview_primary"] == "three_quarter"
+    assert "spec" not in card
+    assert "art_direction" not in card
+    payload = inspect_payload(job, full=True)
     assert payload["iteration"] == 1
     assert payload["current_best"] is None
     assert payload["art_direction"]["subject"] == "crate"
@@ -79,10 +85,8 @@ def test_inspect_includes_art_and_iteration(project: Path) -> None:
     assert payload["preview_roles"]["context"] is None
     assert "clay_three_quarter" in payload["preview_roles"]["diagnostic"]
     assert "silhouette_side" in payload["preview_roles"]["silhouette"]
-    assert "spec" not in payload
-    full = inspect_payload(job, full=True)
-    assert "spec" in full
-    assert full["art_direction"]["silhouette"] == "box"
+    assert "spec" in payload
+    assert payload["art_direction"]["silhouette"] == "box"
 
 
 def test_evaluate_and_history(project: Path, monkeypatch) -> None:
@@ -130,7 +134,9 @@ def test_evaluate_and_history(project: Path, monkeypatch) -> None:
     slim = json.loads(summary.stdout)
     assert "previews" not in slim["iterations"][0]
     assert slim["iterations"][0]["primary_preview"].endswith("front.png")
-    inspect = runner.invoke(app, ["inspect", "box", "--json"])
+    inspect = runner.invoke(
+        app, ["inspect", "box", "--json", "--full"],
+    )
     assert inspect.exit_code == 0
     info = json.loads(inspect.stdout)
     assert info["evaluation"]["scores"]["silhouette"] == 5

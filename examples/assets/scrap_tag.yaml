@@ -1,0 +1,87 @@
+type: layered_raster
+id: scrap_tag
+workflow: illustrated
+name: Scrap Tag
+
+# Bale tag for Scrap Paws. Fills, rules, corners, and speckle.
+# Quantize with scrap_tag_q.
+dimensions:
+  width: 320
+  height: 96
+
+style: default
+
+layers:
+  - name: board
+    role: background
+    fill: wood_dark
+  - name: face
+    role: fill
+    fill: cream
+    rect: {x: 8, y: 8, width: 304, height: 80}
+  - name: grain
+    role: overlay
+    fill: wood_light
+    stamp: speckle
+    stamp_inner: cream
+    stamp_seed: 4
+    rect: {x: 8, y: 8, width: 304, height: 80}
+  - name: rule_top
+    role: fill
+    fill: steel
+    stamp: rule
+    rect: {x: 16, y: 14, width: 288, height: 3}
+  - name: rule_bottom
+    role: fill
+    fill: steel
+    stamp: rule
+    rect: {x: 16, y: 79, width: 288, height: 3}
+  - name: corner_tl
+    role: fill
+    fill: brass
+    stamp: l_corner
+    stamp_corner: tl
+    rect: {x: 12, y: 12, width: 16, height: 16}
+  - name: corner_tr
+    role: fill
+    fill: brass
+    stamp: l_corner
+    stamp_corner: tr
+    rect: {x: 292, y: 12, width: 16, height: 16}
+  - name: corner_bl
+    role: fill
+    fill: brass
+    stamp: l_corner
+    stamp_corner: bl
+    rect: {x: 12, y: 68, width: 16, height: 16}
+  - name: corner_br
+    role: fill
+    fill: brass
+    stamp: l_corner
+    stamp_corner: br
+    rect: {x: 292, y: 68, width: 16, height: 16}
+  - name: label
+    role: text
+    text: SCRAP
+    fill: ink
+    font_size: 28
+    align: center
+    rect: {x: 48, y: 28, width: 224, height: 40}
+
+art_direction:
+  subject: cozy scrap-yard bale tag
+  focal_point: the word SCRAP on a cream field
+  value_hierarchy: cream field, brass corners, steel rules
+  usage:
+    importance: standard_prop
+    viewing_distance: close
+  silhouette: wide rounded ticket
+  forms:
+    primary: [face]
+    secondary: [rules, corners]
+    tertiary: [label]
+  detail_density: low
+
+export:
+  kra: true
+  png: true

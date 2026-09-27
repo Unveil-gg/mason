@@ -43,16 +43,19 @@ def _hex_luma(value):
 def _pale_preview():
     """True when a light hero would vanish on a light studio.
 
-    Garments always dim: worn cotton blows out the same way.
-    Props dim when any used palette swatch is pale (cream dice
-    boxes, paper lids). Dark iron / navy assets keep the
-    brighter key so they do not disappear.
+    Garments always dim. A prop with an image texture keeps
+    the brighter key: a pale swatch must not crush the albedo.
+    Solid pale props (cream boxes, paper lids) still dim.
     """
+    if CONFIG.get("garment"):
+        return True
+    if CONFIG.get("part_textures"):
+        return False
     pal = CONFIG.get("palette") or {}
     for value in pal.values():
         if _hex_luma(value) >= 0.62:
             return True
-    return bool(CONFIG.get("garment"))
+    return False
 
 
 def _tint_plate(rgb):

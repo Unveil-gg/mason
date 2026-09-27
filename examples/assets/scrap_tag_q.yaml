@@ -1,0 +1,25 @@
+type: image_process
+id: scrap_tag_q
+workflow: texture
+name: Scrap Tag Quantized
+
+# Snap the Krita tag onto the style palette.
+style: default
+depends_on: [scrap_tag]
+
+source:
+  asset: scrap_tag
+  file: output/asset.png
+
+operations:
+  - op: quantize
+    palette: style
+    dither: false
+
+art_direction:
+  subject: scrap tag locked to the style palette
+  focal_point: the word SCRAP
+  value_hierarchy: cream field, brass corners, steel rules
+
+export:
+  format: png
