@@ -19,47 +19,49 @@
   <sub><em>Grand Mansion — built with Mason + Grok 4.6 Fast (High Effort)</em></sub>
 </p>
 
-Mason is a local developer CLI that orchestrates **already installed**
-creative tools. It does not bundle [Blender](https://www.blender.org/),
-[Krita](https://krita.org/en/), [Aseprite](https://www.aseprite.org/), or
-[ImageMagick](https://imagemagick.org/). Coding agents (Cursor, Claude Code,
-Codex, and others) write structured asset specs; Mason runs the tools
-headlessly, validates outputs, and writes previews the agent can inspect.
+Mason is a local CLI. Coding agents write a YAML spec; Mason runs
+[Blender](https://www.blender.org/), [Krita](https://krita.org/en/),
+[Aseprite](https://www.aseprite.org/), or
+[ImageMagick](https://imagemagick.org/) headlessly, validates the
+output, and writes previews. It has no LLM and does not bundle those
+apps. Specs are source. Editor files and previews are outputs.
 
-Mason itself has no LLM. The agent is the reasoning layer.
+Windows, macOS, and Linux. Python 3.12+.
 
-## Design philosophy
+## Install
 
-- Specs and generated scripts are source of truth.
-- Binary/editor files are outputs and caches.
-- Every build should be reproducible.
-- Every asset is technically validated.
-- Every visual asset produces previews.
-- Every important command supports `--json` (JSON on stdout only).
-
-## Supported OSes
-
-Windows, macOS, and Linux. Tools are discovered via manual config, PATH,
-and common install locations. They are **not** assumed to be on PATH.
-
-## Installation
-
-Python 3.12+. Prefer [uv](https://docs.astral.sh/uv/).
+Prefer [uv](https://docs.astral.sh/uv/). `uv tool install` puts
+`mason` on PATH. Open a new terminal if the current one cannot see it.
 
 ### Use Mason in a game
 
-Install the CLI once. Do not clone this repo into the game.
-A private repo needs GitHub auth for the URL.
+Install the CLI once, then work in the game repo. The Mason repo is
+private, so GitHub auth has to work for git (`gh auth login`, or a
+credential helper) before this URL will clone.
 
 ```bash
 uv tool install "git+https://github.com/Unveil-gg/mason.git"
-mason config set tools.blender.path \
-  "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe"
 mason doctor
 ```
 
-Krita, Aseprite, and ImageMagick stay optional. Mason finds
-them the same way it finds Blender.
+`mason doctor` looks for Blender in machine config, then on PATH,
+then in common install folders (`Program Files/Blender Foundation`,
+`/Applications/Blender.app`, `/usr/bin/blender`). Set a path only
+when doctor does not find it. The version folder on Windows is
+whatever you installed:
+
+```bash
+mason config set tools.blender.path "C:/Program Files/Blender Foundation/Blender 4.2/blender.exe"
+mason config set tools.blender.path "/Applications/Blender.app/Contents/MacOS/Blender"
+```
+
+Krita, Aseprite, and ImageMagick are optional. Doctor finds them
+the same way (`krita` or `kritarunner`, `magick` then `convert`,
+`aseprite`). After you install one later, run `mason tools scan`.
+
+Machine config is `%APPDATA%/Mason/config.yaml` on Windows and
+`~/.config/mason/config.yaml` on macOS and Linux. Keep those paths
+out of asset specs.
 
 In the game repo:
 
@@ -68,9 +70,8 @@ mason init
 ```
 
 That writes `mason.yaml`, `.mason/`, `styles/default.yaml`, and
-the Mason workflow in `AGENTS.md` and `CLAUDE.md`. Write a spec
-there and `mason build` it. Run `mason init` again after a Mason
-upgrade to refresh the workflow block.
+the workflow in `AGENTS.md` and `CLAUDE.md`. Run `mason init` again
+after a Mason upgrade to refresh that workflow block.
 
 ### Develop Mason
 
@@ -79,70 +80,22 @@ git clone https://github.com/Unveil-gg/mason.git
 cd mason
 uv sync
 uv run mason doctor
-```
-
-To put that clone's `mason` on PATH:
-
-```bash
 uv tool install --editable .
 ```
 
-Re-run the tool install after pulling if you did not use
-`--editable`.
+`--editable` keeps the PATH command on this clone after you pull.
+`pip install -e ".[dev]"` is the same idea without uv.
 
-Editable install with pip:
-
-```bash
-pip install -e ".[dev]"
-mason doctor
-```
-
-## Dependency model
-
-Mason is a thin harness:
-
-| Tool | Mason uses it for | Bundled? |
-| --- | --- | --- |
-| Blender 4.x | `static_prop` (3D parts → .blend/.glb + 4 previews) | No |
-| Krita | `layered_raster` (.kra + PNG) | No |
-| ImageMagick | `image_process` (resize, quantize, …) | No |
-| Aseprite | `sprite_sheet` (.aseprite + PNG + frames.json) | No |
-
-Install those applications yourself. Point Mason at them if needed:
-
-```bash
-mason config set tools.blender.path "C:/Program Files/Blender Foundation/Blender 4.5/blender.exe"
-mason tools scan
-```
-
-Machine config lives at `%APPDATA%/Mason/config.yaml` on Windows and
-`~/.config/mason/config.yaml` on macOS/Linux. Never put machine paths
-in asset specs.
-
-## How Mason finds Blender
-
-1. `tools.blender.path` in machine config
-2. `blender` on PATH
-3. Common locations (`Program Files/Blender Foundation/*`,
-   `/Applications/Blender.app/...`, `/usr/bin/blender`, …)
-
-Then `blender --version` confirms the binary. Same pattern for Krita
-(`krita` + `kritarunner`), ImageMagick (`magick`, then `convert`), and
-Aseprite.
+| Tool | Used for |
+| --- | --- |
+| Blender 4+ | `static_prop` → `.blend` / `.glb` and previews |
+| Krita | `layered_raster` → `.kra` + PNG |
+| Aseprite | `sprite_sheet` → PNG + `frames.json` |
+| ImageMagick | `image_process` (resize, quantize, …) |
 
 ## Quick start
 
-In a game repo, after `mason init`, save the crate spec below as
-`crate.yaml`:
-
-```bash
-mason doctor
-mason build crate.yaml
-mason inspect simple_crate --json
-mason rebuild simple_crate
-```
-
-## Example asset YAML
+From the game repo, save this as `crate.yaml`:
 
 ```yaml
 type: static_prop
@@ -160,22 +113,19 @@ export:
   save_blend: true
 ```
 
-**Recipes** (`crate`, `shelf`, `table`, `hydrant`, `cart`, `house`,
-`tree`, `pool`, `estate`) are named clusters, not the path to a
-beautiful asset. The source of truth is `parts` plus a style profile.
-Add a recipe only after the same cluster appears three times. Beauty
-comes from style (palette, families, bevel, tile size), secondary
-forms, stamps, and the critic loop — not from a longer recipe list.
+```bash
+mason build crate.yaml
+mason inspect simple_crate --json
+mason rebuild simple_crate
+```
 
-Specs live in the game repo. The crate YAML below is a complete
-`static_prop`. A sprite sheet is the same idea: one `pixels` map
-per frame on a shared palette. EEVEE is preferred; Mason falls
-back to Cycles CPU if EEVEE fails.
+Recipes (`crate`, `shelf`, `table`, `hydrant`, `cart`, `house`,
+`tree`, `pool`, `estate`) are shortcuts. New shapes are `parts`
+plus a style. EEVEE is preferred; Mason falls back to Cycles CPU.
 
-## Textures on 3D parts
-
-A part can use a 2D asset's PNG as its material instead of a flat
-palette color:
+A part can use another job's PNG instead of a flat color. Build
+the raster first. Boxes and cylinders tile by `textures.tile_size`.
+A textured plane is a decal (one stretched image).
 
 ```yaml
 geometry:
@@ -184,269 +134,115 @@ geometry:
       size: [0.6, 0.6, 0.6]
       location: [0, 0, 0.3]
       texture:
-        asset: plank_texture   # another asset id, built beforehand
-        file: output/asset.png # or: texture: {path: "textures/x.png"}
+        asset: plank_texture
+        file: output/asset.png
 ```
 
-Build order matters: `plank_texture` (a `layered_raster` job) must be
-built before `textured_crate` references it. Two UV modes, chosen
-automatically by shape:
+Edit `styles/<name>.yaml` for palette, family roughness, bevel,
+and tile size. Specs name the style. They do not inline hex.
 
-- `box`/`cylinder` parts get a deterministic cube projection
-  (`bpy.ops.uv.cube_project`), sized by `textures.tile_size` in the
-  style profile (world units per tile), so tileable materials (wood,
-  stone, fabric) repeat consistently across differently-sized props
-  without per-asset tuning.
-- A textured `plane` part is treated as a **decal** (a label, sign, or
-  billboard face): its single quad gets a stretched 0..1 UV so the
-  whole image shows once, undistorted by tile size. `textures.wrap`
-  (`repeat`/`clamp`) only affects the tiled case.
-
-Build the raster job before the prop that references it. A
-textured box or cylinder tiles. A textured plane is a decal:
-one stretched image. Inspect the beauty three-quarter render
-first. Use clay for geometry and silhouettes only when
-readability is in doubt.
-
-## Tuning a style
-
-Edit `styles/<name>.yaml`. Specs only name the style; they should not
-inline hex or PBR. Useful knobs:
-
-| Knob | What it changes |
-| --- | --- |
-| `palette.*` | Named colors used by parts and raster layers |
-| `materials.families.<name>.roughness` / `metallic` | PBR |
-| `materials.families.<name>.variation` | How much solid color mottles |
-| `materials.families.<name>.noise_scale` | Grain frequency (higher = finer) |
-| `materials.families.<name>.tile_size` | World meters per albedo tile |
-| `materials.families.<name>.albedo` | Shared 2D tile (`asset` + `file`) |
-| `geometry.bevel_width` / `bevel_segments` | Edge softness |
-| `textures.tile_size` / `wrap` | Default UV repeat |
-| `lighting.preset` | `neutral_studio` or `high_key` |
-| `render.resolution` / `samples` / `engine` | Preview quality |
-
-Organic families (`lawn`, `foliage`) should prefer solid color +
-`variation` / `noise_scale` over a coarse tiled albedo. Masonry and
-roofing keep bond-stamped tiles.
-
-## Material variants
-
-A `static_prop` spec can fan out into palette-swap siblings from one
-`mason build` call, instead of hand-copying the whole spec:
-
-```yaml
-materials:
-  primary: steel
-  palette_overrides:      # optional: tweak this asset's own palette
-    steel: "#8A9196"
-
-variants:
-  - suffix: black          # -> builds shopping_cart_black as well
-    palette_overrides:
-      steel: "#2B2E31"
-      steel_dark: "#1A1C1E"
-  - suffix: brass
-    primary: brass          # swap the whole material key instead
-```
-
-Each variant becomes its own stored job (`<id>_<suffix>`) with its own
-auto-written sibling spec (`<id>_<suffix>.yaml` next to the parent),
-so it is independently inspectable and rebuildable. `palette_overrides`
-patches specific palette keys for that job only; it never edits
-`styles/<name>.yaml`. Each variant is its own job (`<id>_<suffix>`).
-
-## Demo lighting for screenshots
-
-`mason preview <id>` normally uses the same neutral studio rig every
-time, so evaluation renders stay comparable across iterations. For a
-one-off nicer screenshot (docs, comparisons), pass `--demo-lighting`
-to swap in a warmer key light + a subtle rim light:
+`variants` on a `static_prop` builds sibling jobs (`<id>_<suffix>`)
+from one spec. `palette_overrides` patches that job only.
 
 ```bash
-mason preview grand_mansion --demo-lighting
+mason preview <id> --demo-lighting   # one warmer screenshot
 ```
 
-This only affects that render call; it does not change the stored
-spec, style, or `mason build`/`mason rebuild` output. Run
-`mason preview <id>` again (no flag) to go back to neutral lighting.
+That flag does not change the spec or later builds.
 
-## Raster stamps and sprites
-
-Krita `layered_raster` layers: fill, `shape: rect|ellipse`, text,
-image import, `pixels` + `keys`, `opacity` (0–1), and stamps
-(`l_corner`, `gem`, `rule`, `bond`, `dapple`, `vignette`, `figure`,
-`speckle`). Use `speckle` + soft ellipses to break up flat UI fills;
-`stamp_seed` keeps grain reproducible.
-
-Aseprite `sprite_sheet` is the animation path. Prefer `pixels` +
-`keys` and a shared style palette so idle / walk / attack stay
-cohesive. Mason writes `output/asset.png`, `output/frames.json`, and
-an optional `.aseprite` source.
-
-Write a `sprite_sheet` spec in the game repo and `mason build` it.
-
-Example agent prompts:
-
-- *32×32 hero, side-on, facing right. Style `default`. Animations:
-  idle ×2, walk ×4, attack ×3. One `pixels` map per frame, shared
-  `keys`.*
-- *16×16 coin sparkle, 4 frames, loop. Style palette only, no new
-  hex.*
-- *Rebuild the walk so the stride reads at 4× preview scale.*
-
-`mason ingest <image> --asset <id> [--style <name>] [--type
-static_prop|layered_raster] [--out path]` uses OpenCV to measure a
-reference image: silhouette ratio, a k-means palette, a few color
-regions, a simplified contour, and edge character (hard/soft). It
-writes that as `art_analysis`, mapping palette hexes onto the given
-style's keys when possible (never inventing new hex). If `--asset`
-already has a spec, only `art_analysis` is merged — `parts`/`layers`
-are never touched. If `--asset` names a brand-new id, ingest writes a
-minimal buildable scaffold (one box, or a background + reference
-layer) under `assets/<id>.yaml` instead — it is still not an
-image-to-mesh compiler, so you write the real `parts`/`layers`.
+Raster layers are fills, shapes, text, stamps, and `pixels` +
+`keys`. A sprite sheet is the same pixels, one map per frame, on
+the style palette. `mason ingest <image> --asset <id>` measures a
+reference and, for a new id, writes `assets/<id>.yaml`. It does
+not build a mesh. You still write `parts` or `layers`.
 
 ## Commands
 
 | Command | Purpose |
 | --- | --- |
 | `mason doctor` | Detect tools and capabilities |
-| `mason init` | Create `mason.yaml`, `.mason/`, `styles/default.yaml`, and the agent workflow |
+| `mason init` | Project files plus the agent workflow |
 | `mason build <spec.yaml>` | Generate, run the tool, preview, validate |
-| `mason rebuild <asset-id>` | Rebuild from the stored job / original spec |
+| `mason rebuild <asset-id>` | Rebuild from the stored job |
 | `mason preview <asset-id>` | Re-render previews only |
-| `mason inspect <asset-id>` | Job state, art direction, previews, metrics |
+| `mason inspect <asset-id>` | Job state, previews, metrics |
 | `mason stats [id]` | Triangle / mesh / material counts |
 | `mason validate <asset-id>` | Re-read stored validation |
-| `mason evaluate <id> <json>` | Store a critic visual evaluation |
-| `mason decompose <id> <graph>` | Store a semantic assembly graph |
-| `mason assemble <id>` | Instance accepted component GLBs and rebuild |
-| `mason history <asset-id>` | Iteration snapshots and evaluations |
-| `mason style [name]` | Slim style profile (palette, families, quality) |
-| `mason export <asset-id>` | Copy finished outputs into another project |
-| `mason export --kit <id>` | Copy every already-built member of a kit |
-| `mason vocab` | Shapes, components, recipes, stamps, families |
-| `mason ingest <image>` | OpenCV measurement (ratio, palette, regions) from concept art. `--component` scopes an isolate. |
+| `mason evaluate <id> <json>` | Store a critic evaluation |
+| `mason decompose <id> <graph>` | Store an assembly graph |
+| `mason assemble <id>` | Instance accepted component GLBs |
+| `mason history <asset-id>` | Iteration snapshots |
+| `mason style [name]` | Palette, families, quality |
+| `mason export <asset-id>` | Copy finished outputs |
+| `mason export --kit <id>` | Export an already-built kit |
+| `mason vocab` | Shapes, components, recipes, stamps |
+| `mason ingest <image>` | Measure concept art. `--component` scopes an isolate |
 | `mason compare <id>` | Write `previews/compare.png` |
-| `mason clean [id]` | Delete stored jobs (all, or one id) |
+| `mason clean [id]` | Delete stored jobs |
 | `mason list` | Jobs in this project |
-| `mason tools scan` | Rediscover and store new tool paths |
-| `mason config get/set` | Machine config (`tools.blender.path`, …) |
+| `mason tools scan` | Rediscover tool paths |
+| `mason config get/set` | Machine config |
 
-Add `--json` to any of these for agent-friendly output.
+`--json` prints JSON on stdout. Diagnostics go to stderr.
 
-## Exporting into another project
+```json
+{"success": false, "error": {"code": "blender_missing", "message": "..."}}
+```
 
-`mason build`/`rebuild` only write inside `.mason/jobs/<id>/`. To land the
-finished `.glb`/`.png` in a consuming project (e.g. a sibling Godot repo),
-use `mason export`. It never copies working files (`.blend`/`.kra`) or
-previews.
+## Export
+
+Builds stay in `.mason/jobs/<id>/`. Export copies the finished
+`.glb` or `.png` (and a sprite's `frames.json`) into another project.
+It skips `.blend`, `.kra`, and previews.
 
 ```bash
 mason export simple_crate --to ../my_game/res
-mason export simple_crate --layout grouped   # models/, textures/
+mason export simple_crate --layout grouped
 ```
 
-The destination can also be set once instead of passed every time:
-`install_dir` in `mason.yaml`, or `export.install_to` in an individual
-asset spec (spec setting wins over the project default; `--to` wins over
-both).
+`--to` wins over `export.install_to` on the spec, which wins over
+`install_dir` in `mason.yaml`. Each export updates
+`mason_manifest.json` at the destination. Mason does not write
+Godot `.import` files. For pixel art, set the Godot project’s
+default texture filter to Nearest.
 
-Each export merges an entry into `mason_manifest.json` at the
-destination root, so an agent (or you) can see what Mason has put there
-without needing the Mason project itself. Sprite sheets also copy
-`{id}_frames.json` (rects, durations, loop flags). 3D exports include
-`bounds` on the manifest entry when the last build recorded them.
-Mason does **not** write
-Godot `.import` sidecars: since Godot 4.0, texture filter/repeat moved
-out of the importer into project settings and per-`CanvasItem`
-overrides, so a hand-written `.import` file would be silently wrong.
-For pixel art, set Project Settings → Rendering → Textures → Canvas
-Textures → Default Texture Filter to Nearest instead.
-
-### Kits: multi-model asset packs
-
-One spec still always builds **one** job and one primary output. A
-kit is a named list of already-built jobs, exported together:
+A kit is a list of jobs you have already built. Export does not
+build them or merge them into one GLB.
 
 ```yaml
 # kits/cafe.yaml
 id: cafe
 name: Cafe furniture
-members:
-  - simple_crate
-  - simple_shelf
-  - simple_post
+members: [simple_crate, simple_shelf]
 ```
 
 ```bash
 mason export --kit cafe --to ../my_game/res/models --engine godot
 ```
 
-This is export-only: it does not build members, does not merge
-meshes into one GLB, and fails before copying anything if a member
-has no successful `mason build` yet (build that id first). It reuses
-`mason export` per member, so Godot layout and manifest `assets`
-entries stay identical to a plain single-asset export, then adds a
-`kits.<id>` block (`name`, `members`, `exported_at`) to the same
-`mason_manifest.json`.
-
-## JSON mode
-
-```bash
-mason doctor --json
-mason build crate.yaml --json
-```
-
-Stdout is valid JSON only. Diagnostics go to stderr. Errors look like:
-
-```json
-{"success": false, "error": {"code": "blender_missing", "message": "..."}}
-```
-
-## Directory structure
+## Layout
 
 ```
 mason.yaml
 styles/default.yaml
 .mason/jobs/<asset-id>/
   asset.yaml
-  resolved_style.yaml
   build.py
-  stdout.log
-  stderr.log
   output/          # .blend .glb .kra .png
-  previews/        # front/side/top/three_quarter or full.png
+  previews/        # three_quarter, or full.png for rasters
   validation.json
-  result.json
 ```
 
-## How agents should interact
+Agents follow [AGENTS.md](AGENTS.md): `doctor --json`, edit the
+spec, `build --json`, then open the primary preview. A clean exit
+is not “it looks right.”
 
-See [AGENTS.md](AGENTS.md). Short version: `doctor --json`, edit a spec,
-`build --json`, **open the preview images**, then iterate. Do not treat
-a zero exit code as “it looks right.”
+## Limits (v0.1)
 
-## Current limitations (v0.1)
-
-- Raster generation is palette fills, rects/ellipses, text, stamps,
-  image import, and per-pixel maps. Not freehand painting.
-- `mason ingest` measures ratio, palette, regions, contour, and edge
-  character with OpenCV, and can write a minimal buildable scaffold.
-  It is not an image → mesh compiler; you still author `parts`/
-  `layers`.
-- `mason export` copies files and a manifest only; it does not
-  construct Godot scenes/resources or write `.import` sidecars.
-- Kits (`mason export --kit`) are export-only packs of already-built
-  jobs. They do not auto-build members or merge meshes into one GLB.
-- No in-process LLM, no bundled creative apps.
-
-## Roadmap
+- Rasters are fills, shapes, text, stamps, and pixel maps.
+- Ingest measures a reference. It does not compile a mesh.
+- Export copies files and a manifest. It does not build Godot scenes.
+- Kits do not build their members.
+- No bundled creative apps.
 
 Design notes: [docs/roadmap.md](docs/roadmap.md).
-
-- In-engine / Godot preview (`preview_roles.context`) — hook only
-- Multi-asset kits (one export of a named set)
-- Optional richer Krita brushes — only if stamps + pixels stall
-- Image-to-spec stays an agent skill, not a Mason command
