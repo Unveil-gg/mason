@@ -209,7 +209,7 @@ def test_member_to_body_includes_mirror_copy() -> None:
 def test_knight_example_parses() -> None:
     path = (
         Path(__file__).resolve().parents[1]
-        / "examples" / "assets" / "chess_knight.yaml"
+        / "tests" / "fixtures" / "chess_knight.yaml"
     )
     spec = parse_asset_spec(
         yaml.safe_load(path.read_text(encoding="utf-8")),

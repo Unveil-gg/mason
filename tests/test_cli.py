@@ -63,8 +63,8 @@ def test_vocab_json() -> None:
     assert "cutout" in data
     assert "silhouette_regressed" in data["inspect"]
     assert "pixels+keys" in data["raster"]
-    assert "barbarian.yaml" in data["sprites"]
-    assert "shopping_cart.yaml" in data["variants"]
+    assert "pixels+keys" in data["sprites"]
+    assert "palette_overrides" in data["variants"]
     assert "--demo-lighting" in data["demo_lighting"]
     assert "lathe" in data["shapes"]
     assert "curve" in data["shapes"]

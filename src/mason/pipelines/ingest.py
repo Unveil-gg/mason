@@ -772,7 +772,7 @@ def _write_scaffold(
         spec = _scaffold_layered_raster(
             asset_id, image_ref, analysis, ratio, style_name,
         )
-    path = out if out else Path("examples") / "assets" / f"{asset_id}.yaml"
+    path = out if out else Path("assets") / f"{asset_id}.yaml"
     if not path.is_absolute():
         path = root / path
     path.parent.mkdir(parents=True, exist_ok=True)

@@ -92,16 +92,14 @@ def _full_vocab() -> dict[str, Any]:
             "sprite_sheet via Aseprite. Approve ONE still "
             "(master_frame) before animation. Later frames "
             "inherit palette, canvas, and anchors. Prefer "
-            "pixels+keys. Example: examples/assets/"
-            "barbarian.yaml."
+            "pixels+keys."
         ),
         "style_tune": (
             "styles/<name>.yaml is the project look bible "
             "(not example-only). mason.yaml default_style "
             "plus each spec's style: name. Edit palette, "
             "family roughness/variation/noise_scale/"
-            "tile_size/albedo, bevel, lighting, render. "
-            "harvest is the Harvest Hollow pack bible."
+            "tile_size/albedo, bevel, lighting, render."
         ),
         "recipes_note": (
             "Recipes are named clusters, not the path to "
@@ -394,8 +392,7 @@ def _full_vocab() -> dict[str, Any]:
             "spec into sibling jobs (<id>_<suffix>) on the same "
             "geometry. materials.palette_overrides on the spec "
             "itself works standalone too, patching style palette "
-            "keys for this job only. See "
-            "examples/assets/shopping_cart.yaml."
+            "keys for this job only."
         ),
         "demo_lighting": (
             "mason preview <id> --demo-lighting swaps in a "

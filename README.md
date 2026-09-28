@@ -44,26 +44,51 @@ and common install locations. They are **not** assumed to be on PATH.
 
 ## Installation
 
-Python 3.12+. Prefer [uv](https://docs.astral.sh/uv/):
+Python 3.12+. Prefer [uv](https://docs.astral.sh/uv/).
+
+### Use Mason in a game
+
+Install the CLI once. Do not clone this repo into the game.
+A private repo needs GitHub auth for the URL.
 
 ```bash
-uv sync
-uv run mason doctor
-```
-
-To call `mason` from any terminal, including Cursor and Claude
-Code, install the console script onto PATH:
-
-```bash
-uv tool install --editable .
+uv tool install "git+https://github.com/Unveil-gg/mason.git"
 mason config set tools.blender.path \
   "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe"
 mason doctor
 ```
 
 Krita, Aseprite, and ImageMagick stay optional. Mason finds
-them the same way it finds Blender. Re-run the tool install
-after pulling if you did not use `--editable`.
+them the same way it finds Blender.
+
+In the game repo:
+
+```bash
+mason init
+```
+
+That writes `mason.yaml`, `.mason/`, `styles/default.yaml`, and
+the Mason workflow in `AGENTS.md` and `CLAUDE.md`. Write a spec
+there and `mason build` it. Run `mason init` again after a Mason
+upgrade to refresh the workflow block.
+
+### Develop Mason
+
+```bash
+git clone https://github.com/Unveil-gg/mason.git
+cd mason
+uv sync
+uv run mason doctor
+```
+
+To put that clone's `mason` on PATH:
+
+```bash
+uv tool install --editable .
+```
+
+Re-run the tool install after pulling if you did not use
+`--editable`.
 
 Editable install with pip:
 
@@ -107,23 +132,15 @@ Aseprite.
 
 ## Quick start
 
+In a game repo, after `mason init`, save the crate spec below as
+`crate.yaml`:
+
 ```bash
-mason init
 mason doctor
-mason build examples/assets/simple_crate.yaml
+mason build crate.yaml
 mason inspect simple_crate --json
 mason rebuild simple_crate
 ```
-
-Krita panel + ImageMagick resize (if those tools are installed):
-
-```bash
-mason build examples/assets/simple_panel.yaml
-mason build examples/assets/simple_panel_512.yaml
-```
-
-`simple_panel_512.yaml` reads `examples/ref/swatch.png` so ImageMagick
-can be tried without Krita.
 
 ## Example asset YAML
 
@@ -150,17 +167,10 @@ Add a recipe only after the same cluster appears three times. Beauty
 comes from style (palette, families, bevel, tile size), secondary
 forms, stamps, and the critic loop — not from a longer recipe list.
 
-3D examples: `simple_crate`, `simple_shelf`, `simple_post`,
-`simple_sign`, `simple_fence`, `textured_crate` (tiled material),
-`crate_with_label`, `noir_billboard` (a two-post highway billboard with
-a decal face), `shopping_cart` (flared wire cart, plus a `black`
-palette variant), `grand_mansion` (estate recipe). Raster:
-`simple_panel`, `menu_card`, `plank_texture`, `shipping_label`,
-`noir_billboard_face`, `rpg_status_frame`. Sprite: `barbarian`
-(`sprite_sheet`: idle ×2, walk ×4, attack ×3 on a 4×3 grid) and
-`swordsman` (walk ×4, sword-swing attack ×3). Previews include a 2×2
-`contact_sheet.png`. EEVEE is preferred; Mason falls back to Cycles
-CPU if EEVEE fails.
+Specs live in the game repo. The crate YAML below is a complete
+`static_prop`. A sprite sheet is the same idea: one `pixels` map
+per frame on a shared palette. EEVEE is preferred; Mason falls
+back to Cycles CPU if EEVEE fails.
 
 ## Textures on 3D parts
 
@@ -192,13 +202,11 @@ automatically by shape:
   whole image shows once, undistorted by tile size. `textures.wrap`
   (`repeat`/`clamp`) only affects the tiled case.
 
-Try it: `mason build examples/assets/plank_texture.yaml`, then
-`mason build examples/assets/textured_crate.yaml` (tiled material), or
-`mason build examples/assets/shipping_label.yaml` then
-`mason build examples/assets/crate_with_label.yaml` (decal face).
-For the quality-loop example: `mason build examples/assets/fire_hydrant.yaml`,
-then inspect the beauty three-quarter render first. Use clay for
-geometry and silhouettes only when readability is in doubt.
+Build the raster job before the prop that references it. A
+textured box or cylinder tiles. A textured plane is a decal:
+one stretched image. Inspect the beauty three-quarter render
+first. Use clay for geometry and silhouettes only when
+readability is in doubt.
 
 ## Tuning a style
 
@@ -246,7 +254,7 @@ Each variant becomes its own stored job (`<id>_<suffix>`) with its own
 auto-written sibling spec (`<id>_<suffix>.yaml` next to the parent),
 so it is independently inspectable and rebuildable. `palette_overrides`
 patches specific palette keys for that job only; it never edits
-`styles/*.yaml`. See `examples/assets/shopping_cart.yaml`.
+`styles/<name>.yaml`. Each variant is its own job (`<id>_<suffix>`).
 
 ## Demo lighting for screenshots
 
@@ -276,20 +284,16 @@ Aseprite `sprite_sheet` is the animation path. Prefer `pixels` +
 cohesive. Mason writes `output/asset.png`, `output/frames.json`, and
 an optional `.aseprite` source.
 
-```bash
-mason build examples/assets/barbarian.yaml
-mason build examples/assets/swordsman.yaml
-mason inspect swordsman --json
-```
+Write a `sprite_sheet` spec in the game repo and `mason build` it.
 
 Example agent prompts:
 
-- *32×32 NES hero, side-on, facing right. Style `nes`. Animations:
+- *32×32 hero, side-on, facing right. Style `default`. Animations:
   idle ×2, walk ×4, attack ×3. One `pixels` map per frame, shared
   `keys`.*
 - *16×16 coin sparkle, 4 frames, loop. Style palette only, no new
   hex.*
-- *Rebuild `barbarian` walk so the stride reads at 4× preview scale.*
+- *Rebuild the walk so the stride reads at 4× preview scale.*
 
 `mason ingest <image> --asset <id> [--style <name>] [--type
 static_prop|layered_raster] [--out path]` uses OpenCV to measure a
@@ -300,7 +304,7 @@ style's keys when possible (never inventing new hex). If `--asset`
 already has a spec, only `art_analysis` is merged — `parts`/`layers`
 are never touched. If `--asset` names a brand-new id, ingest writes a
 minimal buildable scaffold (one box, or a background + reference
-layer) under `examples/assets/<id>.yaml` instead — it is still not an
+layer) under `assets/<id>.yaml` instead — it is still not an
 image-to-mesh compiler, so you write the real `parts`/`layers`.
 
 ## Commands
@@ -308,7 +312,7 @@ image-to-mesh compiler, so you write the real `parts`/`layers`.
 | Command | Purpose |
 | --- | --- |
 | `mason doctor` | Detect tools and capabilities |
-| `mason init` | Create `mason.yaml`, `.mason/`, `styles/default.yaml` |
+| `mason init` | Create `mason.yaml`, `.mason/`, `styles/default.yaml`, and the agent workflow |
 | `mason build <spec.yaml>` | Generate, run the tool, preview, validate |
 | `mason rebuild <asset-id>` | Rebuild from the stored job / original spec |
 | `mason preview <asset-id>` | Re-render previews only |
@@ -392,7 +396,7 @@ entries stay identical to a plain single-asset export, then adds a
 
 ```bash
 mason doctor --json
-mason build examples/assets/simple_crate.yaml --json
+mason build crate.yaml --json
 ```
 
 Stdout is valid JSON only. Diagnostics go to stderr. Errors look like:

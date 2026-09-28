@@ -129,7 +129,7 @@ def init(
     path: Annotated[Path, typer.Argument(dir_okay=True)] = Path("."),
     json_mode: JsonFlag = False,
 ) -> None:
-    """Create mason.yaml, .mason/, and styles/default.yaml."""
+    """Create mason.yaml, .mason/, styles/default.yaml, and agent files."""
     created = init_project(path)
     _emit(
         json_mode,

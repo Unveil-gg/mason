@@ -11,3 +11,7 @@ build/
 .mypy_cache/
 *.blend1
 *.log
+examples/
+_agent_out/
+styles/*
+!styles/default.yaml

@@ -86,7 +86,7 @@ def test_example_axle_cart_parses() -> None:
     from mason.core.assets import load_asset_spec
     root = Path(__file__).resolve().parents[1]
     spec = load_asset_spec(
-        root / "examples" / "assets" / "axle_cart.yaml",
+        root / "tests" / "fixtures" / "axle_cart.yaml",
     )
     assert spec.decomposition.mode == "assets"
     assert spec.geometry.parts[0].shape == "instance"

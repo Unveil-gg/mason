@@ -4,67 +4,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from mason.core.agent_workflow import MASON_WORKFLOW
 from mason.core.config import ProjectConfig, save_project_config
 from mason.core.styles import DEFAULT_STYLE_YAML
 from mason.errors import MasonError
 
-MASON_WORKFLOW = """
-# Mason Agent Workflow
-
-Separate creator and critic even if you are one model.
-
-1. Run `mason doctor --json`.
-2. Confirm the required capabilities are available.
-3. Run `mason route <subject> --json`, then
-   `mason vocab --workflow <kind> --json`.
-4. If references exist, ingest them with --view and write
-   reference_analysis (silhouettes, profile, landmarks).
-   Complex objects: decompose, isolate components, model
-   each, assemble, then evaluate the whole.
-5. Write `art_direction` (focal point, value hierarchy,
-   gameplay read, silhouette, forms). `mason plan <id>`
-   must pass before parts.
-6. Write geometric_plan (masses, silhouette, landmarks+uv,
-   critical_views, stage). Intent only. Recognition is not
-   ship; style/type must match. Profile first when silhouette
-   dominates; no secondary detail until the ortho profile holds.
-7. Block out with primitives, then snap + bodies remesh
-   (inflate). skin is optional (skeleton pipes / blob spheres).
-   Record techniques on construction_plan. Intent only.
-8. Create or modify the AssetSpec YAML. Blockout first when
-   silhouette dominates recognition. Painterly work uses
-   `mason paint`. Prefer import over a new Mason capability.
-9. Run `mason build <spec> --json`.
-10. Check technical validation. Do not ignore failures.
-11. If recognition is silhouette, inspect preview_roles.silhouette
-    first. Ignore materials and tiny details.
-12. Inspect preview_roles.primary after the silhouette holds
-    (worn.png for garments, else three_quarter).
-13. Inspect clay_three_quarter.png if geometry needs review.
-14. Evaluate vs current_best (view_scores + silhouette_metrics
-    + compare verdict). Reject if identity, a critical view,
-    or IoU dropped, or represents_object is false.
-    Continuity cannot beat a worse silhouette. Newest is
-    not best. Revert restores the GLB.
-    Restart a failing region; or try best-of-N.
-    Do not advance stage while critical issues remain.
-15. Move named landmarks, record actions_taken, rebuild.
-16. Repeat until validation passes and evaluation `ship` is true.
-17. Treat asset.yaml, geometric_plan.yaml, construction_plan.yaml,
-    and build.py as reproducible source.
-
-Important rules:
-
-- Mason drives Blender only through generated bpy scripts.
-- Do not manually operate Blender, Krita, or Aseprite when Mason can invoke them.
-- Prefer editing specs/generator source and rebuilding.
-- Do not assume a successful tool exit means the asset looks correct.
-- Always inspect previews. Beauty three-quarter first.
-- Do not ignore validation failures.
-- Use `--json` when operating autonomously.
-- When a style palette matters for rasters, follow generation with
-  an `image_process` quantize step.
-"""
+START_MARKER = "# Mason Agent Workflow"
+END_MARKER = "# End Mason Agent Workflow"
 
 
 def find_project_root(start: Path | None = None) -> Path:
@@ -81,7 +27,7 @@ def find_project_root(start: Path | None = None) -> Path:
 
 
 def init_project(root: Path, name: str | None = None) -> dict[str, str]:
-    """Create mason.yaml, .mason/, and styles/default.yaml."""
+    """Create mason.yaml, .mason/, styles/default.yaml, and agent files."""
     root = root.resolve()
     root.mkdir(parents=True, exist_ok=True)
     created: dict[str, str] = {}
@@ -102,18 +48,40 @@ def init_project(root: Path, name: str | None = None) -> dict[str, str]:
     created["style"] = str(default_style)
 
     agents = root / "AGENTS.md"
-    _ensure_agents_workflow(agents)
+    claude = root / "CLAUDE.md"
+    _write_workflow(agents)
+    _write_workflow(claude)
     created["agents"] = str(agents)
+    created["claude"] = str(claude)
     return created
 
 
-def _ensure_agents_workflow(path: Path) -> None:
-    """Append Mason workflow to AGENTS.md if it is missing."""
-    marker = "# Mason Agent Workflow"
-    if path.is_file():
-        text = path.read_text(encoding="utf-8")
-        if marker in text:
-            return
-        path.write_text(text.rstrip() + "\n" + MASON_WORKFLOW, encoding="utf-8")
-        return
-    path.write_text(MASON_WORKFLOW.lstrip(), encoding="utf-8")
+def _write_workflow(path: Path) -> None:
+    """Insert or replace the marked workflow block in path."""
+    text = path.read_text(encoding="utf-8") if path.is_file() else ""
+    path.write_text(_splice_workflow(text), encoding="utf-8")
+
+
+def _splice_workflow(text: str) -> str:
+    """Return text with one current Mason workflow block."""
+    block = MASON_WORKFLOW.strip() + "\n"
+    start = text.find(START_MARKER)
+    if start < 0:
+        body = text.rstrip()
+        return (body + "\n\n" + block) if body else block
+    end_at = text.find(END_MARKER, start)
+    if end_at < 0:
+        head = text[:start].rstrip()
+        return (head + "\n\n" + block) if head else block
+    after = end_at + len(END_MARKER)
+    if text[after:after + 1] == "\n":
+        after += 1
+    head = text[:start].rstrip()
+    tail = text[after:].strip()
+    parts: list[str] = []
+    if head:
+        parts.append(head)
+    parts.append(block.rstrip("\n"))
+    if tail:
+        parts.append(tail)
+    return "\n\n".join(parts) + "\n"
