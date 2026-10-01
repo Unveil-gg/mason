@@ -15,10 +15,14 @@ from mason.core.kits import KitSpec, resolve_kit
 from mason.core.results import ExportResult, KitExportResult
 from mason.core.workspace import find_project_root
 from mason.errors import MasonError
+from mason.pipelines.export_optimize import (
+    grouped_subdir,
+    optimize_file,
+    require_engine,
+)
 
 INSTALLABLE_KEYS = {"glb", "png", "frames"}
 _OUTPUT_NAMES = {"glb": "asset.glb", "png": "asset.png", "frames": "frames.json"}
-GODOT_SUBDIRS = {"glb": "models", "png": "textures", "frames": "textures"}
 INSTALL_NAMES = {"frames": "{id}_frames.json"}
 
 
@@ -152,20 +156,10 @@ def run_export(
     *,
     best: bool = False,
     layout: str = "flat",
+    optimize: bool = False,
 ) -> ExportResult:
-    """Copy a built asset's finished outputs into a target project.
-
-    Args:
-        asset_id: Job/asset id to export.
-        to: Optional destination dir, overriding spec/project config.
-        engine: "generic" or "godot" (manifest only; layout is
-            separate).
-        layout: "flat" writes into --to. "grouped" adds models/
-            and textures/ subfolders.
-
-    Returns:
-        ExportResult with the absolute paths written.
-    """
+    """Copy finished outputs. optimize shrinks the copy only."""
+    engine = require_engine(engine)
     root = find_project_root()
     job = require_job(root, asset_id)
     result = job.load_result()
@@ -177,13 +171,14 @@ def run_export(
         )
     dest_dir = _install_dir(root, job, to)
     installed: dict[str, str] = {}
+    optimized: dict[str, str] = {}
     for key, rel_path in result.outputs.items():
         if key not in INSTALLABLE_KEYS:
             continue
         src = _export_source(root, job, key, rel_path, best=best)
         if src is None or not src.is_file():
             continue
-        sub = GODOT_SUBDIRS.get(key, "") if layout == "grouped" else ""
+        sub = grouped_subdir(engine, key) if layout == "grouped" else ""
         target_dir = (dest_dir / sub) if sub else dest_dir
         target_dir.mkdir(parents=True, exist_ok=True)
         name = INSTALL_NAMES.get(key)
@@ -194,10 +189,18 @@ def run_export(
         installed[key] = str(dest)
         if key == "glb":
             installed.update(_copy_atlas_sidecars(src, dest, asset_id))
+    if optimize:
+        for key, dest_s in list(installed.items()):
+            method = optimize_file(Path(dest_s))
+            if method:
+                optimized[key] = method
+    extra = _manifest_extra(job)
+    if optimized:
+        extra["optimized"] = optimized
     manifest = None
     if installed:
         manifest = str(_update_manifest(
-            dest_dir, asset_id, engine, installed, _manifest_extra(job),
+            dest_dir, asset_id, engine, installed, extra,
         ))
     return ExportResult(
         success=bool(installed),
@@ -205,6 +208,7 @@ def run_export(
         engine=engine,
         installed=installed,
         manifest=manifest,
+        optimized=optimized,
     )
 
 
@@ -234,22 +238,10 @@ def run_export_kit(
     *,
     best: bool = False,
     layout: str = "flat",
+    optimize: bool = False,
 ) -> KitExportResult:
-    """Export every member of a kit (an already-built asset pack).
-
-    Reuses `run_export` per member so Godot layout and manifest
-    `assets` entries stay identical to a plain single-asset export.
-    Fails before copying anything if a member has no successful
-    build.
-
-    Args:
-        kit: Kit id, or a path to a kit YAML.
-        to: Optional destination dir, overriding spec/project config.
-        engine: "generic" or "godot".
-
-    Returns:
-        KitExportResult with each member's ExportResult.
-    """
+    """Export every built kit member. Fails if any member is unbuilt."""
+    engine = require_engine(engine)
     root = find_project_root()
     spec = resolve_kit(root, kit)
     for member in spec.members:
@@ -265,6 +257,7 @@ def run_export_kit(
     members: dict[str, ExportResult] = {
         member: run_export(
             member, to, engine, best=best, layout=layout,
+            optimize=optimize,
         )
         for member in spec.members
     }

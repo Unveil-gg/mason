@@ -403,7 +403,8 @@ def _full_vocab() -> dict[str, Any]:
         "kits": (
             "kits/<id>.yaml {id, name, members: [asset-id, ...]} is a "
             "named list of already-built jobs. mason export --kit <id> "
-            "[--to dir] [--engine godot] fans mason export over every "
+            "[--to dir] [--engine godot|unreal] [--optimize] "
+            "fans mason export over every "
             "member (fails first if any member has no successful "
             "build) and adds kits.<id> to the same mason_manifest.json. "
             "Export-only: no auto-build, no merged mesh."

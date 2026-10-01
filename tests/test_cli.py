@@ -100,6 +100,8 @@ def test_vocab_json() -> None:
     assert "mason route" in data["workflow"]
     assert "primary_failure" in data["critique"]
     assert "mason paint" in data["paint"]
+    assert "--optimize" in data["kits"]
+    assert "unreal" in data["kits"]
 
 
 def test_clean_removes_jobs(project: Path, monkeypatch) -> None:

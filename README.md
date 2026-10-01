@@ -35,9 +35,9 @@ Prefer [uv](https://docs.astral.sh/uv/). `uv tool install` puts
 
 ### Use Mason in a game
 
-Install the CLI once, then work in the game repo. The Mason repo is
-private, so GitHub auth has to work for git (`gh auth login`, or a
-credential helper) before this URL will clone.
+Install the CLI once, then work in the game repo. A public clone
+needs no extra GitHub login. If this repo is private, use
+`gh auth login` or another credential helper first.
 
 ```bash
 uv tool install "git+https://github.com/Unveil-gg/mason.git"
@@ -99,12 +99,10 @@ when there is no `mason.yaml`, then builds from the user's request.
 `mason init` copies the same skill into the project and refreshes it
 on upgrade.
 
-Listing on [skills.sh](https://skills.sh) is driven by public installs
-and indexing, not a form. A **public** GitHub repo helps discovery; a
-private repo still works with `gh auth login` (or another credential
-helper) but may not appear on skills.sh until the repo is public and
-people install from it. After you go public, run one install yourself
-to seed the directory.
+Listing on [skills.sh](https://skills.sh) comes from `npx skills add`
+telemetry, not a submit form. Other machines and people count;
+repeating the command on one machine barely does. A public repo
+helps. A private repo still installs with GitHub auth.
 
 ### Develop Mason
 
@@ -208,7 +206,7 @@ not build a mesh. You still write `parts` or `layers`.
 | `mason assemble <id>` | Instance accepted component GLBs |
 | `mason history <asset-id>` | Iteration snapshots |
 | `mason style [name]` | Palette, families, quality |
-| `mason export <asset-id>` | Copy finished outputs |
+| `mason export <asset-id>` | Copy finished outputs (`--optimize`, `--engine`) |
 | `mason export --kit <id>` | Export an already-built kit |
 | `mason vocab` | Shapes, components, recipes, stamps |
 | `mason ingest <image>` | Measure concept art. `--component` scopes an isolate |
@@ -232,14 +230,23 @@ It skips `.blend`, `.kra`, and previews.
 
 ```bash
 mason export simple_crate --to ../my_game/res
-mason export simple_crate --layout grouped
+mason export simple_crate --layout grouped --engine godot
+mason export simple_crate --layout grouped --engine unreal
+mason export simple_crate --to ../my_game/res --optimize
 ```
 
 `--to` wins over `export.install_to` on the spec, which wins over
-`install_dir` in `mason.yaml`. Each export updates
-`mason_manifest.json` at the destination. Mason does not write
-Godot `.import` files. For pixel art, set the Godot project’s
-default texture filter to Nearest.
+`install_dir` in `mason.yaml`. Set `install_dir` once if this
+project always exports to the same game folder. `--layout grouped`
+uses `models/` and `textures/` for Godot, or `Meshes/` and
+`Textures/` for Unreal. `--optimize` shrinks the copy only
+(palette-quantize PNG; `gltfpack` on GLB if that tool is on PATH).
+Job files stay untouched.
+
+Each export updates `mason_manifest.json` at the destination.
+Mason does not write Godot `.import` or Unreal `.uasset` files.
+For pixel art, set the Godot project’s default texture filter to
+Nearest.
 
 A kit is a list of jobs you have already built. Export does not
 build them or merge them into one GLB.
@@ -277,7 +284,7 @@ not “it looks right.” `default` needs no style file.
 
 - Rasters are fills, shapes, text, stamps, and pixel maps.
 - Ingest measures a reference. It does not compile a mesh.
-- Export copies files and a manifest. It does not build Godot scenes.
+- Export copies files and a manifest. It does not build engine scenes.
 - Kits do not build their members.
 - No bundled creative apps.
 

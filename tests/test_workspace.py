@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_skill_version_matches_package() -> None:
     text = (skill_source() / "SKILL.md").read_text(encoding="utf-8")
     assert f'mason_version: "{__version__}"' in text
+    assert "tilesets" in text
+    assert "Skip this block" in text
     assert (skill_source() / "references" / "workflow.md").is_file()
     assert (skill_source() / "references" / "evaluate.md").is_file()
 

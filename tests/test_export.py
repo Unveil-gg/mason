@@ -122,6 +122,79 @@ def test_export_uses_project_config(
     assert (tmp_path / "install_from_config" / "box.glb").is_file()
 
 
+def test_export_unreal_grouped(
+    project: Path, monkeypatch, tmp_path: Path,
+) -> None:
+    monkeypatch.chdir(project)
+    _make_job(project)
+    dest = tmp_path / "Content"
+    result = run_export(
+        "box", to=dest, engine="unreal", layout="grouped",
+    )
+    assert (dest / "Meshes" / "box.glb").is_file()
+    assert result.installed["glb"] == str(dest / "Meshes" / "box.glb")
+    manifest = json.loads(Path(result.manifest).read_text(encoding="utf-8"))
+    assert manifest["assets"]["box"]["engine"] == "unreal"
+
+
+def test_export_rejects_unknown_engine(
+    project: Path, monkeypatch, tmp_path: Path,
+) -> None:
+    monkeypatch.chdir(project)
+    _make_job(project)
+    with pytest.raises(MasonError) as exc:
+        run_export("box", to=tmp_path / "out", engine="unity")
+    assert exc.value.code == "invalid_export_engine"
+
+
+def test_export_optimize_png_skips_job(
+    project: Path, monkeypatch, tmp_path: Path,
+) -> None:
+    from io import BytesIO
+
+    from PIL import Image
+
+    monkeypatch.chdir(project)
+    spec = parse_asset_spec({
+        "type": "layered_raster",
+        "id": "swatch",
+        "name": "Swatch",
+        "dimensions": {"width": 8, "height": 8},
+        "layers": [{"name": "fill", "fill": "ink"}],
+    })
+    job = AssetJob(project, "swatch")
+    job.prepare()
+    job.write_spec(spec)
+    raw = BytesIO()
+    Image.new("RGB", (32, 32), (80, 40, 20)).save(raw, format="PNG")
+    png = job.output / "asset.png"
+    png.write_bytes(raw.getvalue())
+    before = png.read_bytes()
+    result = BuildResult(
+        success=True,
+        asset_id="swatch",
+        asset_type="layered_raster",
+        outputs={"png": job.rel(png)},
+    )
+    job.write_result(result)
+    dest = tmp_path / "res"
+    exported = run_export("swatch", to=dest, optimize=True)
+    assert exported.optimized.get("png") == "quantize"
+    assert png.read_bytes() == before
+    assert (dest / "swatch.png").is_file()
+
+
+def test_export_optimize_skips_fake_glb(
+    project: Path, monkeypatch, tmp_path: Path,
+) -> None:
+    monkeypatch.chdir(project)
+    _make_job(project)
+    dest = tmp_path / "out"
+    result = run_export("box", to=dest, optimize=True)
+    assert (dest / "box.glb").read_bytes() == b"glb-bytes"
+    assert "glb" not in result.optimized
+
+
 def test_export_godot_subfolder(
     project: Path, monkeypatch, tmp_path: Path,
 ) -> None:

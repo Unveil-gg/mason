@@ -88,6 +88,9 @@ def print_export(result: ExportResult) -> None:
     console.print(f"Exported [bold]{result.asset_id}[/bold] ({status})")
     for key, path in result.installed.items():
         console.print(f"  {key}: {path}")
+    if result.optimized:
+        for key, method in result.optimized.items():
+            console.print(f"  optimized.{key}: {method}")
     if result.manifest:
         console.print(f"  manifest: {result.manifest}")
 

@@ -274,7 +274,7 @@ def export(
     ] = None,
     engine: Annotated[
         str,
-        typer.Option("--engine", help="generic or godot."),
+        typer.Option("--engine", help="generic, godot, or unreal."),
     ] = "generic",
     best: Annotated[
         bool,
@@ -290,9 +290,22 @@ def export(
         str,
         typer.Option(
             "--layout",
-            help="flat (into --to) or grouped (models/, textures/).",
+            help=(
+                "flat (into --to) or grouped (godot: models/; "
+                "unreal: Meshes/)."
+            ),
         ),
     ] = "flat",
+    optimize: Annotated[
+        bool,
+        typer.Option(
+            "--optimize",
+            help=(
+                "Shrink the copy only: palette-quantize PNG, "
+                "gltfpack on GLB if installed. Job files stay."
+            ),
+        ),
+    ] = False,
     json_mode: JsonFlag = False,
 ) -> None:
     """Copy an asset's finished outputs into another project, or
@@ -302,6 +315,7 @@ def export(
         if kit:
             result = run_export_kit(
                 kit, to, engine, best=best, layout=layout,
+                optimize=optimize,
             )
             _emit(
                 json_mode, result.model_dump(),
@@ -318,6 +332,7 @@ def export(
             )
         result = run_export(
             asset_id, to, engine, best=best, layout=layout,
+            optimize=optimize,
         )
         _emit(json_mode, result.model_dump(), lambda: print_export(result))
         if not result.success:

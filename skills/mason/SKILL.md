@@ -1,14 +1,14 @@
 ---
 name: mason
 description: >-
-  Builds game assets with the Mason CLI: 3D props, buildings,
-  sprites, rasters, textures, and kits. Use when the user asks
-  for a prop, crate, sprite, pixel art, poster, palette,
-  reference image, or to export a model into a game. Installs
-  the Mason CLI when it is missing and initializes the project.
+  Builds game assets with the Mason CLI: 3D props and 2D art
+  (sprites, pixel art, tilesets, UI, icons, posters, labels,
+  textures, palettes). Use when the user asks for a crate, kit,
+  Krita or Aseprite work, a reference image, or to export into
+  Godot or Unreal. Installs the Mason CLI when it is missing.
 compatibility: >-
   Python 3.12+. Blender 4+ is required for 3D. Krita, Aseprite,
-  and ImageMagick are optional.
+  and ImageMagick are optional for 2D.
 metadata:
   mason_version: "0.1.0"
 ---
@@ -20,8 +20,12 @@ the CLI. Do not open Blender, Krita, or Aseprite.
 
 ## Setup
 
-1. Run `mason --version`.
-   If the command is missing, install it and continue:
+Skip this block when `mason --version` works and the repo has
+`mason.yaml`. Then only `mason doctor --json` once per session.
+
+Otherwise:
+
+1. If `mason` is missing:
 
    ```bash
    uv tool install "git+https://github.com/Unveil-gg/mason.git"
@@ -30,10 +34,10 @@ the CLI. Do not open Blender, Krita, or Aseprite.
 2. Compare `mason --version` to `mason_version` in this file's
    frontmatter. If the CLI is older, stop and tell the user to
    upgrade Mason.
-3. If the directory has no `mason.yaml`, run `mason init` at the
-   git root, or in the current directory when there is no git root.
+3. If there is no `mason.yaml`, run `mason init` at the git
+   root, or in the current directory when there is no git root.
 4. Run `mason doctor --json` once per machine per session.
-   3D needs Blender.
+   3D needs Blender. 2D needs Krita or Aseprite as routed.
 
 ## Build
 
@@ -52,8 +56,13 @@ the CLI. Do not open Blender, Krita, or Aseprite.
 4. Specs name a style (`style: default`). Do not inline hex.
    `default` is built into the CLI. `styles/<name>.yaml` in the
    project overrides it.
-5. Run `mason export <id> --to <dir>` when the user wants files
-   in the game. A kit is `mason export --kit <id> --to <dir>`.
+5. Export when the user wants files in the game:
+   `mason export <id> --to <dir> --engine godot|unreal`.
+   A kit is `mason export --kit <id> --to <dir>`.
+   Add `--optimize` to shrink the copy only. Use `--layout
+   grouped` for engine folders (`models/` or `Meshes/`).
+   Prefer `install_dir` in `mason.yaml` so later exports omit
+   `--to`.
 
 ## Rules
 

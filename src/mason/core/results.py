@@ -77,6 +77,7 @@ class ExportResult(BaseModel):
     engine: str
     installed: dict[str, str] = Field(default_factory=dict)
     manifest: str | None = None
+    optimized: dict[str, str] = Field(default_factory=dict)
 
 
 def slim_validation(validation: dict[str, Any]) -> dict[str, Any]:

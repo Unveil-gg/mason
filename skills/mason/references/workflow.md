@@ -46,6 +46,8 @@ for reasons not to ship.
 6. Stop when validation passes, no critical discrepancy remains,
    the beauty preview looks ready, and `ship` is true.
 7. Export only when the user wants the files in the game.
+   `mason export <id> --to <dir> --engine godot|unreal`.
+   `--optimize` shrinks the copy, not the job.
 
 `asset.yaml`, `art_direction.yaml`, `construction_plan.yaml`,
 `geometric_plan.yaml`, `decomposition.yaml`, and `build.py` in the
