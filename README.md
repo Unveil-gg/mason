@@ -81,14 +81,30 @@ built into the CLI; add `styles/<name>.yaml` only for a project look.
 `mason init --global` installs the skill for your user and skips
 project files.
 
-Or start from the skill. In the game repo:
+### Agent skill ([skills.sh](https://skills.sh))
+
+There is no separate publish step. The skill lives in this repo at
+`skills/mason/`. Anyone with repo access installs it with the
+[Vercel skills CLI](https://github.com/vercel-labs/skills):
 
 ```bash
-npx skills add Unveil-gg/mason
+npx skills add Unveil-gg/mason              # this project
+npx skills add Unveil-gg/mason -g           # all projects (this user)
+npx skills add Unveil-gg/mason -s mason -y  # non-interactive, mason only
+npx skills add Unveil-gg/mason --list       # list skills in the repo
 ```
 
-Then ask for the asset. The skill installs the CLI if it is missing
-and runs `mason init` when the folder has no `mason.yaml`.
+The skill installs the CLI if `mason` is missing, runs `mason init`
+when there is no `mason.yaml`, then builds from the user's request.
+`mason init` copies the same skill into the project and refreshes it
+on upgrade.
+
+Listing on [skills.sh](https://skills.sh) is driven by public installs
+and indexing, not a form. A **public** GitHub repo helps discovery; a
+private repo still works with `gh auth login` (or another credential
+helper) but may not appear on skills.sh until the repo is public and
+people install from it. After you go public, run one install yourself
+to seed the directory.
 
 ### Develop Mason
 
