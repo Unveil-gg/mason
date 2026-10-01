@@ -29,7 +29,8 @@ from mason.core.results import BuildResult, slim_validation
 from mason.core.styles import resolve_style, style_payload
 from mason.core.vocab import vocab_payload
 from mason.core.jobs import clean_jobs, list_jobs, require_job
-from mason.core.workspace import find_project_root, init_project
+from mason.core.skill_install import workflow_text
+from mason.core.workspace import find_project_root, init_global, init_project
 from mason.errors import MasonError
 from mason.pipelines.common import project_context
 from mason.pipelines.assemble import run_assemble
@@ -128,14 +129,36 @@ def doctor(json_mode: JsonFlag = False) -> None:
 def init(
     path: Annotated[Path, typer.Argument(dir_okay=True)] = Path("."),
     json_mode: JsonFlag = False,
+    global_install: Annotated[
+        bool,
+        typer.Option(
+            "--global",
+            help="Install the skill for this user. Skip project files.",
+        ),
+    ] = False,
 ) -> None:
-    """Create mason.yaml, .mason/, styles/default.yaml, and agent files."""
-    created = init_project(path)
-    _emit(
-        json_mode,
-        {"success": True, "created": created},
-        lambda: print_init(created),
-    )
+    """Pin a project, or with --global install the user skill."""
+
+    def _run():
+        created = init_global() if global_install else init_project(path)
+        _emit(
+            json_mode,
+            {"success": True, "created": created},
+            lambda: print_init(created),
+        )
+
+    _guard(json_mode, _run)
+
+
+@app.command()
+def workflow(json_mode: JsonFlag = False) -> None:
+    """Print the directed asset loop."""
+
+    def _run():
+        text = workflow_text()
+        _emit(json_mode, {"workflow": text}, lambda: typer.echo(text))
+
+    _guard(json_mode, _run)
 
 
 @app.command()

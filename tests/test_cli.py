@@ -27,7 +27,9 @@ def test_init_json(tmp_path: Path) -> None:
     data = json.loads(result.stdout)
     assert data["success"] is True
     assert (tmp_path / "mason.yaml").is_file()
-    assert (tmp_path / "styles" / "default.yaml").is_file()
+    skill = tmp_path / ".agents" / "skills" / "mason" / "SKILL.md"
+    assert skill.is_file()
+    assert not (tmp_path / "styles" / "default.yaml").exists()
 
 
 def test_build_invalid_spec(project: Path, monkeypatch) -> None:
@@ -47,6 +49,13 @@ def test_not_a_project(tmp_path: Path, monkeypatch) -> None:
     assert result.exit_code != 0
     data = json.loads(result.stdout)
     assert data["error"]["code"] == "not_a_project"
+
+
+def test_workflow_json() -> None:
+    result = runner.invoke(app, ["workflow", "--json"])
+    assert result.exit_code == 0
+    data = json.loads(result.stdout)
+    assert "mason evaluate" in data["workflow"]
 
 
 def test_vocab_json() -> None:

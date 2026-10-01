@@ -150,7 +150,10 @@ def load_style(path: Path) -> StyleProfile:
         raise MasonError(
             f"Style file not found: {path}",
             code="style_not_found",
-            hint="Create styles/<name>.yaml or run mason init.",
+            hint=(
+                "Create styles/<name>.yaml. "
+                "The default style is built in."
+            ),
             context={"path": str(path)},
         )
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -169,15 +172,36 @@ def load_style(path: Path) -> StyleProfile:
         ) from exc
 
 
+def packaged_default_style() -> StyleProfile:
+    """Return the default style shipped with the CLI."""
+    data = yaml.safe_load(DEFAULT_STYLE_YAML)
+    return StyleProfile.model_validate(data)
+
+
 def resolve_style(
     project_root: Path,
     name: str,
     default_style: str = "default",
 ) -> StyleProfile:
-    """Load styles/<name>.yaml from the project. Returns StyleProfile."""
+    """Load styles/<name>.yaml, or the built-in default.
+
+    A project file wins. Returns StyleProfile.
+    """
     style_name = name or default_style
     path = project_root / "styles" / f"{style_name}.yaml"
-    return load_style(path)
+    if path.is_file():
+        return load_style(path)
+    if style_name == "default":
+        return packaged_default_style()
+    raise MasonError(
+        f"Style file not found: {path}",
+        code="style_not_found",
+        hint=(
+            "Create styles/<name>.yaml. "
+            "The default style is built in."
+        ),
+        context={"path": str(path)},
+    )
 
 
 def style_payload(profile: StyleProfile) -> dict[str, Any]:

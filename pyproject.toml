@@ -32,6 +32,9 @@ packages = ["src/mason"]
 [tool.hatch.build.targets.wheel.sources]
 "src/mason" = "mason"
 
+[tool.hatch.build.targets.wheel.force-include]
+"skills/mason" = "mason/data/skill"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]

@@ -15,7 +15,9 @@ from mason.core.workspace import init_project
 def project(tmp_path: Path) -> Path:
     """Initialized Mason project in a temp directory."""
     init_project(tmp_path, name="test")
-    (tmp_path / "styles" / "default.yaml").write_text(
+    styles = tmp_path / "styles"
+    styles.mkdir(parents=True, exist_ok=True)
+    (styles / "default.yaml").write_text(
         DEFAULT_STYLE_YAML,
         encoding="utf-8",
     )

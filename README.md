@@ -69,9 +69,26 @@ In the game repo:
 mason init
 ```
 
-That writes `mason.yaml`, `.mason/`, `styles/default.yaml`, and
-the workflow in `AGENTS.md` and `CLAUDE.md`. Run `mason init` again
-after a Mason upgrade to refresh that workflow block.
+That writes `mason.yaml`, adds `.mason/` to an existing
+`.gitignore`, and installs the Mason skill into
+`.agents/skills/mason` (linked for Cursor and Claude, or copied
+if the OS refuses the link). It does not edit `AGENTS.md`. Run
+`mason init` again after a Mason upgrade to refresh the skill.
+An existing `mason.yaml` and
+any `styles/` files are left as they are. The `default` style is
+built into the CLI; add `styles/<name>.yaml` only for a project look.
+
+`mason init --global` installs the skill for your user and skips
+project files.
+
+Or start from the skill. In the game repo:
+
+```bash
+npx skills add Unveil-gg/mason
+```
+
+Then ask for the asset. The skill installs the CLI if it is missing
+and runs `mason init` when the folder has no `mason.yaml`.
 
 ### Develop Mason
 
@@ -161,7 +178,9 @@ not build a mesh. You still write `parts` or `layers`.
 | Command | Purpose |
 | --- | --- |
 | `mason doctor` | Detect tools and capabilities |
-| `mason init` | Project files plus the agent workflow |
+| `mason init` | Project pin plus the Mason skill |
+| `mason init --global` | User skill only |
+| `mason workflow` | Directed build loop |
 | `mason build <spec.yaml>` | Generate, run the tool, preview, validate |
 | `mason rebuild <asset-id>` | Rebuild from the stored job |
 | `mason preview <asset-id>` | Re-render previews only |
@@ -224,7 +243,8 @@ mason export --kit cafe --to ../my_game/res/models --engine godot
 
 ```
 mason.yaml
-styles/default.yaml
+.agents/skills/mason/   # skill, refreshed by mason init
+styles/<name>.yaml      # optional project look
 .mason/jobs/<asset-id>/
   asset.yaml
   build.py
@@ -233,9 +253,9 @@ styles/default.yaml
   validation.json
 ```
 
-Agents follow [AGENTS.md](AGENTS.md): `doctor --json`, edit the
-spec, `build --json`, then open the primary preview. A clean exit
-is not “it looks right.”
+The skill tells the agent to `doctor --json`, edit the spec,
+`build --json`, then open the primary preview. A clean exit is
+not “it looks right.” `default` needs no style file.
 
 ## Limits (v0.1)
 

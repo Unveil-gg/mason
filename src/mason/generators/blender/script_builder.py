@@ -11,6 +11,9 @@ from mason.generators.blender.bodies import CREATE_BODIES_SRC
 from mason.generators.blender.curves import CREATE_CURVE_SRC
 from mason.generators.blender.export import EXPORT_SRC
 from mason.generators.blender.prop_atlas import PROP_ATLAS_SRC
+from mason.generators.blender.prop_atlas_pack import (
+    PROP_ATLAS_PACK_SRC,
+)
 from mason.generators.blender.prop_atlas_sample import (
     PROP_ATLAS_SAMPLE_SRC,
 )
@@ -193,6 +196,7 @@ _BODY = (
     + CREATE_MATERIAL_SRC
     + PROP_PACK_SRC
     + PROP_ATLAS_SAMPLE_SRC
+    + PROP_ATLAS_PACK_SRC
     + PROP_ATLAS_SRC
     + CREATE_GARMENT_BODY_SRC
     + CREATE_GARMENT_ANATOMY_SRC

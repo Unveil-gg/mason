@@ -230,6 +230,11 @@ def _bake_prop_atlas():
     bands = len(meshes)
     for index, obj in enumerate(meshes):
         _stash_src_uv(obj)
+        packed = False
+        if textures:
+            packed = _pack_textured_uvs(obj, textures, size)
+        if packed:
+            continue
         _smart_uv(obj)
         pad = 2.0 / size
         v0 = index / bands + pad

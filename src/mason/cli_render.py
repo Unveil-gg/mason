@@ -120,6 +120,6 @@ def print_list(jobs: list[AssetJob]) -> None:
 
 
 def print_init(created: dict[str, str]) -> None:
-    console.print("Initialized Mason project")
+    console.print("Initialized Mason")
     for key, path in created.items():
         console.print(f"  {key}: {path}")

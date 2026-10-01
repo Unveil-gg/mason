@@ -4,13 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from mason.core.agent_workflow import MASON_WORKFLOW
 from mason.core.config import ProjectConfig, save_project_config
-from mason.core.styles import DEFAULT_STYLE_YAML
+from mason.core.skill_install import install_skill
 from mason.errors import MasonError
 
-START_MARKER = "# Mason Agent Workflow"
-END_MARKER = "# End Mason Agent Workflow"
+_GITIGNORE_LINE = ".mason/"
 
 
 def find_project_root(start: Path | None = None) -> Path:
@@ -27,61 +25,53 @@ def find_project_root(start: Path | None = None) -> Path:
 
 
 def init_project(root: Path, name: str | None = None) -> dict[str, str]:
-    """Create mason.yaml, .mason/, styles/default.yaml, and agent files."""
+    """Create mason.yaml, .mason/, a gitignore line, and the skill.
+
+    Leaves an existing mason.yaml and any styles/ files unchanged.
+    Does not write AGENTS.md, CLAUDE.md, or styles/default.yaml.
+    Returns the paths written or reused.
+    """
     root = root.resolve()
     root.mkdir(parents=True, exist_ok=True)
     created: dict[str, str] = {}
 
-    config = ProjectConfig(name=name or root.name)
-    mason_yaml = save_project_config(root, config)
+    mason_yaml = root / "mason.yaml"
+    if not mason_yaml.is_file():
+        config = ProjectConfig(name=name or root.name)
+        save_project_config(root, config)
     created["mason.yaml"] = str(mason_yaml)
 
     jobs = root / ".mason" / "jobs"
     jobs.mkdir(parents=True, exist_ok=True)
     created["jobs"] = str(jobs)
 
-    styles = root / "styles"
-    styles.mkdir(parents=True, exist_ok=True)
-    default_style = styles / "default.yaml"
-    if not default_style.is_file():
-        default_style.write_text(DEFAULT_STYLE_YAML, encoding="utf-8")
-    created["style"] = str(default_style)
+    ignored = _ensure_gitignore(root)
+    if ignored:
+        created["gitignore"] = ignored
 
-    agents = root / "AGENTS.md"
-    claude = root / "CLAUDE.md"
-    _write_workflow(agents)
-    _write_workflow(claude)
-    created["agents"] = str(agents)
-    created["claude"] = str(claude)
+    skill = root / ".agents" / "skills" / "mason"
+    created.update(install_skill(skill))
     return created
 
 
-def _write_workflow(path: Path) -> None:
-    """Insert or replace the marked workflow block in path."""
-    text = path.read_text(encoding="utf-8") if path.is_file() else ""
-    path.write_text(_splice_workflow(text), encoding="utf-8")
+def init_global(home: Path | None = None) -> dict[str, str]:
+    """Install the skill for one user. No project files.
+
+    home defaults to the user home directory. Returns skill paths.
+    """
+    base = (home or Path.home()).resolve()
+    return install_skill(base / ".agents" / "skills" / "mason")
 
 
-def _splice_workflow(text: str) -> str:
-    """Return text with one current Mason workflow block."""
-    block = MASON_WORKFLOW.strip() + "\n"
-    start = text.find(START_MARKER)
-    if start < 0:
-        body = text.rstrip()
-        return (body + "\n\n" + block) if body else block
-    end_at = text.find(END_MARKER, start)
-    if end_at < 0:
-        head = text[:start].rstrip()
-        return (head + "\n\n" + block) if head else block
-    after = end_at + len(END_MARKER)
-    if text[after:after + 1] == "\n":
-        after += 1
-    head = text[:start].rstrip()
-    tail = text[after:].strip()
-    parts: list[str] = []
-    if head:
-        parts.append(head)
-    parts.append(block.rstrip("\n"))
-    if tail:
-        parts.append(tail)
-    return "\n\n".join(parts) + "\n"
+def _ensure_gitignore(root: Path) -> str | None:
+    """Append .mason/ when a gitignore already exists. Returns path."""
+    path = root / ".gitignore"
+    if not path.is_file():
+        return None
+    text = path.read_text(encoding="utf-8")
+    lines = {line.strip() for line in text.splitlines()}
+    if _GITIGNORE_LINE in lines or ".mason" in lines:
+        return None
+    suffix = "" if text.endswith("\n") or text == "" else "\n"
+    path.write_text(text + suffix + _GITIGNORE_LINE + "\n", encoding="utf-8")
+    return str(path)

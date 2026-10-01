@@ -6,7 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from mason.core.styles import DEFAULT_STYLE_YAML, hex_rgba, load_style
+from mason.core.styles import (
+    DEFAULT_STYLE_YAML,
+    hex_rgba,
+    load_style,
+    resolve_style,
+)
 from mason.errors import MasonError
 
 
@@ -50,4 +55,27 @@ def test_missing_palette_key(tmp_path: Path) -> None:
 def test_missing_file(tmp_path: Path) -> None:
     with pytest.raises(MasonError) as exc:
         load_style(tmp_path / "missing.yaml")
+    assert exc.value.code == "style_not_found"
+
+
+def test_resolve_builtin_default(tmp_path: Path) -> None:
+    style = resolve_style(tmp_path, "default")
+    assert style.name == "default"
+    assert style.color("wood_dark") == "#654936"
+
+
+def test_project_style_overrides_builtin(tmp_path: Path) -> None:
+    styles = tmp_path / "styles"
+    styles.mkdir()
+    (styles / "default.yaml").write_text(
+        "name: default\npalette:\n  wood_dark: '#000000'\n",
+        encoding="utf-8",
+    )
+    style = resolve_style(tmp_path, "default")
+    assert style.color("wood_dark") == "#000000"
+
+
+def test_resolve_missing_named_style(tmp_path: Path) -> None:
+    with pytest.raises(MasonError) as exc:
+        resolve_style(tmp_path, "cafe")
     assert exc.value.code == "style_not_found"
