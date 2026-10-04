@@ -135,6 +135,17 @@ class LayerRect(BaseModel):
 PIXEL_TRANSPARENT = frozenset(". _")
 
 
+class DabStroke(BaseModel):
+    """Polyline of round dabs. Baked to a PNG before Krita."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    points: list[tuple[float, float]] = Field(min_length=2)
+    radius: float = Field(default=6.0, gt=0)
+    spacing: float = Field(default=0.45, gt=0, le=2)
+    strength: float = Field(default=0.85, ge=0, le=1)
+
+
 class LayerExpression(BaseModel):
     """Sandboxed formula over x/y/u/v/w/h/seed. Mason bakes a PNG
     and hands it to Krita as a role:image layer."""
@@ -175,9 +186,14 @@ class RasterLayer(BaseModel):
     shape: Literal["rect", "ellipse"] = "rect"
     opacity: float = Field(default=1.0, ge=0, le=1)
     expression: LayerExpression | None = None
+    stroke: DabStroke | None = None
 
     @model_validator(mode="after")
     def need_content(self) -> RasterLayer:
+        if self.stroke:
+            if not self.fill:
+                raise ValueError("stroke needs fill")
+            return self
         if self.expression:
             if not self.fill or self.rect is None:
                 raise ValueError("expression needs fill and rect")

@@ -20,7 +20,11 @@ allowed.
 
 - Prop: `proportions`, `silhouette`, `game_readability`.
 - Illustrated and pixel: `game_readability`,
-  `style_consistency`.
+  `style_consistency`. Illustrated may also send
+  `layering`, `background_read`, and `contact_read`.
+  Silhouette IoU is optional unless ingest wrote
+  `silhouette_metrics.json`. A layered raster also
+  writes `previews/silhouette.png`.
 
 `mode` is `beauty` or `silhouette`. `stage` is `blockout`,
 `silhouette`, `secondary`, `tertiary`, `material`, or `final`.

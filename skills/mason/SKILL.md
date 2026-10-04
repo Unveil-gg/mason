@@ -85,6 +85,10 @@ Otherwise:
 - Painter scripts, generated PNGs, and scratch specs go in
   `.mason/jobs/<id>/` (`output/`, `previews/`). Do not leave
   them at the repo root. `styles/<name>.yaml` stays in `styles/`.
+- Illustrated critiques name a landmark or a layer on the
+  job. Silhouette IoU is optional unless ingest wrote
+  metrics. `layered_raster` also writes
+  `previews/silhouette.png`.
 - Holes in the 2D path (no brush stroke, headless Krita cannot
   play a preset) and in how a picture is judged are in
   [references/gaps.md](references/gaps.md).

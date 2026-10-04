@@ -167,11 +167,18 @@ def build(
     json_mode: JsonFlag = False,
     full: FullFlag = False,
     prompt: PromptFlag = None,
+    allow_window: Annotated[
+        bool,
+        typer.Option(
+            "--allow-window",
+            help="Confirm a tool may open a window. Paintop is not wired.",
+        ),
+    ] = False,
 ) -> None:
     """Build an asset from a YAML spec."""
 
     def _run():
-        result = run_build(spec, prompt=prompt)
+        result = run_build(spec, prompt=prompt, allow_window=allow_window)
         _emit(
             json_mode, _build_payload(result, full),
             lambda: print_build(result),
@@ -209,11 +216,18 @@ def rebuild(
     json_mode: JsonFlag = False,
     full: FullFlag = False,
     prompt: PromptFlag = None,
+    allow_window: Annotated[
+        bool,
+        typer.Option(
+            "--allow-window",
+            help="Confirm a tool may open a window. Paintop is not wired.",
+        ),
+    ] = False,
 ) -> None:
     """Rebuild a stored job by asset id."""
 
     def _run():
-        result = run_rebuild(asset_id, prompt=prompt)
+        result = run_rebuild(asset_id, prompt=prompt, allow_window=allow_window)
         _emit(
             json_mode, _build_payload(result, full),
             lambda: print_build(result),

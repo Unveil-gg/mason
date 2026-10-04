@@ -10,6 +10,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict
 
 from mason.core.art import VisualEvaluation
+from mason.core.form_plan import GeometricPlan
 from mason.core.assets import AssetSpec, dump_asset_spec, load_asset_spec
 from mason.core.results import BuildResult, ValidationReport
 from mason.core.styles import StyleProfile
@@ -121,7 +122,13 @@ class AssetJob:
         dump_asset_spec(spec, self.asset_yaml)
 
     def load_spec(self) -> AssetSpec:
-        return load_asset_spec(self.asset_yaml)
+        """Load asset.yaml. Overlay geometric_plan.yaml when the spec omits it."""
+        spec = load_asset_spec(self.asset_yaml)
+        side = self.geometric_plan_yaml
+        if spec.geometric_plan is None and side.is_file():
+            data = yaml.safe_load(side.read_text(encoding="utf-8"))
+            spec.geometric_plan = GeometricPlan.model_validate(data)
+        return spec
 
     def write_style(self, style: StyleProfile) -> None:
         self.style_yaml.write_text(

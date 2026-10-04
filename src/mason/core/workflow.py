@@ -191,7 +191,9 @@ _CARDS: dict[str, dict[str, Any]] = {
         "decompose": False,
         "prefer_import": False,
         "painterly": True,
-        "vocab_keys": ("raster", "inspect", "critique", "iteration"),
+        "vocab_keys": (
+            "raster", "geometric_plan", "inspect", "critique", "iteration",
+        ),
         "shapes": (),
     },
     "texture": {

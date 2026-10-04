@@ -16,6 +16,7 @@ from mason.core.styles import StyleProfile
 from mason.errors import MasonError
 from mason.generators.krita.script_builder import build_krita_script
 from mason.generators.krita.stamps import expand_stamps
+from mason.generators.raster.dabs import bake_strokes
 from mason.generators.raster.expression import materialize_expressions
 from mason.pipelines.text_fit import fit_text_layers
 from mason.pipelines.compare import write_compare_plate
@@ -38,6 +39,7 @@ def build_layered_raster(
     source_spec: str | None,
     *,
     mode: str = "all",
+    allow_window: bool = False,
 ) -> BuildResult:
     """Generate Krita script, run kritarunner, validate."""
     info = require_tool("krita")
@@ -49,6 +51,7 @@ def build_layered_raster(
             hint="Install a full Krita package that includes kritarunner.",
             context={"krita": info.path},
         )
+    _paintop_guard(spec, allow_window)
     width, height = canvas_size(spec, style)
     job.prepare()
     ensure_reference_silhouette(job, spec)
@@ -56,6 +59,9 @@ def build_layered_raster(
     job.write_style(style)
     job.write_meta(source_spec)
     prepared = fit_text_layers(materialize_expressions(spec, style, job))
+    prepared = bake_strokes(
+        prepared, style, job.output / "strokes", width, height,
+    )
     job.build_py.write_text(
         build_krita_script(
             prepared,
@@ -104,6 +110,10 @@ def build_layered_raster(
         raise tool_failed(job, result.command, result.exit_code, "krita")
     if not (job.previews / "full.png").is_file():
         raise tool_failed(job, result.command, result.exit_code, "krita")
+    write_raster_silhouette(
+        job.previews / "full.png",
+        job.previews / "silhouette.png",
+    )
 
     write_compare_plate(job)
     report = validate_raster(job, spec, width, height, result.exit_code)
@@ -115,8 +125,14 @@ def build_layered_raster(
     previews = {}
     if (job.previews / "full.png").is_file():
         previews["full"] = job.rel(job.previews / "full.png")
+    if (job.previews / "silhouette.png").is_file():
+        previews["silhouette"] = job.rel(job.previews / "silhouette.png")
     if (job.previews / "compare.png").is_file():
         previews["compare"] = job.rel(job.previews / "compare.png")
+    layers_dir = job.output / "layers"
+    if layers_dir.is_dir():
+        for png in sorted(layers_dir.glob("*.png")):
+            previews[f"layer_{png.stem}"] = job.rel(png)
     return finish_result(
         job,
         spec,
@@ -184,8 +200,43 @@ def validate_raster(
     )
 
 
+def write_raster_silhouette(src: Path, dest: Path) -> None:
+    """Black on white from the beauty preview. Dark pixels are the mass."""
+    image = Image.open(src).convert("L")
+    image.point(lambda value: 0 if value < 210 else 255).save(dest)
+
+
+def _paintop_guard(spec: LayeredRasterSpec, allow_window: bool) -> None:
+    """Stop when a spec asks for a Krita brush preset.
+
+    A paintop needs a view. Headless builds use stroke dabs instead.
+    --allow-window is the confirm; the preset path is not wired, so
+    this still does not open a window.
+    """
+    if spec.metadata.get("krita_paintop") != "1":
+        return
+    if not allow_window:
+        raise MasonError(
+            "A Krita paintop needs a window.",
+            code="needs_window",
+            hint=(
+                "Pass mason build --allow-window, or use a stroke "
+                "layer. Stroke layers dab without a view."
+            ),
+        )
+    raise MasonError(
+        "Krita paintop is not wired. Stroke layers dab headlessly.",
+        code="paintop_unwired",
+        hint="Remove metadata.krita_paintop and use a stroke layer.",
+    )
+
+
 def _install_krita_script(job: AssetJob) -> str:
-    """Copy build.py where kritarunner can import it. Returns module name."""
+    """Install a loader kritarunner can import. It runs the job script.
+
+    -s only imports a module name from the kritarunner folder, so a
+    full path to build.py does not load. The loader runpy's that file.
+    """
     if os.name == "nt":
         appdata = os.environ.get("APPDATA")
         if not appdata:
@@ -194,6 +245,16 @@ def _install_krita_script(job: AssetJob) -> str:
     else:
         dest_dir = Path.home() / ".local" / "share" / "kritarunner"
     dest_dir.mkdir(parents=True, exist_ok=True)
-    dest = dest_dir / "mason_job.py"
-    dest.write_text(job.build_py.read_text(encoding="utf-8"), encoding="utf-8")
+    target = str(job.build_py.resolve())
+    loader = (
+        "# Mason. kritarunner imports this module, then calls __main__.\n"
+        "import runpy\n"
+        "\n"
+        "def __main__(*_args):\n"
+        f"    ns = runpy.run_path({target!r}, run_name='mason_job_body')\n"
+        "    fn = ns.get('__main__')\n"
+        "    if fn:\n"
+        "        fn()\n"
+    )
+    (dest_dir / "mason_job.py").write_text(loader, encoding="utf-8")
     return "mason_job"

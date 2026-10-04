@@ -223,7 +223,9 @@ def test_krita_script_has_document(project: Path) -> None:
     assert "app.setBatchmode(True)" in script
     assert "doc.setBatchmode(True)" in script
     assert "paint_text" in script
-    assert "createFileLayer" in script
+    assert "createFileLayer" not in script
+    assert "node.setPixelData" in script
+    assert 'os.path.join(output, "layers")' in script
     assert "background" in script
     assert "#DDD0B4" in script
     assert "#8066A8" in script

@@ -12,18 +12,21 @@ evaluate a formula. Stamps are `l_corner`, `gem`, `rule`, `bond`,
 `courses` is a bond of rectangles, not a stone wash. Nothing in
 that list is a brush stroke.
 
-kritarunner can create a document, add a file layer, and call
-`setPixelData`. `-s` loads a module from `%APPDATA%\kritarunner`
-(see `_install_krita_script`). A full path to a script in the job
-does not load, so the layered document is never written. The
-current raster build stays on `kritarunner`. Fills, stamps, and
-text do not need a view.
+kritarunner can create a document and call `setPixelData`.
+`-s` still imports a module name from `%APPDATA%\kritarunner`.
+`_install_krita_script` writes a loader there that `runpy`s
+the job's `build.py`, so the script that runs is the one in
+the job. A full path passed to `-s` still does not load.
+Fills, stamps, text, and baked stroke dabs do not need a view.
 
 A freehand stroke uses the paintop, and the paintop needs a
 `KisView`. `kritarunner` never creates one, so `activeWindow()`
 is empty. `QT_QPA_PLATFORM=offscreen` does not fix it. The brush
 wants a real canvas. That launch is not wired yet. It waits
-until a spec field calls a paintop.
+until a spec sets `metadata.krita_paintop` to `"1"`.
+`mason build --allow-window` is that yes. The preset is
+still not called: the build stops with `paintop_unwired`
+instead of opening a window.
 
 When it is wired, ask before opening a window. Name the app and
 the one step. A yes is `--allow-window` on that invocation. No
@@ -41,10 +44,8 @@ Blender meshes and renders stay on `blender --background
 `bpy.ops.wm.quit_blender()`. The same confirm rule applies.
 ImageMagick and `aseprite -b --script` never need a window.
 
-A layer that carries an image is added twice in
-`script_builder.py`: a file layer, which lands at the origin, and
-a paint layer at the rect. A wash that is not full-canvas ghosts
-into the corner.
+An image layer is one paint layer. `setPixelData` places it
+at the rect. It is not also a file layer at the origin.
 
 `mason paint` copies an underlay and adds empty paint, mask, and
 lettering layers. It does not put marks on them.
@@ -63,20 +64,23 @@ shadow, a broken reflection, and the masonry. A fill does not
 know which of those it is, and it does not know a pier occludes
 it. There is no stamp for a cast shadow or a reflection.
 
-kritarunner can stack paint layers if the script calls
-`setPixelData` itself. The illustrated workflow still flattens
-to one preview and does not round-trip that stack. Putting the
-same pixels in as image layers ghosts them, because each image
-is also placed at the origin.
+kritarunner stacks paint layers and tries to save each one
+under `output/layers/`. The build lists those PNGs on the
+result as `layer_<name>`. `previews/silhouette.png` is a
+black-on-white read of `full.png`. The illustrated workflow
+still flattens the beauty preview to one PNG.
 
 Noise is not a style operation. ImageMagick can add grain to a
 finished PNG. It cannot granulate one pass and leave the sky
 alone.
 
 A crash of white where an arch meets the river is a path of
-dabs. A fill cannot break that path or leave paper in the
-tip. The numpy painter stamps discs along the line because
-no layer type is a stroke.
+dabs. A `stroke` layer (`points`, `radius`, `spacing`,
+`strength`) bakes those discs to a PNG before Krita. A
+Krita preset still needs a view. `mason build --allow-window`
+is the confirm, and a spec with `metadata.krita_paintop: "1"`
+stops instead of opening a window, because that path is not
+wired.
 
 ## What this picture needed
 
@@ -92,28 +96,20 @@ not a layer type.
 
 ## Understanding
 
-The directed loop asks the same model to paint and then
-score. Nothing measures the picture. A silhouette can read
-as a bridge while the water sits too high, the distance is
-only a pale wash, and no white marks the line where stone
-meets the river. Those are contact and depth facts. They
-are not in the spec. `mason plan` has no slot for a water
-plane, a far hill, or a crash line, so the next pass has
-nothing to check them against except the last complaint.
+`geometric_plan.landmarks` can name `waterline`,
+`opening.background`, `arch.contact_foam`, and
+`bridge.silhouette`. `mason evaluate` resolves those ids.
+Nothing in the plan compiles a horizon or a water plane
+into the raster. The painter still has to honor the notes.
 
 ## Evaluation
 
-`mason evaluate` stores the JSON the critic wrote. It does
-not open the preview. The score names (proportions,
-materials, a three-quarter view) describe a 3D prop. This
-job has no separate silhouette render, so "open the
-silhouette first" has nothing to open. `represents_style`
-is a yes or no. It does not test brush handling, bare
-paper, or whether a background reads through an opening.
-"Water too high" has no landmark: there is no part named
-water and no node for the spring line. `compare` can say
-the silhouette improved and still accept a flat haze,
-because contrast and contact foam are not scores.
+`mason evaluate` stores the critic JSON and returns `next`.
+It does not open the preview. Illustrated scores may include
+`layering`, `background_read`, and `contact_read`. A
+layered raster writes `previews/silhouette.png`. Silhouette
+IoU appears in `next.measured` only when ingest stored
+metrics. `represents_style` is still a yes or no.
 
 ## Already fine
 

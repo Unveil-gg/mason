@@ -22,7 +22,15 @@ def preview_roles_for(
     asset_type: str, *, garment: bool = False,
 ) -> dict[str, Any]:
     """Return primary / beauty / diagnostic roles for one asset type."""
-    if asset_type in ("layered_raster", "sprite_sheet", "image_process"):
+    if asset_type == "layered_raster":
+        return {
+            "primary": "full",
+            "beauty": ["full"],
+            "diagnostic": ["compare", "gameplay"],
+            "silhouette": ["silhouette"],
+            "context": None,
+        }
+    if asset_type in ("sprite_sheet", "image_process"):
         return {
             "primary": "full",
             "beauty": ["full"],

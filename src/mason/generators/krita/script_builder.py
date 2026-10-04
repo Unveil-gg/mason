@@ -208,11 +208,9 @@ def main():
         x, y = int(rect["x"]), int(rect["y"])
         lw, lh = int(rect["width"]), int(rect["height"])
         image_path = layer.get("image")
+        node = doc.createNode(layer["name"], "paintlayer")
+        root.addChildNode(node, None)
         if image_path:
-            node = doc.createFileLayer(layer["name"], image_path, "None")
-            root.addChildNode(node, None)
-            paint = doc.createNode(layer["name"] + "_pixels", "paintlayer")
-            root.addChildNode(paint, None)
             src = QImage(image_path)
             if not src.isNull():
                 scaled = src.scaled(lw, lh)
@@ -224,13 +222,12 @@ def main():
                         else scaled.byteCount()
                     )
                     bits.setsize(nbytes)
-                paint.setPixelData(bytes(bits), x, y, scaled.width(), scaled.height())
+                node.setPixelData(
+                    bytes(bits), x, y, scaled.width(), scaled.height(),
+                )
             if layer.get("role") == "underlay":
                 node.setLocked(True)
-                paint.setLocked(True)
         else:
-            node = doc.createNode(layer["name"], "paintlayer")
-            root.addChildNode(node, None)
             if layer.get("pixels"):
                 paint_pixels(
                     node, layer["pixels"], layer.get("keys") or {},
@@ -260,6 +257,15 @@ def main():
             "name": layer["name"],
             "role": layer.get("role"),
         })
+        layer_dir = os.path.join(output, "layers")
+        os.makedirs(layer_dir, exist_ok=True)
+        try:
+            node.save(
+                os.path.join(layer_dir, layer["name"] + ".png"),
+                72.0, 72.0, InfoObject(),
+            )
+        except Exception:
+            pass
     doc.refreshProjection()
     kra = os.path.join(output, "asset.kra")
     png = os.path.join(output, "asset.png")

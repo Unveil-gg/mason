@@ -33,6 +33,7 @@ def run_build(
     *,
     mode: str = "all",
     prompt: str | None = None,
+    allow_window: bool = False,
 ) -> BuildResult:
     """Build from a spec file in the current project."""
     root, project = project_context()
@@ -48,7 +49,7 @@ def run_build(
     source = rel_source(root, spec_path)
     result = _run(
         spec, style, job, source, mode,
-        prompt=prompt, command="build",
+        prompt=prompt, command="build", allow_window=allow_window,
     )
     if result.success and variants:
         result = _build_variants(variants, spec_path, result)
@@ -103,6 +104,7 @@ def run_rebuild(
     mode: str = "all",
     demo_lighting: bool = False,
     prompt: str | None = None,
+    allow_window: bool = False,
 ) -> BuildResult:
     """Rebuild an existing job. `demo_lighting` (preview mode only)
     swaps in a nicer one-off light rig without touching the stored
@@ -121,6 +123,7 @@ def run_rebuild(
         demo_lighting=demo_lighting,
         prompt=prompt,
         command=command,
+        allow_window=allow_window,
     )
 
 
@@ -134,6 +137,7 @@ def _run(
     demo_lighting: bool = False,
     prompt: str | None = None,
     command: str = "build",
+    allow_window: bool = False,
 ) -> BuildResult:
     job.run_ctx = RunContext(
         started_at=datetime.now(timezone.utc),
@@ -145,7 +149,9 @@ def _run(
             spec, style, job, source, mode=mode, demo_lighting=demo_lighting,
         )
     if isinstance(spec, LayeredRasterSpec):
-        return build_layered_raster(spec, style, job, source, mode=mode)
+        return build_layered_raster(
+            spec, style, job, source, mode=mode, allow_window=allow_window,
+        )
     if isinstance(spec, ImageProcessSpec):
         return build_image_process(spec, style, job, source, mode=mode)
     if isinstance(spec, SpriteSheetSpec):

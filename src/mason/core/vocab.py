@@ -84,7 +84,11 @@ def _full_vocab() -> dict[str, Any]:
             "raw Krita code). height is grayscale; normal is "
             "a Sobel map. image_process op height_to_normal "
             "converts a height PNG. Text shrinks to fit its "
-            "rect. "
+            "rect. stroke: {points, radius, spacing, strength} "
+            "bakes round dabs to a PNG. No Krita preset. "
+            "Illustrated landmarks: waterline, "
+            "opening.background, arch.contact_foam, "
+            "bridge.silhouette. "
             "Mixed 2D: AI image for atmosphere, Mason text/"
             "icons/chrome on top. Never AI the type."
         ),
