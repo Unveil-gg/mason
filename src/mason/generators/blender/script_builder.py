@@ -96,10 +96,7 @@ def build_blender_script(
         "engine": style.render.engine,
         "lighting_preset": style.lighting.preset,
         "demo_lighting": demo_lighting,
-        "families": {
-            key: fam.model_dump(mode="json")
-            for key, fam in style.materials.families.items()
-        },
+        "families": _used_families(spec, style, parts),
         "palette": palette,
         "part_textures": part_textures or {},
         "part_roughness": part_roughness or {},
@@ -135,8 +132,78 @@ def build_blender_script(
         _HEADER
         + json.dumps(payload, indent=2)
         + "\n''')\n"
-        + _BODY
+        + _script_body(spec, parts)
     )
+
+
+def _used_families(
+    spec: StaticPropSpec,
+    style: StyleProfile,
+    parts: list[PropPart],
+) -> dict:
+    """Style families a part or the garment cloth actually names."""
+    names = {part.family for part in parts if part.family}
+    if spec.geometry.garment is not None:
+        names.add("fabric")
+    families = style.materials.families
+    return {
+        key: families[key].model_dump(mode="json")
+        for key in sorted(names)
+        if key in families
+    }
+
+
+def _script_body(spec: StaticPropSpec, parts: list[PropPart]) -> str:
+    """Concatenate helpers the spec can call, then main."""
+    shapes = {part.shape for part in parts}
+    needs_lathe = "lathe" in shapes or any(
+        part.bend or part.drape for part in parts
+    )
+    needs_curve = (
+        "curve" in shapes
+        or "outline" in shapes
+        or any(part.follow for part in parts)
+    )
+    needs_pack = (
+        spec.export.profile == "prop"
+        or spec.materials.strategy in ("atlas", "palette")
+        or bool(spec.export.volumes)
+    )
+    needs_atlas = (
+        spec.export.profile == "prop"
+        or spec.materials.strategy in ("atlas", "palette")
+    )
+    chunks: list[str] = [CREATE_BOX_SRC]
+    if "instance" in shapes:
+        chunks.append(CREATE_INSTANCE_SRC)
+    if needs_lathe:
+        chunks.append(CREATE_LATHE_SRC)
+    if needs_curve:
+        chunks.append(CREATE_CURVE_SRC)
+    if "skin" in shapes:
+        chunks.append(CREATE_SKIN_SRC)
+    chunks.append(CREATE_BODIES_SRC)
+    chunks.append(CREATE_MATERIAL_SRC)
+    if needs_pack:
+        chunks.append(PROP_PACK_SRC)
+    if needs_atlas:
+        chunks.append(PROP_ATLAS_SAMPLE_SRC)
+        chunks.append(PROP_ATLAS_PACK_SRC)
+        chunks.append(PROP_ATLAS_SRC)
+    if spec.geometry.garment is not None:
+        chunks.extend((
+            CREATE_GARMENT_BODY_SRC,
+            CREATE_GARMENT_ANATOMY_SRC,
+            CREATE_GARMENT_SURFACE_SRC,
+            CREATE_GARMENT_DETAILS_SRC,
+            CREATE_GARMENT_FIT_SRC,
+            CREATE_GARMENT_METRICS_SRC,
+            CREATE_GARMENT_RIG_SRC,
+        ))
+    chunks.append(EXPORT_SRC)
+    chunks.append(PREVIEW_SCENE_SRC)
+    chunks.append(_MAIN)
+    return "".join(chunks)
 
 
 def _export_movers(spec: StaticPropSpec) -> list[str]:
@@ -186,28 +253,7 @@ from mathutils import Vector
 CONFIG = json.loads(r\'\'\'
 '''
 
-_BODY = (
-    CREATE_INSTANCE_SRC
-    + CREATE_BOX_SRC
-    + CREATE_LATHE_SRC
-    + CREATE_CURVE_SRC
-    + CREATE_SKIN_SRC
-    + CREATE_BODIES_SRC
-    + CREATE_MATERIAL_SRC
-    + PROP_PACK_SRC
-    + PROP_ATLAS_SAMPLE_SRC
-    + PROP_ATLAS_PACK_SRC
-    + PROP_ATLAS_SRC
-    + CREATE_GARMENT_BODY_SRC
-    + CREATE_GARMENT_ANATOMY_SRC
-    + CREATE_GARMENT_SURFACE_SRC
-    + CREATE_GARMENT_DETAILS_SRC
-    + CREATE_GARMENT_FIT_SRC
-    + CREATE_GARMENT_METRICS_SRC
-    + CREATE_GARMENT_RIG_SRC
-    + EXPORT_SRC
-    + PREVIEW_SCENE_SRC
-    + r'''
+_MAIN = r'''
 def reset_scene():
     """Delete all objects so the build is deterministic."""
     for obj in list(bpy.data.objects):
@@ -444,4 +490,3 @@ def main():
 if __name__ == "__main__":
     main()
 '''
-)

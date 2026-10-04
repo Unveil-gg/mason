@@ -508,12 +508,19 @@ def evaluate(
             help="Score a snapshot instead of the current job.",
         ),
     ] = None,
+    full: Annotated[
+        bool,
+        typer.Option(
+            "--full",
+            help="Print the stored evaluation, not only next.",
+        ),
+    ] = False,
 ) -> None:
     """Store a critic evaluation and accept or reject the checkpoint."""
 
     def _run():
         payload = evaluate_payload(
-            asset_id, evaluation, iteration=iteration,
+            asset_id, evaluation, iteration=iteration, full=full,
         )
         check = payload.get("checkpoint") or {}
         _emit(
@@ -678,7 +685,7 @@ def history(
         bool,
         typer.Option(
             "--summary",
-            help="Omit per-view preview lists; include primary only.",
+            help="Print only the next-edit packet for each iteration.",
         ),
     ] = False,
 ) -> None:

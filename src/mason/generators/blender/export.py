@@ -79,7 +79,8 @@ def export_glb(path):
         pack_prop_for_export()
     else:
         flatten_materials_for_gltf()
-        emit_export_volumes()
+        if CONFIG.get("export_volumes"):
+            emit_export_volumes()
     bpy.ops.object.select_all(action="DESELECT")
     for obj in bpy.data.objects:
         if obj.name.startswith("_mason_"):

@@ -123,8 +123,8 @@ def test_evaluate_and_history(project: Path, monkeypatch) -> None:
     )
     assert result.exit_code == 0, result.stdout
     data = json.loads(result.stdout)
-    assert data["iteration"] == 1
-    assert data["ship"] is False
+    assert "scores" not in data
+    assert "ship" not in data
     assert data["checkpoint"]["current_best"] == 1
     assert data["next"]["primary_failure"] == (
         "silhouette reads as a cube"
@@ -141,15 +141,15 @@ def test_evaluate_and_history(project: Path, monkeypatch) -> None:
     summary = runner.invoke(app, ["history", "box", "--json", "--summary"])
     assert summary.exit_code == 0
     slim = json.loads(summary.stdout)
-    assert "previews" not in slim["iterations"][0]
-    assert "scores" not in slim["iterations"][0]
-    head = list(slim["iterations"][0])[:4]
-    assert head == [
+    assert set(slim["iterations"][0]) == {
         "iteration",
         "primary_failure",
         "correction_targets",
         "verdict",
-    ]
+        "unresolved",
+        "primary_preview",
+        "measured",
+    }
     assert slim["iterations"][0]["primary_failure"] == (
         "silhouette reads as a cube"
     )
@@ -164,6 +164,14 @@ def test_evaluate_and_history(project: Path, monkeypatch) -> None:
     info = json.loads(inspect.stdout)
     assert info["evaluation"]["scores"]["silhouette"] == 5
     assert info["current_best"] == 1
+    full = runner.invoke(
+        app, ["evaluate", "box", str(eval_path), "--json", "--full"],
+    )
+    assert full.exit_code == 0, full.stdout
+    dumped = json.loads(full.stdout)
+    assert dumped["iteration"] == 1
+    assert dumped["ship"] is False
+    assert dumped["scores"]["silhouette"] == 5
 
 
 def test_evaluate_requires_correction_target(

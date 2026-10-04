@@ -6,11 +6,13 @@ A failed review must set `primary_failure` (one sentence) and
 at least one `correction_targets` entry. Each target names a
 landmark, part, or layer that already exists on the job.
 
-`mason evaluate` returns `next`: that failure, the targets,
-any name that did not resolve, the primary preview, and
-measured validation plus silhouette IoU when those files
-exist. The next edit reads `next`, or
-`mason history <id> --json --summary`.
+The default JSON is `next` and `checkpoint`. `next` is that
+failure, the targets, any name that did not resolve, the
+primary preview, and measured validation plus silhouette IoU
+when those files exist. `--full` prints the stored evaluation.
+The next edit reads `next`, or
+`mason history <id> --json --summary`, and opens only
+`primary_preview`.
 
 Scores are optional integers from 1 to 10. Send a verdict
 plus only the scores for the workflow. Extra scores are

@@ -35,25 +35,18 @@ def test_blender_script_has_helpers(project: Path) -> None:
     assert "def create_cylinder" in script
     assert "def create_plane" in script
     assert "def create_primitive" in script
-    assert "def create_lathe" in script
-    assert "def apply_bend" in script
-    assert "def apply_drape" in script
     assert "def apply_bump_and_normal" in script
     assert "def apply_shader" in script
     assert "def create_attachments" in script
-    assert "def create_curve" in script
-    assert "def create_skin" in script
-    assert "def create_blob" in script
-    assert "def create_outline" in script
-    assert "def import_instance" in script
     assert "def apply_bodies" in script
-    assert "def apply_follow" in script
     assert "def finish_geometry" in script
     assert "def create_material" in script
     assert "def export_glb" in script
     assert "def flatten_materials_for_gltf" in script
-    assert "def pack_prop_for_export" in script
-    assert "def emit_export_volumes" in script
+    assert "def create_lathe" not in script
+    assert "def build_garment" not in script
+    assert "def pack_prop_for_export" not in script
+    assert len(script.splitlines()) < 1800
     assert "json.loads" in script
     assert "#654936" in script
     assert "BLENDER_EEVEE" in script
@@ -101,6 +94,36 @@ def test_prop_export_config(project: Path) -> None:
     assert '"export_profile": "prop"' in script
     assert '"lid"' in script
     assert "col_cabinet" in script
+    assert "def pack_prop_for_export" in script
+    assert "def emit_export_volumes" in script
+    compile(script, "<build.py>", "exec")
+
+
+def test_lathe_script_includes_bend(project: Path) -> None:
+    spec = parse_asset_spec({
+        "type": "static_prop",
+        "id": "vase",
+        "name": "Vase",
+        "dimensions": {"width": 0.2, "depth": 0.2, "height": 0.3},
+        "geometry": {
+            "parts": [{
+                "name": "body",
+                "shape": "lathe",
+                "location": [0, 0, 0.15],
+                "profile": [[0.05, 0.0], [0.03, 0.3]],
+            }],
+        },
+    })
+    style = load_style(project / "styles" / "default.yaml")
+    parts = resolved_parts(spec)
+    bw, bs, r, m = apply_style_defaults(spec, style)
+    script = build_blender_script(
+        spec, style, parts, project / ".mason" / "jobs" / "vase",
+        bevel_width=bw, bevel_segments=bs, roughness=r, metallic=m,
+    )
+    assert "def create_lathe" in script
+    assert "def apply_bend" in script
+    assert "def build_garment" not in script
     compile(script, "<build.py>", "exec")
 
 
@@ -125,7 +148,8 @@ def test_blender_script_wires_part_textures(project: Path) -> None:
     assert "/abs/path/plank.png" in script
     assert '"tile_size": 1.0' in script
     assert '"wrap": "repeat"' in script
-    assert "def _tex_image" in script
+    assert "def _tex_image" not in script
+    assert "def create_textured_material" in script
     assert "if CONFIG.get(\"part_textures\"):" in script
 
 
@@ -352,3 +376,4 @@ def test_blender_script_has_garment_pipeline(project: Path) -> None:
     assert "FIT_METRICS" in script
     assert "payload[\"fit\"] = fit" in script
     assert "if CONFIG.get(\"garment\"):" in script
+    compile(script, "<build.py>", "exec")

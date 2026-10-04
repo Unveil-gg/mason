@@ -77,6 +77,9 @@ Otherwise:
   `correction_targets` naming a landmark, part, or layer on the
   job. Read `next` from `mason evaluate` or
   `mason history <id> --json --summary`. Scores are optional.
+- Open only `next.primary_preview`. Do not pass `--full` unless
+  the slim card is missing a measurement. Open `build.py` only
+  when a Blender traceback names a line.
 - Shapes, recipes, and stamps come from `mason vocab --json`,
   not from memory.
 - Painter scripts, generated PNGs, and scratch specs go in

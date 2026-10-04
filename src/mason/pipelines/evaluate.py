@@ -22,7 +22,7 @@ def run_evaluate(
 ) -> VisualEvaluation:
     """Validate and persist a critic evaluation, then apply checkpoint."""
     payload = evaluate_payload(
-        asset_id, evaluation_path, iteration=iteration,
+        asset_id, evaluation_path, iteration=iteration, full=True,
     )
     payload.pop("checkpoint", None)
     payload.pop("next", None)
@@ -34,8 +34,9 @@ def evaluate_payload(
     evaluation_path: Path,
     *,
     iteration: int | None = None,
+    full: bool = False,
 ) -> dict:
-    """Evaluation dump plus checkpoint accept/reject and next packet."""
+    """Checkpoint plus next packet. `--full` adds the stored record."""
     if not evaluation_path.is_file():
         raise MasonError(
             f"Evaluation file not found: {evaluation_path}",
@@ -64,9 +65,12 @@ def evaluate_payload(
     status = apply_checkpoint(job, evaluation)
     stored = job.load_evaluation(evaluation.iteration or iteration)
     record = stored or evaluation
+    packet = next_packet(job, record)
+    if not full:
+        return {"next": packet, "checkpoint": status}
     payload = record.model_dump(mode="json")
     payload["checkpoint"] = status
-    payload["next"] = next_packet(job, record)
+    payload["next"] = packet
     return payload
 
 
@@ -160,7 +164,7 @@ def _summary_row(
     evaluation: VisualEvaluation | None,
     preview: str | None,
 ) -> dict:
-    """Put the action packet first. Omit the preview map."""
+    """Return only the next-edit packet for one iteration."""
     if evaluation is None:
         packet = {
             "primary_failure": "",
@@ -174,7 +178,7 @@ def _summary_row(
         packet = next_packet(job, evaluation)
         if not packet["primary_preview"]:
             packet = {**packet, "primary_preview": preview}
-    lead = {
+    return {
         "iteration": row["iteration"],
         "primary_failure": packet["primary_failure"],
         "correction_targets": packet["correction_targets"],
@@ -183,5 +187,3 @@ def _summary_row(
         "primary_preview": packet["primary_preview"] or preview,
         "measured": packet["measured"],
     }
-    rest = {key: value for key, value in row.items() if key not in lead}
-    return {**lead, **rest}
