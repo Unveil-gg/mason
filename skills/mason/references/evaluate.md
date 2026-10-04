@@ -1,48 +1,58 @@
 # mason evaluate
 
 Write JSON and pass the file to `mason evaluate <id> <file>`.
-A failed review must set `primary_failure` and at least one
-`correction_targets` entry.
+Set `compare.verdict` to `accept`, `reject`, or `try_again`.
+A failed review must set `primary_failure` (one sentence) and
+at least one `correction_targets` entry. Each target names a
+landmark, part, or layer that already exists on the job.
+
+`mason evaluate` returns `next`: that failure, the targets,
+any name that did not resolve, the primary preview, and
+measured validation plus silhouette IoU when those files
+exist. The next edit reads `next`, or
+`mason history <id> --json --summary`.
+
+Scores are optional integers from 1 to 10. Send a verdict
+plus only the scores for the workflow. Extra scores are
+allowed.
+
+- Prop: `proportions`, `silhouette`, `game_readability`.
+- Illustrated and pixel: `game_readability`,
+  `style_consistency`.
+
+`mode` is `beauty` or `silhouette`. `stage` is `blockout`,
+`silhouette`, `secondary`, `tertiary`, `material`, or `final`.
+
+Prop:
 
 ```json
 {
   "passed": false,
-  "mode": "beauty",
-  "represents_object": true,
-  "represents_style": true,
-  "stage": "blockout",
   "ship": false,
   "primary_failure": "The lid is taller than the box.",
   "correction_targets": [{"part": "lid", "landmark": "top"}],
   "scores": {
     "proportions": 4,
-    "secondary_forms": 5,
-    "tertiary_detail": 5,
-    "materials": 6,
-    "visual_hierarchy": 5,
-    "style_consistency": 6,
+    "silhouette": 4,
     "game_readability": 5
   },
-  "discrepancies": [
-    {
-      "rank": "critical",
-      "category": "proportion",
-      "description": "Lid reads as a second crate.",
-      "geometric_intent": "Lid is a thin cap on the box.",
-      "landmark": "lid.top"
-    }
-  ],
-  "view_scores": [{"view": "three_quarter", "score": 4}],
-  "compare": {
-    "improves": [],
-    "worsens": ["silhouette"],
-    "verdict": "reject"
-  }
+  "compare": {"verdict": "reject"}
 }
 ```
 
-`mode` is `beauty` or `silhouette`. `stage` is `blockout`,
-`silhouette`, `secondary`, `tertiary`, `material`, or `final`.
-Discrepancy `rank` is `critical`, `major`, or `minor`.
-`compare.verdict` is `accept`, `reject`, or `try_again`.
-Scores are integers from 1 to 10.
+Illustrated. `waterline` is a landmark id. A layer named
+`river` is the same kind of target.
+
+```json
+{
+  "passed": false,
+  "ship": false,
+  "primary_failure": "The river sits above the waterline.",
+  "correction_targets": [{"landmark": "waterline"}],
+  "scores": {
+    "game_readability": 4,
+    "style_consistency": 5
+  },
+  "compare": {"verdict": "reject"}
+}
+```

@@ -87,7 +87,7 @@ def test_vocab_json() -> None:
     assert "landmarks" in data["geometric_plan"]
     assert "primary_failure" in data["critique"]
     assert "current_best" in data["iteration"]
-    assert "view_scores" in data["critique"]
+    assert "correction_targets" in data["critique"]
     assert "critical_views" in data["geometric_plan"]
     assert "--view" in data["reference"]
     assert "silhouette_metrics" in data["inspect"]

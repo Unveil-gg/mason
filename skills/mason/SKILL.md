@@ -16,7 +16,8 @@ metadata:
 # Mason
 
 The user describes the object. You write the YAML spec and run
-the CLI. Do not open Blender, Krita, or Aseprite.
+the CLI. Do not open Blender, Krita, or Aseprite. The spec is
+the source. A GUI edit is not a reproducible job.
 
 ## Setup
 
@@ -67,8 +68,15 @@ Otherwise:
 ## Rules
 
 - Use `--json` on Mason commands.
+- Prefer the CLI, validation, project styles, and the iteration
+  record. Those get more useful as models improve. Do not add a
+  generator whose only job is to spare the model from the tool.
 - A clean process exit is not success. Read validation and the
   primary preview.
+- A failed review is one `primary_failure` and
+  `correction_targets` naming a landmark, part, or layer on the
+  job. Read `next` from `mason evaluate` or
+  `mason history <id> --json --summary`. Scores are optional.
 - Shapes, recipes, and stamps come from `mason vocab --json`,
   not from memory.
 - Painter scripts, generated PNGs, and scratch specs go in

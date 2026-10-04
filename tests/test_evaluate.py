@@ -8,8 +8,11 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 from mason.cli import app
+from mason.core.art import VisualEvaluation
 from mason.core.assets import parse_asset_spec
+from mason.core.form_plan import GeometricPlan, Landmark
 from mason.core.inspect import inspect_payload
+from mason.pipelines.eval_next import next_packet
 from mason.core.jobs import AssetJob
 from mason.core.results import ValidationCheck, ValidationReport
 from mason.core.styles import load_style
@@ -123,6 +126,12 @@ def test_evaluate_and_history(project: Path, monkeypatch) -> None:
     assert data["iteration"] == 1
     assert data["ship"] is False
     assert data["checkpoint"]["current_best"] == 1
+    assert data["next"]["primary_failure"] == (
+        "silhouette reads as a cube"
+    )
+    assert data["next"]["unresolved"] == ["lid"]
+    assert data["next"]["measured"]["validation_passed"] is True
+    assert "scores" not in data["next"]
     hist = runner.invoke(app, ["history", "box", "--json"])
     assert hist.exit_code == 0
     payload = json.loads(hist.stdout)
@@ -133,7 +142,21 @@ def test_evaluate_and_history(project: Path, monkeypatch) -> None:
     assert summary.exit_code == 0
     slim = json.loads(summary.stdout)
     assert "previews" not in slim["iterations"][0]
-    assert slim["iterations"][0]["primary_preview"].endswith("front.png")
+    assert "scores" not in slim["iterations"][0]
+    head = list(slim["iterations"][0])[:4]
+    assert head == [
+        "iteration",
+        "primary_failure",
+        "correction_targets",
+        "verdict",
+    ]
+    assert slim["iterations"][0]["primary_failure"] == (
+        "silhouette reads as a cube"
+    )
+    assert slim["iterations"][0]["unresolved"] == ["lid"]
+    assert slim["iterations"][0]["primary_preview"].endswith(
+        "front.png",
+    )
     inspect = runner.invoke(
         app, ["inspect", "box", "--json", "--full"],
     )
@@ -141,3 +164,57 @@ def test_evaluate_and_history(project: Path, monkeypatch) -> None:
     info = json.loads(inspect.stdout)
     assert info["evaluation"]["scores"]["silhouette"] == 5
     assert info["current_best"] == 1
+
+
+def test_evaluate_requires_correction_target(
+    project: Path, monkeypatch,
+) -> None:
+    _seed_job(project)
+    monkeypatch.chdir(project)
+    path = project / "crit.json"
+    path.write_text(json.dumps({
+        "passed": False,
+        "ship": False,
+        "primary_failure": "lid too tall",
+        "scores": {"game_readability": 4},
+    }), encoding="utf-8")
+    result = runner.invoke(
+        app, ["evaluate", "box", str(path), "--json"],
+    )
+    assert result.exit_code != 0
+    data = json.loads(result.stdout)
+    assert data["error"]["code"] == "invalid_evaluation"
+    assert "correction_targets" in data["error"]["message"]
+
+
+def test_next_resolves_landmark_and_iou(project: Path) -> None:
+    job = _seed_job(project)
+    spec = job.load_spec()
+    spec.geometric_plan = GeometricPlan(landmarks=[
+        Landmark(id="waterline", role="contact"),
+    ])
+    job.write_spec(spec)
+    metrics = job.iterations / "001" / "silhouette_metrics.json"
+    metrics.write_text(json.dumps({"iou": 0.8}), encoding="utf-8")
+    later = job.iterations / "002"
+    later.mkdir()
+    (later / "silhouette_metrics.json").write_text(
+        json.dumps({"iou": 0.6}), encoding="utf-8",
+    )
+    evaluation = VisualEvaluation.model_validate({
+        "passed": False,
+        "ship": False,
+        "primary_failure": "The river sits above the waterline.",
+        "correction_targets": [
+            {"landmark": "waterline"},
+            {"part": "missing"},
+        ],
+        "scores": {"game_readability": 4},
+        "iteration": 2,
+        "compare": {"best_iteration": 1, "verdict": "reject"},
+    })
+    packet = next_packet(job, evaluation)
+    assert packet["unresolved"] == ["missing"]
+    assert packet["measured"]["silhouette_iou"] == 0.6
+    assert packet["measured"]["silhouette_iou_delta"] == -0.2
+    assert "validation_passed" not in packet["measured"]

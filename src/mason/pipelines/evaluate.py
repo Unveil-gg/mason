@@ -6,11 +6,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from mason.core.art import VisualEvaluation
-from mason.core.jobs import require_job
+from mason.core.jobs import AssetJob, require_job
 from mason.core.runs import JobRun
 from mason.core.workspace import find_project_root
 from mason.errors import MasonError
 from mason.pipelines.checkpoint import apply_checkpoint
+from mason.pipelines.eval_next import next_packet, primary_preview
 
 
 def run_evaluate(
@@ -24,6 +25,7 @@ def run_evaluate(
         asset_id, evaluation_path, iteration=iteration,
     )
     payload.pop("checkpoint", None)
+    payload.pop("next", None)
     return VisualEvaluation.model_validate(payload)
 
 
@@ -33,7 +35,7 @@ def evaluate_payload(
     *,
     iteration: int | None = None,
 ) -> dict:
-    """Evaluation dump plus checkpoint accept/reject."""
+    """Evaluation dump plus checkpoint accept/reject and next packet."""
     if not evaluation_path.is_file():
         raise MasonError(
             f"Evaluation file not found: {evaluation_path}",
@@ -49,13 +51,7 @@ def evaluate_payload(
             f"Invalid visual evaluation: {exc}",
             code="invalid_evaluation",
         ) from exc
-    if not evaluation.passed and not evaluation.primary_failure:
-        raise MasonError(
-            "Failed evaluate needs primary_failure "
-            "(the single highest-impact miss).",
-            code="invalid_evaluation",
-            hint="Set primary_failure and correction_targets.",
-        )
+    _require_failure_packet(evaluation)
     root = find_project_root()
     job = require_job(root, asset_id)
     meta = job.load_meta()
@@ -70,6 +66,7 @@ def evaluate_payload(
     record = stored or evaluation
     payload = record.model_dump(mode="json")
     payload["checkpoint"] = status
+    payload["next"] = next_packet(job, record)
     return payload
 
 
@@ -91,7 +88,7 @@ def history_payload(asset_id: str, *, summary: bool = False) -> dict:
         if snap.is_dir():
             for png in sorted(snap.glob("*.png")):
                 previews[png.stem] = job.rel(png)
-        row = {
+        row: dict = {
             "iteration": number,
             "built_at": result.built_at if result else None,
             "is_best": number == current_best,
@@ -123,8 +120,9 @@ def history_payload(asset_id: str, *, summary: bool = False) -> dict:
             row["duration_ms"] = run.duration_ms
             row["triangles"] = run.triangles
             row["prompt"] = run.prompt
+        preview = primary_preview(previews, primary_key)
         if summary:
-            row["primary_preview"] = _primary_preview(previews, primary_key)
+            row = _summary_row(job, row, evaluation, preview)
         else:
             row["previews"] = previews
         rows.append(row)
@@ -135,13 +133,55 @@ def history_payload(asset_id: str, *, summary: bool = False) -> dict:
     }
 
 
-def _primary_preview(previews: dict[str, str], primary_key: str) -> str | None:
-    """Pick the best preview path for summary history rows."""
-    if primary_key in previews:
-        return previews[primary_key]
-    for key in ("three_quarter", "full", "front"):
-        if key in previews:
-            return previews[key]
-    if previews:
-        return next(iter(previews.values()))
-    return None
+def _require_failure_packet(evaluation: VisualEvaluation) -> None:
+    """Reject a failed review that omits the one next edit."""
+    if evaluation.passed:
+        return
+    missing = []
+    if not evaluation.primary_failure:
+        missing.append("primary_failure")
+    if not evaluation.correction_targets:
+        missing.append("correction_targets")
+    if not missing:
+        return
+    raise MasonError(
+        "Failed evaluate needs " + " and ".join(missing) + ".",
+        code="invalid_evaluation",
+        hint=(
+            "Set primary_failure and one correction_target "
+            "naming a landmark, part, or layer."
+        ),
+    )
+
+
+def _summary_row(
+    job: AssetJob,
+    row: dict,
+    evaluation: VisualEvaluation | None,
+    preview: str | None,
+) -> dict:
+    """Put the action packet first. Omit the preview map."""
+    if evaluation is None:
+        packet = {
+            "primary_failure": "",
+            "correction_targets": [],
+            "verdict": None,
+            "unresolved": [],
+            "primary_preview": preview,
+            "measured": {},
+        }
+    else:
+        packet = next_packet(job, evaluation)
+        if not packet["primary_preview"]:
+            packet = {**packet, "primary_preview": preview}
+    lead = {
+        "iteration": row["iteration"],
+        "primary_failure": packet["primary_failure"],
+        "correction_targets": packet["correction_targets"],
+        "verdict": packet["verdict"],
+        "unresolved": packet["unresolved"],
+        "primary_preview": packet["primary_preview"] or preview,
+        "measured": packet["measured"],
+    }
+    rest = {key: value for key, value in row.items() if key not in lead}
+    return {**lead, **rest}

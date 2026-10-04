@@ -237,6 +237,7 @@ def test_evaluate_cli_checkpoint(project: Path, monkeypatch) -> None:
         "passed": False,
         "ship": False,
         "primary_failure": "needs a stronger crate read",
+        "correction_targets": [{"part": "crate"}],
         "scores": _scores(silhouette=6),
     }), encoding="utf-8")
     result = runner.invoke(

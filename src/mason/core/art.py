@@ -256,13 +256,13 @@ class EvalScores(BaseModel):
     )
     detail_density: int | None = Field(default=None, ge=1, le=10)
     silhouette: int | None = Field(default=None, ge=1, le=10)
-    proportions: int = Field(ge=1, le=10)
-    secondary_forms: int = Field(ge=1, le=10)
-    tertiary_detail: int = Field(ge=1, le=10)
-    materials: int = Field(ge=1, le=10)
-    visual_hierarchy: int = Field(ge=1, le=10)
-    style_consistency: int = Field(ge=1, le=10)
-    game_readability: int = Field(ge=1, le=10)
+    proportions: int | None = Field(default=None, ge=1, le=10)
+    secondary_forms: int | None = Field(default=None, ge=1, le=10)
+    tertiary_detail: int | None = Field(default=None, ge=1, le=10)
+    materials: int | None = Field(default=None, ge=1, le=10)
+    visual_hierarchy: int | None = Field(default=None, ge=1, le=10)
+    style_consistency: int | None = Field(default=None, ge=1, le=10)
+    game_readability: int | None = Field(default=None, ge=1, le=10)
     continuity: int | None = Field(default=None, ge=1, le=10)
     form_conviction: int | None = Field(default=None, ge=1, le=10)
     target_identity: int | None = Field(default=None, ge=1, le=10)
@@ -337,7 +337,7 @@ class VisualEvaluation(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     passed: bool
-    scores: EvalScores
+    scores: EvalScores = Field(default_factory=EvalScores)
     issues: list[EvalIssue] = Field(default_factory=list)
     discrepancies: list[EvalDiscrepancy] = Field(default_factory=list)
     mode: Literal["beauty", "silhouette"] = "beauty"
