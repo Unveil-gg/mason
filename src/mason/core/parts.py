@@ -6,6 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from mason.core.entropy import PartVary
 from mason.core.forms import (
     BodySpec,
     PartCurve,
@@ -202,6 +203,10 @@ class PropPart(BaseModel):
     inset: float = Field(default=0.0, ge=0)
     array: PartArray | None = None
     mirror: Literal["x", "y", "z"] | None = None
+    vary: PartVary | None = None
+    bevel_width: float | None = Field(default=None, ge=0)
+    color_bias: float = Field(default=0.0, ge=0, le=1)
+    roughness_bias: float = Field(default=0.0, ge=-1, le=1)
     component: Literal[
         "bolt", "hinge", "handle", "caster", "bracket", "trim",
         "x_brace", "rail", "wire_wall", "rivet_strip", "cornice",

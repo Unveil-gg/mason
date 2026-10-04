@@ -9,13 +9,13 @@ from mason.core.jobs import AssetJob
 from mason.core.parts import ImageSource, PropPart
 from mason.core.paths import resolve_image_source
 from mason.core.results import BuildResult
-from mason.core.styles import StyleProfile
+from mason.core.styles import StyleProfile, StyleProcess
 from mason.core.surfaces import prepare_surface_maps
 from mason.core.workspace import find_project_root
 from mason.errors import MasonError
 from mason.generators.blender.components import expand_components
 from mason.generators.blender.decal_faces import resolve_face
-from mason.generators.blender.part_ops import expand_part_ops
+from mason.generators.blender.part_ops import expand_part_ops, place_breakup
 from mason.generators.blender.recipes import expand_recipe
 from mason.generators.blender.snap import (
     apply_seats,
@@ -37,8 +37,14 @@ from mason.tools.blender.validation import validate_static_prop
 from mason.tools.registry import require_tool
 
 
-def resolved_parts(spec: StaticPropSpec):
-    """Return parts, using a recipe expander when needed."""
+def resolved_parts(
+    spec: StaticPropSpec,
+    style: StyleProfile | None = None,
+):
+    """Return parts, using a recipe expander when needed.
+
+    style supplies the hand for vary. Omitted style uses zeros.
+    """
     if spec.geometry.parts:
         parts = list(spec.geometry.parts)
     elif spec.geometry.recipe is not None:
@@ -51,12 +57,13 @@ def resolved_parts(spec: StaticPropSpec):
     else:
         parts = []
     parts = parts + _decal_parts(spec)
-    after_ops = expand_part_ops(parts)
-    after_snap = apply_seats(after_ops)
-    return expand_components(after_snap)
+    return _with_vary(spec, style, parts)
 
 
-def snap_touch_report(spec: StaticPropSpec) -> tuple[bool, str]:
+def snap_touch_report(
+    spec: StaticPropSpec,
+    style: StyleProfile | None = None,
+) -> tuple[bool, str]:
     """Re-expand through snap and report whether snapped faces meet."""
     if spec.geometry.parts:
         parts = list(spec.geometry.parts)
@@ -69,13 +76,18 @@ def snap_touch_report(spec: StaticPropSpec) -> tuple[bool, str]:
         )
     else:
         return True, "ok"
-    after_snap = apply_seats(expand_part_ops(parts + _decal_parts(spec)))
+    after_snap = apply_seats(_varied_hosts(
+        spec, style, parts + _decal_parts(spec),
+    ))
     if not any(part.snap for part in after_snap):
         return True, "ok"
     return snaps_touch(after_snap)
 
 
-def facade_fit_report(spec: StaticPropSpec) -> tuple[bool, str]:
+def facade_fit_report(
+    spec: StaticPropSpec,
+    style: StyleProfile | None = None,
+) -> tuple[bool, str]:
     """Whether wall snap/flush decorations overlap their host face."""
     if spec.geometry.parts:
         parts = list(spec.geometry.parts)
@@ -88,10 +100,62 @@ def facade_fit_report(spec: StaticPropSpec) -> tuple[bool, str]:
         )
     else:
         return True, "ok"
-    seated = apply_seats(expand_part_ops(parts + _decal_parts(spec)))
+    seated = apply_seats(_varied_hosts(
+        spec, style, parts + _decal_parts(spec),
+    ))
     if not any(p.flush for p in seated):
         return True, "ok"
     return facades_fit(seated)
+
+
+def _with_vary(
+    spec: StaticPropSpec,
+    style: StyleProfile | None,
+    parts: list[PropPart],
+) -> list[PropPart]:
+    """Vary, snap, then flecks, then components."""
+    process, bevel = _hand(spec, style)
+    hosts = expand_part_ops(
+        parts,
+        seed=spec.seed,
+        process=process,
+        bevel_width=bevel,
+        breakup=False,
+    )
+    seated = apply_seats(hosts)
+    flecked = place_breakup(seated, seed=spec.seed, process=process)
+    return expand_components(flecked)
+
+
+def _varied_hosts(
+    spec: StaticPropSpec,
+    style: StyleProfile | None,
+    parts: list[PropPart],
+) -> list[PropPart]:
+    """Hosts only, so snap checks ignore flecks."""
+    process, bevel = _hand(spec, style)
+    return expand_part_ops(
+        parts,
+        seed=spec.seed,
+        process=process,
+        bevel_width=bevel,
+        breakup=False,
+    )
+
+
+def _hand(
+    spec: StaticPropSpec,
+    style: StyleProfile | None,
+) -> tuple[StyleProcess, float]:
+    """Style process and the bevel width vary scales."""
+    process = style.process if style is not None else StyleProcess()
+    if spec.geometry.bevel_width is not None:
+        bevel = spec.geometry.bevel_width
+    elif style is not None:
+        bevel = style.geometry.bevel_width
+    else:
+        bevel = 0.02
+    return process, bevel
 
 
 def _decal_parts(spec: StaticPropSpec) -> list[PropPart]:
@@ -287,9 +351,9 @@ def build_static_prop(
                 **spec.materials.palette_overrides,
             },
         })
-    touch = snap_touch_report(spec)
-    facade = facade_fit_report(spec)
-    parts = resolved_parts(spec)
+    touch = snap_touch_report(spec, style)
+    facade = facade_fit_report(spec, style)
+    parts = resolved_parts(spec, style)
     assert_known_families(parts, style)
     spec.geometry.parts = parts
     job.prepare()

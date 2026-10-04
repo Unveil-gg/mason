@@ -98,6 +98,19 @@ class ContextPreview(BaseModel):
     scale_ref: str = ""
 
 
+class StyleProcess(BaseModel):
+    """Hand ranges. Zero keeps a mark or part exact."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    jitter: float = Field(default=0.0, ge=0, le=1)
+    density: float = Field(default=0.0, ge=0, le=1)
+    irregularity: float = Field(default=0.0, ge=0, le=1)
+    overlap: float = Field(default=0.0, ge=0, le=1)
+    breakup: float = Field(default=0.0, ge=0, le=1)
+    variation: float = Field(default=0.0, ge=0, le=1)
+
+
 class StyleProfile(BaseModel):
     """Named palette and default geometry/material/render settings."""
 
@@ -112,6 +125,7 @@ class StyleProfile(BaseModel):
     render: StyleRender = Field(default_factory=StyleRender)
     lighting: StyleLighting = Field(default_factory=StyleLighting)
     textures: StyleTextures = Field(default_factory=StyleTextures)
+    process: StyleProcess = Field(default_factory=StyleProcess)
     quality: dict[str, QualityGuidance] = Field(default_factory=dict)
     context_preview: ContextPreview | None = None
 
@@ -218,6 +232,7 @@ def style_payload(profile: StyleProfile) -> dict[str, Any]:
         "render": profile.render.model_dump(mode="json"),
         "lighting": profile.lighting.model_dump(mode="json"),
         "textures": profile.textures.model_dump(mode="json"),
+        "process": profile.process.model_dump(mode="json"),
     }
 
 

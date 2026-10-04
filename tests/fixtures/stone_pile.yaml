@@ -1,0 +1,26 @@
+type: static_prop
+id: stone_pile
+name: Stone Pile
+seed: 11
+dimensions:
+  width: 0.6
+  depth: 0.4
+  height: 0.36
+style: default
+materials:
+  primary: charcoal
+geometry:
+  parts:
+    - name: stone
+      shape: box
+      size: [0.34, 0.22, 0.12]
+      location: [0.0, 0.0, 0.06]
+      material: charcoal
+      array:
+        count: 3
+        offset: [0, 0, 0.11]
+      vary:
+        silhouette: 0.12
+        breakup: 0.18
+        breakup_count: 4
+        axis: z

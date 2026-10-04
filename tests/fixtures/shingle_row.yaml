@@ -1,0 +1,28 @@
+type: static_prop
+id: shingle_row
+name: Shingle Row
+seed: 3
+dimensions:
+  width: 1.2
+  depth: 0.2
+  height: 0.04
+style: default
+materials:
+  primary: wood_dark
+geometry:
+  bevel: true
+  parts:
+    - name: shingle
+      shape: box
+      size: [0.18, 0.16, 0.02]
+      location: [0.09, 0.0, 0.01]
+      material: wood_dark
+      array:
+        count: 6
+        offset: [0.19, 0, 0]
+      vary:
+        scale: 0.08
+        rotation: 0.04
+        spacing: 0.06
+        bevel: 0.25
+        material: 0.2

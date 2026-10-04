@@ -26,6 +26,8 @@ def test_load_default_style(tmp_path: Path) -> None:
     assert style.color("smoke") == "#5C5548"
     assert hex_rgba("#2E7D4F") == [46, 125, 79, 255]
     assert style.geometry.bevel_width == 0.02
+    assert style.process.jitter == 0.0
+    assert style.process.variation == 0.0
     assert style.textures.tile_size == 1.0
     assert style.textures.wrap == "repeat"
     assert style.context_preview is None

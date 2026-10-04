@@ -1,0 +1,19 @@
+name: watercolor
+version: 1
+
+palette:
+  sky: "#C5D4D0"
+  paper: "#E7DCC8"
+  sap: "#3E5C45"
+  moss: "#6E8F62"
+  ink: "#2A2420"
+  foam: "#F4F0E6"
+  shadow: "#8A7B68"
+
+process:
+  jitter: 0.12
+  density: 0.55
+  irregularity: 0.35
+  overlap: 0.62
+  breakup: 0.08
+  variation: 0.15

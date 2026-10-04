@@ -1,0 +1,51 @@
+type: layered_raster
+id: reed_bank
+name: Reed Bank
+seed: 7
+style: watercolor
+dimensions:
+  width: 128
+  height: 96
+layers:
+  - name: sky
+    fill: sky
+    mark:
+      kind: wash
+      hand: true
+      rect: {x: 0, y: 0, width: 128, height: 48}
+      shape: rect
+  - name: bank
+    fill: moss
+    mark:
+      kind: mass
+      hand: true
+      rect: {x: 0, y: 40, width: 128, height: 56}
+  - name: branch
+    fill: ink
+    mark:
+      kind: stroke_path
+      hand: true
+      points: [[8, 70], [48, 52], [96, 64]]
+      radius: 3
+      radius_end: 1.2
+  - name: reeds
+    fill: sap
+    mark:
+      kind: scatter
+      hand: true
+      rect: {x: 10, y: 48, width: 108, height: 36}
+      count: 18
+      radius: 2.5
+  - name: shade
+    fill: shadow
+    mark:
+      kind: hatch
+      hand: true
+      rect: {x: 0, y: 72, width: 128, height: 24}
+      angle: -0.4
+  - name: foam
+    fill: foam
+    mark:
+      kind: dab
+      at: [40, 58]
+      radius: 4

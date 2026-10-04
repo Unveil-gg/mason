@@ -270,6 +270,19 @@ def reset_scene():
         bpy.data.curves.remove(curve)
 
 
+def _scale_hex(value, bias):
+    """Darken #RRGGBB. bias is 0..1 toward a flatter albedo."""
+    if bias <= 0.0:
+        return value
+    text = value.strip().lstrip("#")
+    scale = 1.0 - 0.35 * min(float(bias), 1.0)
+    out = []
+    for i in (0, 2, 4):
+        channel = int(text[i:i + 2], 16)
+        out.append(max(0, min(255, int(channel * scale))))
+    return "#%02X%02X%02X" % (out[0], out[1], out[2])
+
+
 def family_settings(part):
     """Resolve roughness/metallic/variation for one part."""
     families = CONFIG.get("families") or {}
@@ -291,15 +304,20 @@ def build_geometry():
     def solid_material(part, key):
         settings = family_settings(part)
         wear = float(part.get("wear") or 0.0)
-        cache = (key, part.get("family"), wear)
+        bias = float(part.get("color_bias") or 0.0)
+        rough_bias = float(part.get("roughness_bias") or 0.0)
+        cache = (key, part.get("family"), wear, bias, rough_bias)
         if cache not in mats:
             hex_color = CONFIG["palette"].get(key) or CONFIG["palette"].get(
                 "primary",
             )
+            hex_color = _scale_hex(hex_color, bias)
+            rough = settings["roughness"] + rough_bias
+            rough = min(1.0, max(0.0, rough))
             mats[cache] = create_material(
                 f"{key}_{len(mats)}",
                 hex_color,
-                settings["roughness"],
+                rough,
                 settings["metallic"],
                 settings.get("variation") or 0.0,
                 wear,
@@ -419,7 +437,10 @@ def build_geometry():
         if (part.get("shape") or "box") in organic:
             use_bevel = False
         if use_bevel and not is_plane:
-            apply_bevel(obj, CONFIG["bevel_width"], CONFIG["bevel_segments"])
+            width = part.get("bevel_width")
+            if width is None:
+                width = CONFIG["bevel_width"]
+            apply_bevel(obj, width, CONFIG["bevel_segments"])
         settings = family_settings(part)
         tile = settings.get("tile_size") or CONFIG["tile_size"]
         if strategy == "palette":

@@ -15,6 +15,7 @@ from pydantic import (
 )
 
 from mason.core.art import ArtFields
+from mason.core.marks import Mark
 from mason.core.parts import (  # noqa: F401
     AttachSocket,
     DecalSpec,
@@ -119,6 +120,7 @@ class StaticPropSpec(ArtFields):
     export: Export3D = Field(default_factory=Export3D)
     attachments: list[AttachSocket] = Field(default_factory=list)
     metadata: dict[str, str] = Field(default_factory=dict)
+    seed: int = 0
 
 
 class LayerRect(BaseModel):
@@ -187,9 +189,17 @@ class RasterLayer(BaseModel):
     opacity: float = Field(default=1.0, ge=0, le=1)
     expression: LayerExpression | None = None
     stroke: DabStroke | None = None
+    mark: Mark | None = None
+    hand: bool = False
 
     @model_validator(mode="after")
     def need_content(self) -> RasterLayer:
+        if self.mark and self.stroke:
+            raise ValueError("layer cannot set both mark and stroke")
+        if self.mark:
+            if not self.fill:
+                raise ValueError("mark needs fill")
+            return self
         if self.stroke:
             if not self.fill:
                 raise ValueError("stroke needs fill")
@@ -245,6 +255,7 @@ class LayeredRasterSpec(ArtFields):
     layers: list[RasterLayer] = Field(min_length=1)
     export: RasterExport = Field(default_factory=RasterExport)
     metadata: dict[str, str] = Field(default_factory=dict)
+    seed: int = 0
 
 
 class ResizeOp(BaseModel):
