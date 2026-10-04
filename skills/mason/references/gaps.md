@@ -15,9 +15,31 @@ that list is a brush stroke.
 kritarunner can create a document, add a file layer, and call
 `setPixelData`. `-s` loads a module from `%APPDATA%\kritarunner`
 (see `_install_krita_script`). A full path to a script in the job
-does not load, so the layered document is never written. A freehand
-stroke uses the paintop, and the paintop needs a view. A headless
-script cannot play a watercolor preset along a path.
+does not load, so the layered document is never written. The
+current raster build stays on `kritarunner`. Fills, stamps, and
+text do not need a view.
+
+A freehand stroke uses the paintop, and the paintop needs a
+`KisView`. `kritarunner` never creates one, so `activeWindow()`
+is empty. `QT_QPA_PLATFORM=offscreen` does not fix it. The brush
+wants a real canvas. That launch is not wired yet. It waits
+until a spec field calls a paintop.
+
+When it is wired, ask before opening a window. Name the app and
+the one step. A yes is `--allow-window` on that invocation. No
+flag, a no, or a non-interactive run stays headless. If the step
+cannot finish headless, stop. Do not hang on a prompt, and do
+not open a window. A confirmed Krita run is `krita --nosplash`,
+not `kritarunner`. The script waits for `windowCreated`, calls
+`addView`, saves, and quits even if it throws.
+
+Blender meshes and renders stay on `blender --background
+--python`. Sculpt, grease pencil, and texture paint need a
+`VIEW_3D`, which `--background` never creates. Drop
+`--background` only after that failure, and only with
+`--allow-window`: `blender --python build.py`, then
+`bpy.ops.wm.quit_blender()`. The same confirm rule applies.
+ImageMagick and `aseprite -b --script` never need a window.
 
 A layer that carries an image is added twice in
 `script_builder.py`: a file layer, which lands at the origin, and
