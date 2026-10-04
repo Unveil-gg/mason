@@ -71,3 +71,9 @@ Otherwise:
   primary preview.
 - Shapes, recipes, and stamps come from `mason vocab --json`,
   not from memory.
+- Painter scripts, generated PNGs, and scratch specs go in
+  `.mason/jobs/<id>/` (`output/`, `previews/`). Do not leave
+  them at the repo root. `styles/<name>.yaml` stays in `styles/`.
+- Holes in the 2D path (no brush stroke, headless Krita cannot
+  play a preset) and in how a picture is judged are in
+  [references/gaps.md](references/gaps.md).
