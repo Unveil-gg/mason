@@ -19,6 +19,11 @@
   <sub><em>Grand Mansion — built with Mason + Grok 4.6 Fast (High Effort)</em></sub>
 </p>
 
+<p align="center">
+  <img src="docs/images/bridge_troubled_water.png" alt="Bridge over Troubled Water — stylized watercolor viaduct over dark water" width="640"><br>
+  <sub><em>Bridge over Troubled Water — agent-painted 2D study in a Mason job; predominantly Grok 4.7 High Fast</em></sub>
+</p>
+
 Mason is a local CLI. Coding agents write a YAML spec; Mason runs
 [Blender](https://www.blender.org/), [Krita](https://krita.org/en/),
 [Aseprite](https://www.aseprite.org/), or
