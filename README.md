@@ -1,6 +1,7 @@
 <h1 align="center">
   <img src="docs/images/mason-logo.png" alt="Mason logo" width="176"><br>
-  Mason
+  Mason<br>
+  <sub>Local asset-generation harness for coding agents.</sub>
 </h1>
 
 <p align="center">
