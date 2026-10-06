@@ -1,8 +1,11 @@
 <h1 align="center">
   <img src="docs/images/mason-logo.png" alt="Mason logo" width="176"><br>
-  Mason<br>
-  <sub>Local asset-generation harness for coding agents.</sub>
+  Mason
 </h1>
+
+---
+
+<sub>Local asset-generation harness for coding agents.</sub>
 
 <p align="center">
   <a href="https://www.python.org/downloads/">
