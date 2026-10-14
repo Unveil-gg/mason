@@ -12,6 +12,26 @@ from mason.cli import app
 runner = CliRunner()
 
 
+def test_version_flag() -> None:
+    from mason import __version__
+    flag = runner.invoke(app, ["--version"])
+    command = runner.invoke(app, ["version"])
+    assert flag.exit_code == 0
+    assert command.exit_code == 0
+    assert flag.stdout.strip() == __version__
+    assert command.stdout.strip() == __version__
+
+
+def test_prop_vocab_mentions_movers() -> None:
+    result = runner.invoke(app, ["vocab", "--workflow", "prop", "--json"])
+    assert result.exit_code == 0
+    data = json.loads(result.stdout)
+    assert "export.movers" in data["export_profile"]
+    assert "siblings of body" in data["export_profile"]
+    assert "segments" in data["cylinder"]
+    assert "wordmark" in data["text"]
+
+
 def test_doctor_json() -> None:
     result = runner.invoke(app, ["doctor", "--json"])
     assert result.exit_code == 0

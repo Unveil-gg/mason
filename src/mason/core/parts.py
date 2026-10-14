@@ -173,7 +173,7 @@ class PropPart(BaseModel):
     shape: Literal[
         "box", "cylinder", "plane", "cone", "torus",
         "tapered_box", "sphere", "lathe",
-        "curve", "skin", "outline", "instance",
+        "curve", "skin", "outline", "instance", "text",
     ] = "box"
     size: tuple[float, float, float] | None = None
     location: tuple[float, float, float]
@@ -212,6 +212,7 @@ class PropPart(BaseModel):
         "x_brace", "rail", "wire_wall", "rivet_strip", "cornice",
     ] | None = None
     component_params: dict[str, float] = Field(default_factory=dict)
+    text: str | None = None
 
     @model_validator(mode="after")
     def size_or_lathe(self) -> PropPart:
@@ -227,6 +228,14 @@ class PropPart(BaseModel):
             return self
         if self.profile is not None and self.shape != "lathe":
             raise ValueError("profile is only valid on shape: lathe")
+        if self.text is not None and self.shape != "text":
+            raise ValueError("text is only valid on shape: text")
+        if self.shape == "text":
+            if not (self.text or "").strip():
+                raise ValueError("text shape needs text")
+            if self.size is None:
+                raise ValueError("text shape needs size")
+            return self
         if self.shape == "lathe":
             if not self.profile or len(self.profile) < 2:
                 raise ValueError(

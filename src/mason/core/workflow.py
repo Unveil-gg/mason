@@ -73,7 +73,7 @@ _CARDS: dict[str, dict[str, Any]] = {
         "required_refs": [],
         "operations": (
             "box", "cylinder", "snap", "array", "mirror", "cutout",
-            "component",
+            "component", "text",
         ),
         "examples": (),
         "decompose": False,
@@ -82,6 +82,7 @@ _CARDS: dict[str, dict[str, Any]] = {
         "vocab_keys": (
             "shapes", "snap", "cutout", "components", "recipes_note",
             "modeling", "inspect", "critique", "iteration",
+            "export_profile", "cylinder", "text",
         ),
         "shapes": (
             "box", "cylinder", "plane", "tapered_box", "instance",

@@ -37,6 +37,43 @@ def test_static_prop_requires_parts_or_recipe() -> None:
         })
 
 
+def test_text_wordmark() -> None:
+    spec = parse_asset_spec({
+        "type": "static_prop",
+        "id": "badge",
+        "name": "Badge",
+        "dimensions": {"width": 0.2, "depth": 0.02, "height": 0.08},
+        "geometry": {
+            "parts": [{
+                "name": "mark",
+                "shape": "text",
+                "text": "SCRAP",
+                "size": [0.2, 0.01, 0.06],
+                "location": [0, 0, 0.03],
+            }],
+        },
+    })
+    assert spec.geometry.parts[0].text == "SCRAP"
+
+
+def test_text_rejected_on_box() -> None:
+    with pytest.raises(MasonError):
+        parse_asset_spec({
+            "type": "static_prop",
+            "id": "x",
+            "name": "X",
+            "dimensions": {"width": 1, "depth": 1, "height": 1},
+            "geometry": {
+                "parts": [{
+                    "name": "box",
+                    "text": "NO",
+                    "size": [1, 1, 1],
+                    "location": [0, 0, 0.5],
+                }],
+            },
+        })
+
+
 def test_cylinder_and_parent() -> None:
     spec = parse_asset_spec({
         "type": "static_prop",

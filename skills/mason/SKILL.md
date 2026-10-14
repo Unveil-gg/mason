@@ -45,7 +45,9 @@ Otherwise:
 1. Run `mason route "<subject>" --json` and copy `workflow` onto
    the spec.
 2. **Quick** when `decompose` is false and `required_refs` is
-   empty (simple prop, texture, pixel, poster, import): write
+   empty (simple prop, texture, pixel, poster, import): if the
+   user supplied a reference image, run `mason ingest` first.
+   Ingest measures it and does not build a mesh. Then write
    the spec, run `mason build <spec> --json`, and open only the
    preview named by `preview_roles.primary`. A palette or
    material change is another build. Do not write an evaluation.

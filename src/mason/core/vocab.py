@@ -10,7 +10,7 @@ from mason.generators.krita.stamps import STAMPS
 SHAPES = (
     "box", "cylinder", "plane", "cone", "torus",
     "tapered_box", "sphere", "lathe",
-    "curve", "skin", "outline", "instance",
+    "curve", "skin", "outline", "instance", "text",
 )
 TECHNIQUES = (
     "lathe", "box", "curve", "outline", "skin",
@@ -340,11 +340,24 @@ def _full_vocab() -> dict[str, Any]:
             "rotation, parent}]. Empties named attach_<name> "
             "export in the GLB and metadata.json / manifest."
         ),
+        "cylinder": (
+            "shape: cylinder size is (diameter_x, diameter_y, "
+            "height) along +Z before rotation. segments 8-64 "
+            "(default 24) is the side count. A caster component "
+            "fuses its wheel into the body."
+        ),
+        "text": (
+            "shape: text + text: a short string builds a mesh "
+            "wordmark fitted to size (width, depth, height). "
+            "Centered on location. Not a paragraph."
+        ),
         "export_profile": (
             "export.profile kit (default) keeps one mesh per "
             "part. prop joins statics into body, keeps "
             "export.movers (or attachment parents) plus their "
             "children as separate meshes, and bakes one atlas. "
+            "Movers export as siblings of body, not children of "
+            "parts that were joined away. "
             "Canonical files beside the GLB are {id}_albedo.png, "
             "{id}_orm.png, and {id}_normal.png when a bump was "
             "baked (image names albedo, orm, and normal). "
@@ -418,7 +431,10 @@ def _full_vocab() -> dict[str, Any]:
             "mason preview <id> --demo-lighting swaps in a "
             "warmer/rim-lit rig for one-off screenshots. Off by "
             "default; never changes the stored spec/style, so "
-            "plain build/rebuild renders stay comparable."
+            "plain build/rebuild renders stay comparable. "
+            "Everyday studio lights scale with camera distance, "
+            "capped at 4x. Demo energy is capped so the floor "
+            "does not clip."
         ),
         "kits": (
             "kits/<id>.yaml {id, name, members: [asset-id, ...]} is a "

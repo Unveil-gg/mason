@@ -36,7 +36,10 @@ from mason.generators.blender.garment_surface import (
 )
 from mason.generators.blender.lathe import CREATE_LATHE_SRC
 from mason.generators.blender.materials import CREATE_MATERIAL_SRC
-from mason.generators.blender.preview_scene import PREVIEW_SCENE_SRC
+from mason.generators.blender.preview_scene import (
+    PREVIEW_SCENE_SRC,
+    mesh_is_pale,
+)
 from mason.generators.blender.primitives import CREATE_BOX_SRC
 from mason.generators.blender.skin import CREATE_SKIN_SRC
 
@@ -96,6 +99,7 @@ def build_blender_script(
         "engine": style.render.engine,
         "lighting_preset": style.lighting.preset,
         "demo_lighting": demo_lighting,
+        "pale_preview": mesh_is_pale(parts, palette),
         "families": _used_families(spec, style, parts),
         "palette": palette,
         "part_textures": part_textures or {},
@@ -409,7 +413,7 @@ def build_geometry():
         )
 
     created = {}
-    organic = ("sphere", "lathe", "curve", "skin", "outline")
+    organic = ("sphere", "lathe", "curve", "skin", "outline", "text")
     for part in CONFIG["parts"]:
         obj = create_primitive(part)
         if part.get("bend") and obj.type == "MESH":

@@ -51,11 +51,9 @@ def _pale_preview():
         return True
     if CONFIG.get("part_textures"):
         return False
-    pal = CONFIG.get("palette") or {}
-    for value in pal.values():
-        if _hex_luma(value) >= 0.62:
-            return True
-    return False
+    # Precomputed from mesh volume. One light accent does not
+    # dim a dark prop. See mesh_is_pale.
+    return bool(CONFIG.get("pale_preview"))
 
 
 def _tint_plate(rgb):
@@ -174,8 +172,9 @@ def setup_studio_lights(
         # thus the key/world contrast that actually makes a shadow
         # visible, roughly constant across small props and big
         # builds alike. A flat wattage looked fine on small assets
-        # and invisible on a mansion-scale build.
-        d2 = distance * distance
+        # and invisible on a mansion-scale build. Cap the scale so
+        # a vehicle-sized prop does not clip the floor.
+        d2 = min(distance * distance, 8.0)
         add_light(
             "key", 40.0 * d2,
             center + Vector((-distance, distance, distance * 1.2)),
@@ -195,12 +194,22 @@ def setup_studio_lights(
         )
         return
 
-    add_light("key", 40.0, center + Vector((distance, -distance, distance)))
+    # Crate-scale distance is about 1.6 m. Stretch watts with
+    # distance, and stop at 4x so the step above flat light is
+    # visible without the demo rig's clipped floor.
+    reach = min(max(distance / 1.6, 1.0), 4.0)
     add_light(
-        "fill", 12.0,
+        "key", 40.0 * reach,
+        center + Vector((distance, -distance, distance)),
+    )
+    add_light(
+        "fill", 12.0 * reach,
         center + Vector((-distance, -distance * 0.4, distance * 0.6)),
     )
-    add_light("rim", 18.0, center + Vector((0.0, distance, distance * 0.8)))
+    add_light(
+        "rim", 18.0 * reach,
+        center + Vector((0.0, distance, distance * 0.8)),
+    )
 
 
 def setup_studio_plate(center, mins, radius):
@@ -513,3 +522,42 @@ def render_previews(
     clear_non_mesh()
     CONFIG["preview_engine"] = used
 '''
+
+
+def hex_luma(value: str) -> float:
+    """Rec. 709 luma of a #RRGGBB string, or 0."""
+    text = str(value or "").lstrip("#")
+    if len(text) == 3:
+        text = "".join(char + char for char in text)
+    if len(text) != 6:
+        return 0.0
+    try:
+        red = int(text[0:2], 16) / 255.0
+        green = int(text[2:4], 16) / 255.0
+        blue = int(text[4:6], 16) / 255.0
+    except ValueError:
+        return 0.0
+    return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+
+
+def mesh_is_pale(parts, palette: dict[str, str]) -> bool:
+    """True when most of the mesh volume is a light color.
+
+    Volume is size x*y*z. Cutters and helpers are ignored.
+    One bright accent does not dim the studio.
+    """
+    weight = 0.0
+    total = 0.0
+    for part in parts:
+        if getattr(part, "cutout", None) or getattr(part, "helper", False):
+            continue
+        size = getattr(part, "size", None) or (0.0, 0.0, 0.0)
+        volume = abs(float(size[0]) * float(size[1]) * float(size[2]))
+        if volume <= 0:
+            continue
+        key = getattr(part, "material", None) or "primary"
+        weight += hex_luma(palette.get(key, "")) * volume
+        total += volume
+    if total <= 0:
+        return False
+    return (weight / total) >= 0.62

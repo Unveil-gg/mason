@@ -150,7 +150,7 @@ def validate_static_prop(
         detail_parts = []
         for axis, want in expected.items():
             got = float(bounds.get(axis) or 0)
-            if got <= 0 or not _near(got, want):
+            if not _in_envelope(got, want):
                 ok = False
             detail_parts.append(f"{axis}={got:.4f}/{want:.4f}")
         checks.append(_check("dimensions", ok, ", ".join(detail_parts)))
@@ -297,5 +297,14 @@ def validate_static_prop(
     )
 
 
-def _near(got: float, want: float, rel: float = 0.10, abs_tol: float = 0.05) -> bool:
-    return abs(got - want) <= max(abs_tol, abs(want) * rel)
+def _in_envelope(got: float, want: float) -> bool:
+    """True when one mesh axis fits the declared size.
+
+    The declared size is an envelope. The mesh may be smaller,
+    down to half. It may stick out by 5 cm.
+    """
+    if got <= 0 or want <= 0:
+        return False
+    if got > want + 0.05:
+        return False
+    return got >= want * 0.5

@@ -21,13 +21,16 @@ def shade_smooth(obj):
         poly.use_smooth = True
 
 
-def create_cylinder(name, size, location, rotation=(0.0, 0.0, 0.0)):
+def create_cylinder(
+    name, size, location, rotation=(0.0, 0.0, 0.0), segments=24,
+):
     """Add a cylinder; size is (diameter_x, diameter_y, height)."""
+    sides = max(8, min(int(segments), 64))
     bpy.ops.mesh.primitive_cylinder_add(
         radius=0.5,
         depth=1.0,
         location=location,
-        vertices=24,
+        vertices=sides,
     )
     obj = bpy.context.active_object
     obj.name = name
@@ -37,6 +40,30 @@ def create_cylinder(name, size, location, rotation=(0.0, 0.0, 0.0)):
     obj.location = location
     obj.rotation_euler = rotation
     shade_smooth(obj)
+    return obj
+
+
+def create_text(name, size, location, rotation=(0.0, 0.0, 0.0), body=""):
+    """Mesh wordmark fitted to size (width, depth, height)."""
+    curve = bpy.data.curves.new(name, type="FONT")
+    curve.body = body or " "
+    curve.align_x = "CENTER"
+    curve.align_y = "CENTER"
+    curve.extrude = 0.05
+    obj = bpy.data.objects.new(name, curve)
+    bpy.context.scene.collection.objects.link(obj)
+    bpy.context.view_layer.objects.active = obj
+    obj.select_set(True)
+    bpy.ops.object.convert(target="MESH")
+    obj = bpy.context.active_object
+    obj.name = name
+    obj.rotation_euler = (0.0, 0.0, 0.0)
+    obj.dimensions = size
+    bpy.ops.object.transform_apply(
+        location=False, rotation=False, scale=True,
+    )
+    obj.location = location
+    obj.rotation_euler = rotation
     return obj
 
 
@@ -140,7 +167,11 @@ def create_primitive(part):
         tuple(part.get("rotation") or (0.0, 0.0, 0.0)),
     )
     if shape == "cylinder":
-        return create_cylinder(*args)
+        return create_cylinder(
+            *args, int(part.get("segments") or 24),
+        )
+    if shape == "text":
+        return create_text(*args, part.get("text") or "")
     if shape == "plane":
         return create_plane(*args)
     if shape == "cone":

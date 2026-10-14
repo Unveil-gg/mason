@@ -32,6 +32,9 @@ def test_blender_script_has_helpers(project: Path) -> None:
         bevel_width=bw, bevel_segments=bs, roughness=r, metallic=m,
     )
     assert "def create_box" in script
+    assert "pale_preview" in script
+    assert 'part.get("segments")' in script
+    assert "def create_text" in script
     assert "def create_cylinder" in script
     assert "def create_plane" in script
     assert "def create_primitive" in script
@@ -379,3 +382,31 @@ def test_blender_script_has_garment_pipeline(project: Path) -> None:
     assert "payload[\"fit\"] = fit" in script
     assert "if CONFIG.get(\"garment\"):" in script
     compile(script, "<build.py>", "exec")
+
+
+def test_pale_ignores_a_small_light_accent() -> None:
+    from types import SimpleNamespace
+    from mason.generators.blender.preview_scene import mesh_is_pale
+    dark = SimpleNamespace(
+        cutout=None, helper=False, size=(1.0, 1.0, 1.0),
+        material="ink",
+    )
+    badge = SimpleNamespace(
+        cutout=None, helper=False, size=(0.05, 0.05, 0.01),
+        material="brass",
+    )
+    palette = {"ink": "#1A1410", "brass": "#C4A15A"}
+    assert mesh_is_pale([dark, badge], palette) is False
+    cream = SimpleNamespace(
+        cutout=None, helper=False, size=(1.0, 1.0, 1.0),
+        material="cream",
+    )
+    assert mesh_is_pale([cream], {"cream": "#DDD0B4"}) is True
+
+
+def test_declared_size_is_an_envelope() -> None:
+    from mason.tools.blender.validation import _in_envelope
+    assert _in_envelope(1.19, 1.35)
+    assert _in_envelope(1.04, 1.0)
+    assert not _in_envelope(1.2, 1.0)
+    assert not _in_envelope(0.4, 1.0)

@@ -40,6 +40,14 @@ from mason.pipelines.stats import run_stats
 from mason.pipelines.export import run_export, run_export_kit
 from mason.tools.registry import detect_all, doctor_payload, scan_and_store
 
+
+def _version_flag(value: bool) -> None:
+    """Print the version and exit when --version is set."""
+    if value:
+        typer.echo(__version__)
+        raise typer.Exit()
+
+
 app = typer.Typer(
     name="mason",
     no_args_is_help=True,
@@ -50,6 +58,23 @@ tools_app = typer.Typer(no_args_is_help=True, help="Tool discovery.")
 config_app = typer.Typer(no_args_is_help=True, help="Machine config.")
 app.add_typer(tools_app, name="tools")
 app.add_typer(config_app, name="config")
+
+
+@app.callback()
+def _root(
+    version: Annotated[
+        bool,
+        typer.Option(
+            "--version",
+            callback=_version_flag,
+            is_eager=True,
+            help="Print the Mason version and exit.",
+        ),
+    ] = False,
+) -> None:
+    """Asset-generation harness for coding agents."""
+    del version
+
 
 JsonFlag = Annotated[
     bool,
