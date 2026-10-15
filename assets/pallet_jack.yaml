@@ -95,13 +95,15 @@ geometry:
       material: steel
       family: bare_metal
       bevel: false
-    - name: fork_l
+      parent: carriage
+    - name: carriage
       shape: box
       size: [0.15, 1.30, 0.035]
       location: [-0.18, 1.01, 0.055]
       material: steel
       family: bare_metal
       bevel: false
+      parent: lift
     - name: fork_r
       shape: box
       size: [0.15, 1.30, 0.035]
@@ -109,6 +111,7 @@ geometry:
       material: steel
       family: bare_metal
       bevel: false
+      parent: carriage
     - name: backrest
       component: wire_wall
       component_params: {count: 5.0, thickness: 0.016}
@@ -117,6 +120,7 @@ geometry:
       material: ink
       family: plastic
       bevel: false
+      parent: carriage
     - name: backrest_rail
       shape: box
       size: [0.64, 0.028, 0.028]
@@ -124,6 +128,7 @@ geometry:
       material: ink
       family: plastic
       bevel: false
+      parent: carriage
     - name: backrest_post_l
       shape: box
       size: [0.028, 0.028, 0.60]
@@ -131,6 +136,7 @@ geometry:
       material: ink
       family: plastic
       bevel: false
+      parent: carriage
     - name: backrest_post_r
       shape: box
       size: [0.028, 0.028, 0.60]
@@ -138,6 +144,7 @@ geometry:
       material: ink
       family: plastic
       bevel: false
+      parent: carriage
     - name: tiller_base
       shape: cylinder
       size: [0.07, 0.07, 0.08]
@@ -212,6 +219,7 @@ geometry:
       material: steel
       family: bare_metal
       bevel: false
+      parent: carriage
     - name: load_hanger_r
       shape: box
       size: [0.04, 0.10, 0.05]
@@ -219,6 +227,7 @@ geometry:
       material: steel
       family: bare_metal
       bevel: false
+      parent: carriage
     - name: load_wheel_l
       shape: cylinder
       size: [0.082, 0.082, 0.04]
@@ -227,6 +236,7 @@ geometry:
       material: ink
       family: rubber
       bevel: false
+      parent: carriage
     - name: load_wheel_r
       shape: cylinder
       size: [0.082, 0.082, 0.04]
@@ -235,6 +245,7 @@ geometry:
       material: ink
       family: rubber
       bevel: false
+      parent: carriage
 materials:
   strategy: family
   primary: hydrant_red
@@ -245,11 +256,18 @@ export:
   atlas_size: 512
   movers:
     - drive_wheel
+    - carriage
     - load_wheel_l
     - load_wheel_r
   volumes:
-    - {name: hull, kind: box}
+    - name: hull
+      kind: box
+      min: [-0.42, -0.79, 0.0]
+      max: [0.42, 1.66, 1.286]
 attachments:
+  - name: lift
+    location: [0.0, 0.36, 0.04]
+    parent: cabinet
   - name: rider
     location: [0.0, -0.48, 0.11]
     rotation: [0.0, 0.0, 3.1416]
@@ -273,6 +291,9 @@ attachments:
 metadata:
   spin_axis: local_z
   ride_socket: attach_rider
+  lift_socket: attach_lift
+  lift_axis: local_z
+  lift_travel: "0.12"
 art_direction:
   subject: >-
     Stand-on electric pallet jack for Scrap Paws.
@@ -285,7 +306,7 @@ art_direction:
     importance: focal_prop
     viewing_distance: medium
   forms:
-    primary: [hood, platform, fork_l, fork_r]
+    primary: [hood, platform, carriage, fork_r]
     secondary: [tiller, backrest, drive_wheel]
     tertiary: [button, badge, grip]
   materials:
@@ -303,6 +324,7 @@ art_direction:
       - spinning wheels
   constraints:
     - wheels stay separate meshes
+    - carriage lifts on attach_lift, local Z, 0.12 m
     - no brand wordmark
     - meters, power unit centered on the origin
   recognition_details:
@@ -320,7 +342,7 @@ construction_plan:
   secondary_forms:
     - {type: cylinder, purpose: drive and load wheels}
     - {type: cylinder, purpose: tiller arm}
-  keep_parts: [drive_wheel, load_wheel_l, load_wheel_r]
+  keep_parts: [carriage, drive_wheel, load_wheel_l, load_wheel_r]
 geometric_plan:
   recognition: mixed
   stage: material
@@ -332,14 +354,14 @@ geometric_plan:
   masses:
     - {name: hood, role: primary, connects_to: [cabinet, tiller]}
     - {name: platform, role: primary, connects_to: [cabinet]}
-    - {name: fork_l, role: primary, connects_to: [fork_apron]}
+    - {name: carriage, role: primary, connects_to: [fork_apron]}
     - {name: drive_wheel, role: secondary, connects_to: [cabinet]}
     - {name: backrest, role: secondary, connects_to: [fork_apron]}
   landmarks:
     - {id: deck, role: ride, part: platform}
     - {id: tiller_head, role: steer, part: head}
     - {id: drive_hub, role: spin, part: drive_wheel}
-    - {id: fork_tip, role: load, part: fork_l}
+    - {id: fork_tip, role: load, part: carriage}
   critical_views:
     - {view: three_quarter, weight: 2}
     - {view: side, weight: 1.5}

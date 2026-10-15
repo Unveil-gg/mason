@@ -259,6 +259,8 @@ def validate_static_prop(
                 spec.geometry.parts,
                 data["object_bounds"],
                 bodies=spec.geometry.bodies,
+                movers=set(spec.export.movers),
+                sockets={item.name for item in spec.attachments},
             )
         touch_ok = snap_ok and parent_ok
         if not snap_ok:

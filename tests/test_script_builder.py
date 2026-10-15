@@ -49,7 +49,7 @@ def test_blender_script_has_helpers(project: Path) -> None:
     assert "def create_lathe" not in script
     assert "def build_garment" not in script
     assert "def pack_prop_for_export" not in script
-    assert len(script.splitlines()) < 1800
+    assert len(script.splitlines()) < 1850
     assert "json.loads" in script
     assert "#654936" in script
     assert "BLENDER_EEVEE" in script
@@ -98,6 +98,8 @@ def test_prop_export_config(project: Path) -> None:
     assert '"lid"' in script
     assert "col_cabinet" in script
     assert "def pack_prop_for_export" in script
+    assert "def _owned_meshes" in script
+    assert "child.name in mover_names" in script
     assert "def emit_export_volumes" in script
     compile(script, "<build.py>", "exec")
 

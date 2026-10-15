@@ -91,6 +91,28 @@ def test_parents_touch_skips_cutout() -> None:
     assert ok, detail
 
 
+def test_parents_touch_skips_socket_and_mover() -> None:
+    blade = PropPart(
+        name="fork_r",
+        size=(0.15, 1.3, 0.04),
+        location=(0.18, 1.0, 0.05),
+        parent="carriage",
+    )
+    carriage = PropPart(
+        name="carriage",
+        size=(0.15, 1.3, 0.04),
+        location=(-0.18, 1.0, 0.05),
+        parent="lift",
+    )
+    ok, detail = parents_touch_bounds(
+        [carriage, blade],
+        {},
+        movers={"carriage"},
+        sockets={"lift"},
+    )
+    assert ok, detail
+
+
 def test_parents_touch_skips_body_members() -> None:
     neck = PropPart(
         name="neck",

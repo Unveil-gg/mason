@@ -217,16 +217,26 @@ def parents_touch_bounds(
     object_bounds: dict,
     tol: float = 0.05,
     bodies: list[BodySpec] | None = None,
+    movers: set[str] | None = None,
+    sockets: set[str] | None = None,
 ) -> tuple[bool, str]:
-    """Whether each parented part meets its parent AABB. Returns
-    (ok, detail). Consumed body members are skipped."""
+    """Whether each parented part meets its parent AABB.
+
+    Returns (ok, detail). Consumed body members are skipped.
+    A socket parent is a pivot empty. A mover parent is an
+    assembly root; its pieces need not overlap that one box.
+    """
     details: list[str] = []
     ok = True
+    mover_names = movers or set()
+    socket_names = sockets or set()
     body_of = member_to_body([p.name for p in parts], bodies or [])
     for part in parts:
         if not part.parent or part.cutout or part.helper:
             continue
         if part.name in body_of:
+            continue
+        if part.parent in socket_names or part.parent in mover_names:
             continue
         parent_name = body_of.get(part.parent, part.parent)
         child = _bounds_named(object_bounds, part.name)

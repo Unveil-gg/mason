@@ -1,6 +1,9 @@
 """Blender source snippets for export and metadata."""
 
 EXPORT_SRC = r'''
+import mathutils
+
+
 def _principled_input(bsdf, *names):
     """First matching Principled input, or None."""
     for name in names:
@@ -125,6 +128,29 @@ def create_attachments():
                 empty.matrix_parent_inverse = (
                     target.matrix_world.inverted()
                 )
+    # Parts may name a socket as parent. Sockets exist only now.
+    objects = {obj.name: obj for obj in bpy.data.objects}
+    for part in CONFIG.get("parts") or []:
+        parent_name = part.get("parent")
+        if not parent_name:
+            continue
+        child = objects.get(part["name"])
+        if child is None:
+            continue
+        target = objects.get(parent_name)
+        if target is None:
+            target = objects.get("attach_" + str(parent_name))
+        if target is None or child.parent == target:
+            continue
+        # Assigning matrix_world after parent is ignored here, so
+        # the old location becomes local and the socket shifts the
+        # mesh. Write the local basis directly.
+        bpy.context.view_layer.update()
+        world = child.matrix_world.copy()
+        child.parent = target
+        child.matrix_parent_inverse = mathutils.Matrix.Identity(4)
+        child.matrix_basis = target.matrix_world.inverted() @ world
+        bpy.context.view_layer.update()
 
 
 def save_blend(path):

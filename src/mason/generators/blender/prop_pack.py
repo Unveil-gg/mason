@@ -112,17 +112,34 @@ def emit_export_volumes():
         bpy.context.collection.objects.link(empty)
 
 
-def _descendants(root):
-    """Mesh descendants, not the root itself."""
+def _owned_meshes(root, mover_names):
+    """Meshes this mover joins. Nested movers stay out."""
     found = []
 
     def walk(obj):
         for child in obj.children:
+            if child.name in mover_names:
+                continue
             if (
                 child.type == "MESH"
                 and not child.name.startswith("_mason_")
             ):
                 found.append(child)
+            walk(child)
+
+    walk(root)
+    return found
+
+
+def _nested_movers(root, mover_names):
+    """Mover roots under this root. Their subtrees stay theirs."""
+    found = []
+
+    def walk(obj):
+        for child in obj.children:
+            if child.name in mover_names:
+                found.append(child)
+                continue
             walk(child)
 
     walk(root)
@@ -171,23 +188,39 @@ def _reparent_empties(root, kids):
 
 
 def _join_prop_meshes():
-    """One mesh per mover root, plus a single static body."""
+    """One mesh per mover root, plus a single static body.
+
+    A mover parented under another mover is not joined in.
+    Its parent is moved onto the surviving root first, so a
+    wheel can rise with a carriage and still spin alone.
+    """
     movers = list(CONFIG.get("export_movers") or [])
+    mover_names = set(movers)
     protected = set()
     for name in movers:
         root = bpy.data.objects.get(name)
         if root is None:
             continue
-        kids = _descendants(root)
-        _reparent_empties(root, kids)
+        kids = _owned_meshes(root, mover_names)
+        nested = _nested_movers(root, mover_names)
         if root.type == "MESH":
+            for obj in nested:
+                if obj.parent != root:
+                    _keep_world(obj, root)
+            _reparent_empties(root, kids)
             _join_into(root, kids)
             protected.add(root.name)
-        elif kids:
-            host = kids[0]
-            _join_into(host, kids[1:])
-            _keep_world(host, root)
-            protected.add(host.name)
+            continue
+        if not kids:
+            continue
+        host = kids[0]
+        for obj in nested:
+            if obj.parent != host:
+                _keep_world(obj, host)
+        _reparent_empties(host, kids)
+        _join_into(host, kids[1:])
+        _keep_world(host, root)
+        protected.add(host.name)
     statics = [
         obj for obj in _mesh_objects() if obj.name not in protected
     ]
